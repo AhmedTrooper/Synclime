@@ -1,10 +1,7 @@
-import { Outlet } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
 
 export default function App() {
-  return (
-    <div>
-      <h1>This is App.tsx..the central file</h1>
-      <Outlet />
-    </div>
-  );
+  return <MainLayout />;
 }
+
+
