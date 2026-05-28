@@ -57,8 +57,8 @@ export default function ParsedFiles() {
   const { setActivePath } = useUIStore();
 
   useEffect(() => {
-    // Dock tracks Home active indicator or resets correctly
-    setActivePath("/");
+    // Dock tracks Parsed Files active indicator
+    setActivePath("/parsed_files");
   }, [setActivePath]);
 
   return (

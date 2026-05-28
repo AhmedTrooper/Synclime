@@ -9,8 +9,8 @@ export default function ParsedFileDetail() {
   const { setActivePath } = useUIStore();
 
   useEffect(() => {
-    // Keep navigation dock active on Home item or just set path to reset dock active indicators
-    setActivePath("/");
+    // Keep navigation dock active on Parsed Files item
+    setActivePath("/parsed_files");
   }, [setActivePath]);
 
   return (
