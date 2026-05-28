@@ -2,20 +2,23 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip } from "@heroui/react";
 import { useUIStore } from "../../../store/useUIStore";
-import { Home, Info, Download, Settings, GripVertical, Sun, Moon, Minus, Maximize2, X } from "lucide-react";
+import { Home, Info, Download, Settings, FileText, GripVertical, Sun, Moon, Minus, Maximize2, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export default function BottomDock() {
   const { activePath, badges, theme, toggleTheme } = useUIStore();
 
+  // Cohesive brand accent color tokens (sleek neutral grey, lighting up to unified premium brand blue)
   const dockItems = [
-    { path: "/", label: "Home", icon: Home, badgeKey: "home" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-300" },
-    { path: "/about", label: "About System", icon: Info, badgeKey: "about" as const, color: "hover:text-purple-500 dark:hover:text-purple-400 text-zinc-500 dark:text-zinc-300" },
-    { path: "/downloads", label: "Downloads", icon: Download, badgeKey: "downloads" as const, color: "hover:text-emerald-500 dark:hover:text-emerald-400 text-zinc-500 dark:text-zinc-300" },
-    { path: "/settings", label: "Settings", icon: Settings, badgeKey: "settings" as const, color: "hover:text-amber-500 dark:hover:text-amber-400 text-zinc-500 dark:text-zinc-300" },
+    { path: "/", label: "Home", icon: Home, badgeKey: "home" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400" },
+    { path: "/downloads", label: "Downloads", icon: Download, badgeKey: "downloads" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400" },
+    { path: "/parsed_files", label: "Parsed Files", icon: FileText, badgeKey: "parsedFiles" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400" },
+    { path: "/settings", label: "Settings", icon: Settings, badgeKey: "settings" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400" },
+    { path: "/about", label: "About System", icon: Info, badgeKey: "about" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400" },
   ];
 
   const handleMinimize = async () => {
+
     try {
       const appWindow = getCurrentWindow();
       await appWindow.minimize();
@@ -92,7 +95,7 @@ export default function BottomDock() {
                       whileHover={{ scale: 1.18, y: -6 }}
                       whileTap={{ scale: 0.92 }}
                       transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                      className={`relative z-10 ${item.color} ${isActive ? "text-zinc-900 dark:text-white" : ""}`}
+                      className={`relative z-10 ${item.color} ${isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : ""}`}
                     >
                       <Icon className="w-5.5 h-5.5 transition-transform" />
 

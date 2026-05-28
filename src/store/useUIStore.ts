@@ -5,6 +5,7 @@ interface BadgeState {
   home: number;
   about: number;
   downloads: number;
+  parsedFiles: number;
   settings: number;
 }
 
@@ -28,6 +29,7 @@ export const useUIStore = create<UIStore>()(
         home: 0,
         about: 0,
         downloads: 0,
+        parsedFiles: 0,
         settings: 0,
       },
       theme: "dark",
