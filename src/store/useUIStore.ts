@@ -68,7 +68,7 @@ export const useUIStore = create<UIStore>()(
         })),
     }),
     {
-      name: "osgui-ui-storage",
+      name: "synclime-ui-storage",
       partialize: (state) => ({ theme: state.theme, activePath: state.activePath }),
     }
   )

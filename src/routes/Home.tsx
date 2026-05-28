@@ -18,7 +18,7 @@ export default function Home() {
           Hello World from Home Route
         </h1>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm transition-colors duration-300">
-          OSGUI clean shell environment ready.
+          Synclime clean shell environment ready.
         </p>
       </div>
 

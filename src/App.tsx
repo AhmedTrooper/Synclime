@@ -1,7 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import MainLayout from "./layouts/MainLayout";
+import SplashScreen from "./components/SplashScreen";
+import { AnimatePresence } from "framer-motion";
 
 export default function App() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
     // Disable standard browser reloading & inspector key combinations
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -16,12 +20,25 @@ export default function App() {
 
     document.addEventListener("keydown", handleKeyDown);
 
+    // Simulate system startup and asset loading delay to present premium entrance
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 2000);
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(timer);
     };
   }, []);
 
-  return <MainLayout />;
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        {!isLoaded && <SplashScreen key="splash" />}
+      </AnimatePresence>
+      <MainLayout />
+    </>
+  );
 }
 
 

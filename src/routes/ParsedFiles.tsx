@@ -69,7 +69,7 @@ export default function ParsedFiles() {
           Parsed Files <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">Repository</span>
         </h1>
         <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 max-w-lg leading-relaxed transition-colors duration-300">
-          Clean master repository of all structured dataset formats processed by the OSGUI parser engine.
+          Clean master repository of all structured dataset formats processed by the Synclime parser engine.
         </p>
       </div>
 
