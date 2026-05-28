@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import BottomDock from "../features/navigation/components/BottomDock";
 import { useUIStore } from "../store/useUIStore";
@@ -9,6 +9,7 @@ export default function MainLayout() {
   const setActivePath = useUIStore((state) => state.setActivePath);
   const navigate = useNavigate();
   const location = useLocation();
+  const hasRestored = useRef(false);
 
   useEffect(() => {
     if (theme === "dark") {
@@ -30,11 +31,11 @@ export default function MainLayout() {
     }
   }, [location.pathname, setActivePath]);
 
-  // Invisible, seamless startup restoration of the active route
+  // Invisible, seamless startup restoration of the active route (runs EXACTLY once on app mount)
   useEffect(() => {
-    if (activePath && window.location.pathname !== activePath) {
-      // Only perform automatic restoration when the app first loads at root
-      if (window.location.pathname === "/") {
+    if (!hasRestored.current) {
+      hasRestored.current = true;
+      if (activePath && window.location.pathname === "/" && activePath !== "/") {
         navigate(activePath, { replace: true });
       }
     }
