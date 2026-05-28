@@ -1,8 +1,10 @@
-import VideoContainer from "@/components/video/VideoContainer";
+import { Link } from "react-router-dom";
+
 export default function Home() {
   return (
-    <div className="p-8 overflow-auto custom-scrollbar">
-      <VideoContainer />
+    <div>
+      <h1>Welcome from Home page</h1>
+      <Link to={"/about"}>About page</Link>
     </div>
   );
 }
