@@ -69,7 +69,7 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: "osgui-ui-storage",
-      partialize: (state) => ({ theme: state.theme }),
+      partialize: (state) => ({ theme: state.theme, activePath: state.activePath }),
     }
   )
 );

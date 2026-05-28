@@ -2,42 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+/* Disable global text selection & bouncing for native app feeling */
+html, body {
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   font-family: 'Inter Variable', sans-serif;
-
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-*{
-    padding: 0;
-    margin: 0;
+/* Enable selection only inside input elements */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
+/* Disable standard browser image/link dragging drag events */
+img, a {
+  -webkit-user-drag: none;
+}
 
+/* Reset outline focus rings on interactive elements */
+*:focus {
+  outline: none !important;
+}
+
+/* Premium Custom Scrollbars for native feeling */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #4d4d4d #1e1e1e; /* Thumb & Track for Firefox */
+  scrollbar-color: #3f3f46 transparent;
   overflow: auto;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #1e1e1e;
-  border-radius: 10px;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #4d4d4d;
-  border-radius: 10px;
-  background-clip: padding-box;
-  border: 2px solid transparent;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
-  transition: background 0.3s ease;
+  background: #3f3f46;
+  border-radius: 9999px;
+  transition: background 0.2s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #6a6a6a;
+  background: #52525b;
 }
