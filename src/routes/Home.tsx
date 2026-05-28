@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUIStore } from "../store/useUIStore";
 import { Button } from "@heroui/react";
-import { FileText } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 
 export default function Home() {
   const { setActivePath } = useUIStore();
@@ -22,25 +22,16 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Demo Click Buttons for parsed_file route */}
-      <div className="flex flex-wrap gap-4 mt-2 justify-center">
+      {/* Navigation action to ParsedFiles Repository */}
+      <div className="flex justify-center mt-2">
         <Button
           as={Link}
-          to="/parsed_file/1"
+          to="/parsed_files"
           size="md"
           className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-          startContent={<FileText className="w-4 h-4 text-blue-500" />}
+          startContent={<FolderOpen className="w-4 h-4 text-blue-500" />}
         >
-          View Parsed File 1
-        </Button>
-        <Button
-          as={Link}
-          to="/parsed_file/2"
-          size="md"
-          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-          startContent={<FileText className="w-4 h-4 text-emerald-500" />}
-        >
-          View Parsed File 2
+          Open Parsed Files Repository
         </Button>
       </div>
     </div>

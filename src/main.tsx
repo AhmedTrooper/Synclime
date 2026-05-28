@@ -9,6 +9,7 @@ import Downloads from "./routes/Downloads";
 import DownloadsDetail from "./routes/DownloadsDetail";
 import Settings from "./routes/Settings";
 import ParsedFileDetail from "./routes/ParsedFileDetail";
+import ParsedFiles from "./routes/ParsedFiles";
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import "@fontsource-variable/inter";
 
@@ -45,6 +46,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             <Route
               path="parsed_file/:slug"
               element={<ParsedFileDetail />}
+            />
+            <Route
+              path="parsed_files"
+              element={<ParsedFiles />}
             />
           </Route>
         </Routes>

@@ -25,12 +25,12 @@ export default function ParsedFileDetail() {
       </div>
       <Button
         as={Link}
-        to="/"
+        to="/parsed_files"
         size="sm"
         className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
         startContent={<ArrowLeft className="w-4 h-4" />}
       >
-        Back to Home
+        Back to Repository
       </Button>
     </div>
   );
