@@ -1,12 +1,14 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import BottomDock from "../features/navigation/components/BottomDock";
 import { useUIStore } from "../store/useUIStore";
 
 export default function MainLayout() {
   const theme = useUIStore((state) => state.theme);
   const activePath = useUIStore((state) => state.activePath);
+  const setActivePath = useUIStore((state) => state.setActivePath);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (theme === "dark") {
@@ -16,10 +18,25 @@ export default function MainLayout() {
     }
   }, [theme]);
 
+  // Seamless path sync that filters transient detail routes (Option A)
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith("/parsed_file/")) {
+      setActivePath("/parsed_files");
+    } else if (path.startsWith("/downloads/")) {
+      setActivePath("/downloads");
+    } else {
+      setActivePath(path);
+    }
+  }, [location.pathname, setActivePath]);
+
   // Invisible, seamless startup restoration of the active route
   useEffect(() => {
     if (activePath && window.location.pathname !== activePath) {
-      navigate(activePath, { replace: true });
+      // Only perform automatic restoration when the app first loads at root
+      if (window.location.pathname === "/") {
+        navigate(activePath, { replace: true });
+      }
     }
   }, [activePath, navigate]);
 

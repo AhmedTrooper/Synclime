@@ -1,16 +1,9 @@
-import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useUIStore } from "../store/useUIStore";
 import { Button } from "@heroui/react";
 import { ArrowLeft } from "lucide-react";
 
 export default function DownloadsDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { setActivePath } = useUIStore();
-
-  useEffect(() => {
-    setActivePath("/downloads");
-  }, [setActivePath]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-6 w-full">
