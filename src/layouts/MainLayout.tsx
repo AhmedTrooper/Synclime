@@ -1,8 +1,21 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import BottomDock from "../features/navigation/components/BottomDock";
+import { useUIStore } from "../store/useUIStore";
 
 export default function MainLayout() {
+  const theme = useUIStore((state) => state.theme);
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
+
   return (
+
     <div className="relative min-h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-x-hidden flex flex-col font-sans">
       {/* Background Gradients */}
       <div className="absolute inset-0 -z-50 h-full w-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.06),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
