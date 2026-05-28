@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useUIStore } from "../store/useUIStore";
+import { getVersion, getTauriVersion } from "@tauri-apps/api/app";
 
 export default function SplashScreen() {
   const theme = useUIStore((state) => state.theme);
   const [progress, setProgress] = useState(0);
+  const [appVersion, setAppVersion] = useState("0.1.0");
+  const [tauriVersion, setTauriVersion] = useState("2.x");
 
   // Smooth, uniform progress bar sweep over 1.8 seconds
   useEffect(() => {
@@ -22,6 +25,22 @@ export default function SplashScreen() {
     }, 16);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Asynchronously fetch versions from Tauri API
+  useEffect(() => {
+    const loadVersions = async () => {
+      try {
+        const appVer = await getVersion();
+        const tauriVer = await getTauriVersion();
+        setAppVersion(appVer);
+        setTauriVersion(tauriVer);
+      } catch (err) {
+        // Safe fallback for web browsers / development previews
+        console.log("Safe fallback: Version info not available in browser.", err);
+      }
+    };
+    loadVersions();
   }, []);
 
   const isDark = theme === "dark";
@@ -100,12 +119,13 @@ export default function SplashScreen() {
         </div>
       </div>
 
-      {/* Sleek quiet version in bottom center */}
-      <span className={`absolute bottom-8 text-[9px] font-mono tracking-widest ${
+      {/* Sleek quiet version metadata footer */}
+      <div className={`absolute bottom-6 left-8 right-8 flex justify-between text-[8px] font-mono tracking-widest ${
         isDark ? "text-zinc-600" : "text-zinc-400"
       }`}>
-        VERSION 0.1.0
-      </span>
+        <span>TAURI V{tauriVersion}</span>
+        <span>SYNCLIME V{appVersion}</span>
+      </div>
     </motion.div>
   );
 }
