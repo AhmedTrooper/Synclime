@@ -9,10 +9,10 @@ export default function BottomDock() {
   const { activePath, badges, theme, toggleTheme } = useUIStore();
 
   const dockItems = [
-    { path: "/", label: "Home", icon: Home, badgeKey: "home" as const, color: "hover:text-blue-400 text-zinc-300" },
-    { path: "/about", label: "About System", icon: Info, badgeKey: "about" as const, color: "hover:text-purple-400 text-zinc-300" },
-    { path: "/downloads", label: "Downloads", icon: Download, badgeKey: "downloads" as const, color: "hover:text-emerald-400 text-zinc-300" },
-    { path: "/settings", label: "Settings", icon: Settings, badgeKey: "settings" as const, color: "hover:text-amber-400 text-zinc-300" },
+    { path: "/", label: "Home", icon: Home, badgeKey: "home" as const, color: "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-300" },
+    { path: "/about", label: "About System", icon: Info, badgeKey: "about" as const, color: "hover:text-purple-500 dark:hover:text-purple-400 text-zinc-500 dark:text-zinc-300" },
+    { path: "/downloads", label: "Downloads", icon: Download, badgeKey: "downloads" as const, color: "hover:text-emerald-500 dark:hover:text-emerald-400 text-zinc-500 dark:text-zinc-300" },
+    { path: "/settings", label: "Settings", icon: Settings, badgeKey: "settings" as const, color: "hover:text-amber-500 dark:hover:text-amber-400 text-zinc-500 dark:text-zinc-300" },
   ];
 
   const handleMinimize = async () => {
@@ -52,10 +52,10 @@ export default function BottomDock() {
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 max-w-full">
       <div className="relative flex items-center justify-center">
         {/* Glow backdrop behind dock */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-2xl rounded-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10 blur-2xl rounded-3xl transition-all duration-300" />
 
         {/* Dock container */}
-        <div className="relative flex items-center gap-3.5 bg-black/40 border border-white/10 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]">
+        <div className="relative flex items-center gap-3.5 bg-white/70 dark:bg-black/40 border border-zinc-200/80 dark:border-white/10 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-[0_15px_30px_-10px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-300">
           {/* Main Navigation Icons */}
           <div className="flex items-center gap-3.5">
             {dockItems.map((item) => {
@@ -74,7 +74,7 @@ export default function BottomDock() {
                   closeDelay={0}
                   delay={200}
                   placement="top"
-                  className="bg-zinc-900/90 text-white text-[11px] font-semibold border border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
+                  className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
                 >
                   <Link
                     to={item.path}
@@ -83,7 +83,7 @@ export default function BottomDock() {
                     {isActive && (
                       <motion.div
                         layoutId="active-dock-bg"
-                        className="absolute inset-0 bg-white/10 border border-white/5 rounded-xl -z-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                        className="absolute inset-0 bg-zinc-800/10 dark:bg-white/10 border border-zinc-800/5 dark:border-white/5 rounded-xl -z-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -92,7 +92,7 @@ export default function BottomDock() {
                       whileHover={{ scale: 1.18, y: -6 }}
                       whileTap={{ scale: 0.92 }}
                       transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                      className={`relative z-10 ${item.color} ${isActive ? "text-white" : ""}`}
+                      className={`relative z-10 ${item.color} ${isActive ? "text-zinc-900 dark:text-white" : ""}`}
                     >
                       <Icon className="w-5.5 h-5.5 transition-transform" />
 
@@ -102,7 +102,7 @@ export default function BottomDock() {
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
-                            className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-md shadow-red-500/20 border border-black"
+                            className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-md shadow-red-500/20 border border-white dark:border-black"
                           >
                             {badgeCount}
                           </motion.span>
@@ -116,7 +116,7 @@ export default function BottomDock() {
           </div>
 
           {/* Elegant vertical divider */}
-          <div className="w-[1px] h-6 bg-white/10 self-center mx-1 flex-shrink-0" />
+          <div className="w-[1px] h-6 bg-zinc-800/10 dark:bg-white/10 self-center mx-1 flex-shrink-0" />
 
           {/* Window Control Panel */}
           <div className="flex items-center gap-2">
@@ -126,11 +126,11 @@ export default function BottomDock() {
               closeDelay={0}
               delay={200}
               placement="top"
-              className="bg-zinc-900/90 text-white text-[11px] font-semibold border border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
+              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
             >
               <div
                 data-tauri-drag-region
-                className="p-2 rounded-lg text-zinc-400 hover:text-white cursor-grab active:cursor-grabbing hover:bg-white/5 transition-all select-none"
+                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white cursor-grab active:cursor-grabbing hover:bg-zinc-800/5 dark:hover:bg-white/5 transition-all select-none"
               >
                 <GripVertical className="w-4 h-4 pointer-events-none" />
               </div>
@@ -142,16 +142,16 @@ export default function BottomDock() {
               closeDelay={0}
               delay={200}
               placement="top"
-              className="bg-zinc-900/90 text-white text-[11px] font-semibold border border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
+              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
             >
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all select-none"
+                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
               >
                 {theme === "dark" ? (
-                  <Sun className="w-4 h-4 text-amber-400" />
+                  <Sun className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 ) : (
-                  <Moon className="w-4 h-4 text-blue-400" />
+                  <Moon className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                 )}
               </button>
             </Tooltip>
@@ -162,11 +162,11 @@ export default function BottomDock() {
               closeDelay={0}
               delay={200}
               placement="top"
-              className="bg-zinc-900/90 text-white text-[11px] font-semibold border border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
+              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
             >
               <button
                 onClick={handleMinimize}
-                className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all select-none"
+                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -178,11 +178,11 @@ export default function BottomDock() {
               closeDelay={0}
               delay={200}
               placement="top"
-              className="bg-zinc-900/90 text-white text-[11px] font-semibold border border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
+              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
             >
               <button
                 onClick={handleFullscreen}
-                className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 active:scale-95 transition-all select-none"
+                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
               >
                 <Maximize2 className="w-4 h-4" />
               </button>
@@ -194,11 +194,11 @@ export default function BottomDock() {
               closeDelay={0}
               delay={200}
               placement="top"
-              className="bg-zinc-900/90 text-white text-[11px] font-semibold border border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
+              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
             >
               <button
                 onClick={handleClose}
-                className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 active:scale-95 transition-all select-none"
+                className="p-2 rounded-lg text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-500/10 active:scale-95 transition-all select-none"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -208,5 +208,6 @@ export default function BottomDock() {
       </div>
     </div>
   );
+
 }
 
