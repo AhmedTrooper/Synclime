@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import MainLayout from "./layouts/MainLayout";
-import SplashScreen from "./components/SplashScreen";
+import SplashScreen from "./components/ui/SplashScreen";
 import { AnimatePresence } from "framer-motion";
 
 export default function App() {

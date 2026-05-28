@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useUIStore } from "../store/useUIStore";
+import { useUIStore } from "../../store/useUIStore";
 import { getVersion, getTauriVersion } from "@tauri-apps/api/app";
 
 export default function SplashScreen() {

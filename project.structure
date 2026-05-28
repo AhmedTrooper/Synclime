@@ -1,0 +1,37 @@
+OSGUI/
+├── src-tauri/                 # Native Rust Backend Layer
+│   ├── src/
+│   │   ├── database/          # SQLite migrations and connection setups
+│   │   ├── commands/          # Rust IPC commands mapped to UI actions
+│   │   │   ├── parse.rs       # Spawns yt-dlp --dump-json execution
+│   │   │   └── download.rs    # Handles OS threads, SIGSTOP/SIGCONT process flags
+│   │   └── main.rs            # Core tauri system router & initialization
+│   └── Cargo.toml
+├── src/                       # Frontend TypeScript Layer (The "Clean" Core)
+│   ├── assets/                # Static global media, app icons, splash graphics
+│   ├── core/                  # Engine foundation modules (Zero UI context here)
+│   │   ├── api/               # Tauri window invoke abstractions (`tauri::invoke`)
+│   │   ├── db/                # Global frontend database query helper utilities
+│   │   └── types/             # Re-exporting database.types.ts and domain types
+│   ├── components/            # Shared Stateless UI Atoms (Buttons, Tables, Inputs)
+│   │   ├── ui/                # Base layout components (Modal, Dropdown, Input)
+│   │   └── data/              # Shared tabular rendering layouts
+│   ├── layouts/               # Structural UI frames (Sidebar, Main Content Panel)
+│   │   ├── MainLayout.tsx
+│   │   └── TitleBar.tsx       # OS Window Controls (Minimize, Close)
+│   ├── store/                 # Global UI State Machine (Zustand or Redux slices)
+│   │   ├── useParseStore.ts   # UI hooks tracking current parse tokens
+│   │   └── useQueueStore.ts   # UI hooks tracking live progress updates
+│   ├── features/              # Feature-Driven Domain Slices (Modular Capsules)
+│   │   ├── config/            # Site Config Profile Feature Workspace
+│   │   │   ├── components/    # Cookie list components, Config forms
+│   │   │   └── hooks/         # Custom profile selection mutation states
+│   │   ├── parser/            # Metadata Parsing UI Module Block
+│   │   │   ├── components/    # ParseButton, MetaDetailsCard, SubtitleSelector
+│   │   │   └── hooks/         # Triggers parse execution hooks
+│   │   └── downloader/        # Execution Queue Management Workspace
+│   │       ├── components/    # DownloadRow, LiveLogTerminal, ProgressWheel
+│   │       └── hooks/         # Process signal triggers (Pause/Resume/Reveal)
+│   ├── App.tsx                # Context provider injector and window listener setup
+│   ├── main.tsx               # Frontend bootstrap hook mounting to index.html
+│   └── main.css               # Global Tailwind CSS definitions
