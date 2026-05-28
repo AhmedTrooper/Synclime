@@ -24,8 +24,8 @@ export const useUIStore = create<UIStore>((set) => ({
   badges: {
     home: 0,
     about: 0,
-    downloads: 3, // start with some notifications for visual premium effect
-    settings: 1,
+    downloads: 0,
+    settings: 0,
   },
   theme: "dark",
   setActivePath: (path) => set({ activePath: path }),
