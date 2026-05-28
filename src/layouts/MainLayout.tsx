@@ -1,10 +1,12 @@
 import { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import BottomDock from "../features/navigation/components/BottomDock";
 import { useUIStore } from "../store/useUIStore";
 
 export default function MainLayout() {
   const theme = useUIStore((state) => state.theme);
+  const activePath = useUIStore((state) => state.activePath);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (theme === "dark") {
@@ -13,6 +15,14 @@ export default function MainLayout() {
       document.documentElement.classList.remove("dark");
     }
   }, [theme]);
+
+  // Invisible, seamless startup restoration of the active route
+  useEffect(() => {
+    if (activePath && window.location.pathname !== activePath) {
+      navigate(activePath, { replace: true });
+    }
+  }, [activePath, navigate]);
+
 
   return (
     <div className="relative h-screen w-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden flex flex-col font-sans select-none">

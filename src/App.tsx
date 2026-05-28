@@ -3,11 +3,6 @@ import MainLayout from "./layouts/MainLayout";
 
 export default function App() {
   useEffect(() => {
-    // Disable right-click default context menu to make it feel 100% native
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-
     // Disable standard browser reloading & inspector key combinations
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -19,11 +14,9 @@ export default function App() {
       }
     };
 
-    document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
