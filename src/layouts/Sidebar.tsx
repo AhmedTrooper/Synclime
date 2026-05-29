@@ -17,7 +17,7 @@ export default function Sidebar() {
     <div className="w-56 h-full border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex flex-col flex-shrink-0 pt-2 pb-4 select-none z-20 shadow-[1px_0_10px_rgba(0,0,0,0.02)]">
       <div className="px-3 flex-1 overflow-y-auto">
         <h2 className="text-[10px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-3 mb-2 mt-2">
-          SyncLime
+          Synclime
         </h2>
         <nav className="flex flex-col gap-0.5">
           {navItems.map((item) => {

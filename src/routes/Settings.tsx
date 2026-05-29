@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useUIStore } from "../store/useUIStore";
 import * as Switch from "@radix-ui/react-switch";
-import { Settings as SettingsIcon, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Settings as SettingsIcon, RefreshCw, CheckCircle2, FolderOpen } from "lucide-react";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export default function Settings() {
   const { setActivePath, downloadPath, setDownloadPath, theme, toggleTheme } = useUIStore();
@@ -23,6 +24,25 @@ export default function Settings() {
     setTimeout(() => {
       setSavedSuccess(false);
     }, 3000);
+  };
+
+  const handleBrowse = async () => {
+    try {
+      if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+        const selected = await open({
+          directory: true,
+          multiple: false,
+          defaultPath: tempPath || undefined,
+        });
+        if (selected && typeof selected === "string") {
+          setTempPath(selected);
+        }
+      } else {
+        alert("Native folder picker is only available in the desktop app.");
+      }
+    } catch (err) {
+      console.error("Failed to open dialog:", err);
+    }
   };
 
   const handleResetToDefault = async () => {
@@ -70,6 +90,14 @@ export default function Settings() {
                   onChange={(e) => setTempPath(e.target.value)}
                   className="flex-grow px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm text-zinc-900 dark:text-white shadow-sm"
                 />
+                <button
+                  type="button"
+                  onClick={handleBrowse}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 rounded-md text-[13px] font-medium transition-colors shadow-sm"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  Browse
+                </button>
                 <button
                   type="button"
                   onClick={handleResetToDefault}

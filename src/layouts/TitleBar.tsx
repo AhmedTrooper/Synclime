@@ -59,7 +59,7 @@ export default function TitleBar() {
       {/* Title / Drag region */}
       <div data-tauri-drag-region className="flex items-center gap-2 cursor-default font-semibold text-xs tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
         <span data-tauri-drag-region className="bg-blue-500 w-1.5 h-1.5 rounded-full" />
-        <span data-tauri-drag-region>Synclime Core Shell</span>
+        <span data-tauri-drag-region>Synclime</span>
       </div>
 
       {/* Control Buttons */}
