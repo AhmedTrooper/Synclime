@@ -78,66 +78,75 @@ export default function Settings() {
       </div>
 
       <div className="w-full">
-        <div className="flex flex-col gap-4">
-          <form onSubmit={handleSave} className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Download Directory Path</label>
-              <div className="flex items-center gap-2">
+        <form onSubmit={handleSave} className="flex flex-col gap-4 sm:gap-6">
+          <div className="flex flex-col border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-white dark:bg-zinc-900 shadow-sm">
+            
+            {/* Setting Item 1: Download Path */}
+            <div className="flex flex-col gap-2.5 p-3 sm:p-4">
+              <label className="text-[10px] sm:text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                Download Directory Path
+              </label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <input
                   type="text"
                   placeholder="/home/user/Downloads"
                   value={tempPath}
                   onChange={(e) => setTempPath(e.target.value)}
-                  className="flex-grow px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm text-zinc-900 dark:text-white shadow-sm"
+                  className="w-full sm:flex-grow px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-xs sm:text-sm text-zinc-900 dark:text-white"
                 />
-                <button
-                  type="button"
-                  onClick={handleBrowse}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 rounded-md text-[13px] font-medium transition-colors shadow-sm"
-                >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  Browse
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResetToDefault}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 rounded-md text-[13px] font-medium transition-colors shadow-sm"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Reset
-                </button>
+                <div className="flex flex-row gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleBrowse}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs sm:text-[13px] font-bold sm:font-medium transition-colors"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">Browse</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetToDefault}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs sm:text-[13px] font-bold sm:font-medium transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">Reset</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between py-4 border-t border-zinc-200 dark:border-zinc-800">
-              <div className="flex flex-col gap-1">
-                <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Dark Mode</span>
-                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Toggle dark UI theme</span>
+            <div className="h-[1px] w-full bg-zinc-200 dark:bg-zinc-800" />
+
+            {/* Setting Item 2: Theme */}
+            <div className="flex items-center justify-between p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+              <div className="flex flex-col gap-0.5 sm:gap-1">
+                <span className="text-[12px] sm:text-[13px] font-bold text-zinc-900 dark:text-zinc-100">Dark Mode</span>
+                <span className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Toggle dark UI theme globally</span>
               </div>
               <Switch.Root
                 checked={theme === "dark"}
                 onCheckedChange={toggleTheme}
-                className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors"
+                className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors flex-shrink-0"
               >
                 <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
               </Switch.Root>
             </div>
+          </div>
 
-            <div className="flex items-center gap-4 justify-end pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              {savedSuccess && (
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 animate-fade-in">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved successfully
-                </span>
-              )}
-              <button
-                type="submit"
-                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-md transition-colors text-[13px] shadow-sm"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex flex-col-reverse sm:flex-row items-center gap-4 justify-end pt-2">
+            {savedSuccess && (
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 animate-fade-in w-full sm:w-auto justify-center sm:justify-start">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Configuration Applied
+              </span>
+            )}
+            <button
+              type="submit"
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-[13px] w-full sm:w-auto shadow-md shadow-blue-500/20"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
