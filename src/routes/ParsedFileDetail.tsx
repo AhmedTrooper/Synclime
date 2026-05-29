@@ -844,11 +844,11 @@ export default function ParsedFileDetail() {
 
               <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3">
                 <div className="flex flex-col gap-4">
-                  {subOptions.length > 0 ? (
+                  {displaySubOptions.length > 0 ? (
                     <>
                       <div className="flex flex-col gap-2 text-left">
                         <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                          Select Languages
+                          Select Languages {subOptions.length === 0 && "(Pre-Given List)"}
                         </label>
                         <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl">
                           {displaySubOptions.map((opt) => (
