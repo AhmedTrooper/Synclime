@@ -274,32 +274,32 @@ export default function ParsedFileDetail() {
       <div className="flex justify-between items-center w-full">
         <Link
           to="/parsed_files"
-          className="flex items-center justify-center sm:justify-start gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 w-full sm:w-auto px-3 py-3 sm:py-1.5 rounded-lg transition-all duration-300 text-[12px] sm:text-sm"
+          className="flex items-center justify-center sm:justify-start gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 w-full sm:w-auto px-3 py-3 sm:py-1.5 rounded-lg transition-all duration-300 text-[12px] sm:text-sm overflow-hidden"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Repository
+          <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">Back to Repository</span>
         </Link>
       </div>
 
       {/* Asset Hero Section Card */}
-      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-lg p-3 sm:p-5">
-        <div className="flex flex-col md:flex-row gap-3 sm:gap-6 items-start text-left">
+      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-lg p-2 sm:p-5">
+        <div className="flex flex-row gap-2 sm:gap-6 items-start text-left">
           {file.thumbnail && (
             <img
               src={file.thumbnail}
               alt={file.title}
-              className="w-full md:w-80 aspect-video object-cover rounded-2xl border border-zinc-200 dark:border-white/5 shadow-md flex-shrink-0"
+              className="w-24 sm:w-48 md:w-80 aspect-video object-cover rounded-lg sm:rounded-2xl border border-zinc-200 dark:border-white/5 shadow-md flex-shrink-0"
             />
           )}
 
-          <div className="flex flex-col justify-between h-full py-1">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white leading-snug">
+          <div className="flex flex-col justify-start sm:justify-between h-full py-0 sm:py-1 min-w-0 flex-1">
+            <div className="flex flex-col gap-1 sm:gap-2">
+              <h2 className="text-xs sm:text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white leading-tight line-clamp-2">
                 {file.title}
               </h2>
               
-              <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                <span className="font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-lg border border-zinc-200 dark:border-white/5">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium w-full">
+                <span className="font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-lg border border-zinc-200 dark:border-white/5 truncate max-w-full">
                   {file.author}
                 </span>
                 <span>•</span>
@@ -321,7 +321,7 @@ export default function ParsedFileDetail() {
             </div>
 
             {payload.description && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-4 leading-relaxed line-clamp-3 select-text">
+              <p className="hidden sm:block text-xs text-zinc-500 dark:text-zinc-400 mt-4 leading-relaxed line-clamp-3 select-text">
                 {payload.description}
               </p>
             )}
@@ -354,7 +354,7 @@ export default function ParsedFileDetail() {
                 <select
                   value={selectedPreset}
                   onChange={(e) => setSelectedPreset(e.target.value)}
-                  className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl min-h-[40px] px-3 outline-none text-sm font-semibold"
+                  className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl min-h-[40px] px-3 outline-none text-xs sm:text-sm font-semibold w-full max-w-full overflow-hidden text-ellipsis"
                 >
                   {presetList.map((preset) => (
                     <option key={preset.value} value={preset.value}>
@@ -365,10 +365,10 @@ export default function ParsedFileDetail() {
 
                 <button
                   onClick={downloadAllPlaylist}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300 overflow-hidden"
                 >
-                  <Download className="w-4 h-4" />
-                  Download All Tracks
+                  <Download className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate text-[12px] sm:text-sm">Download All Tracks</span>
                 </button>
               </div>
             </div>
@@ -387,25 +387,25 @@ export default function ParsedFileDetail() {
               {payload.entries?.map((track: any, index: number) => (
                 <div
                   key={track.id}
-                  className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl"
+                  className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-2xl"
                 >
-                  <div className="p-2 sm:p-3 md:p-4 flex flex-row items-center justify-between gap-2 sm:gap-4">
+                  <div className="p-1.5 sm:p-3 md:p-4 flex flex-row items-center justify-between gap-1.5 sm:gap-4">
                     <div className="flex items-center gap-1.5 sm:gap-3 flex-grow text-left min-w-0">
-                      <span className="text-xs font-bold text-zinc-400 font-mono w-5">
+                      <span className="text-[9px] sm:text-xs font-bold text-zinc-400 font-mono w-4 sm:w-5">
                         {(index + 1).toString().padStart(2, "0")}
                       </span>
                       {track.thumbnails?.[0]?.url && (
                         <img
                           src={track.thumbnails[0].url}
                           alt={track.title}
-                          className="w-14 aspect-video object-cover rounded-lg border border-zinc-200 dark:border-white/5 flex-shrink-0"
+                          className="w-10 sm:w-14 aspect-video object-cover rounded-md sm:rounded-lg border border-zinc-200 dark:border-white/5 flex-shrink-0"
                         />
                       )}
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-bold text-zinc-900 dark:text-white line-clamp-1 leading-snug">
+                      <div className="flex flex-col gap-0 min-w-0">
+                        <span className="text-[10px] sm:text-xs font-bold text-zinc-900 dark:text-white line-clamp-1 leading-tight">
                           {track.title}
                         </span>
-                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                        <span className="text-[8px] sm:text-[10px] text-zinc-500 dark:text-zinc-400">
                           {formatDuration(track.duration)}
                         </span>
                       </div>
@@ -413,9 +413,9 @@ export default function ParsedFileDetail() {
 
                     <button
                       onClick={() => startDownload(selectedPreset, false, track.title)}
-                      className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-xl"
+                      className="p-1.5 sm:p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-lg sm:rounded-xl"
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export default function ParsedFileDetail() {
         // ==========================================
         // 2. VIDEO DETAIL LAYOUT WITH LAYER 1 & 2 SELECTORS
         // ==========================================
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 text-left">
+        <div className="flex flex-col-reverse md:grid md:grid-cols-3 gap-4 sm:gap-6 text-left">
           {/* Main Selectors (Layers 1 & 2) */}
           <div className="md:col-span-2 flex flex-col gap-4 sm:gap-6">
             {/* Explicit Switcher Interface Tab bar */}
@@ -472,13 +472,13 @@ export default function ParsedFileDetail() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="hidden sm:grid sm:grid-cols-2 gap-3">
                     {videoStreams.map((v: any) => {
                       const isSelected = selectedVideo === v.format_id;
                       return (
                         <div
                           key={v.format_id}
-                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-4 flex flex-row items-center justify-between gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm ${
+                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm min-w-0 ${
                             isSelected
                               ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
                               : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
@@ -504,6 +504,22 @@ export default function ParsedFileDetail() {
                       </span>
                     )}
                   </div>
+                  
+                  {/* Native Mobile Dropdown for KaiOS D-PAD */}
+                  <div className="block sm:hidden w-full">
+                    <select
+                      value={selectedVideo}
+                      onChange={(e) => setSelectedVideo(e.target.value)}
+                      className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-lg px-2 py-2 outline-none text-[10px] font-semibold max-w-full text-ellipsis overflow-hidden"
+                    >
+                      <option value="">(None) Deselect Video Stream</option>
+                      {videoStreams.map((v: any) => (
+                        <option key={v.format_id} value={v.format_id}>
+                          {v.format_note || `${v.height}p`} ({v.ext}) - {formatSize(v.filesize || v.filesize_approx)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Audio Streams selection */}
@@ -515,21 +531,21 @@ export default function ParsedFileDetail() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="hidden sm:grid sm:grid-cols-2 gap-3">
                     {audioStreams.map((a: any) => {
                       const isSelected = selectedAudio === a.format_id;
                       return (
                         <div
                           key={a.format_id}
-                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-4 flex flex-row items-center justify-between gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm ${
+                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm min-w-0 ${
                             isSelected
                               ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                               : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                           }`}
                           onClick={() => setSelectedAudio(isSelected ? "" : a.format_id)}
                         >
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs font-bold text-zinc-900 dark:text-white font-semibold">
+                          <div className="flex flex-col gap-0.5 min-w-0 break-words">
+                            <span className="text-[11px] sm:text-xs font-bold text-zinc-900 dark:text-white font-semibold leading-tight">
                               {a.format_note || "Audio Only"} ({a.ext})
                             </span>
                             <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
@@ -547,6 +563,22 @@ export default function ParsedFileDetail() {
                       </span>
                     )}
                   </div>
+
+                  {/* Native Mobile Dropdown for Audio */}
+                  <div className="block sm:hidden w-full">
+                    <select
+                      value={selectedAudio}
+                      onChange={(e) => setSelectedAudio(e.target.value)}
+                      className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-lg px-2 py-2 outline-none text-[10px] font-semibold max-w-full text-ellipsis overflow-hidden"
+                    >
+                      <option value="">(None) Deselect Audio Stream</option>
+                      {audioStreams.map((a: any) => (
+                        <option key={a.format_id} value={a.format_id}>
+                          {a.format_note || "Audio Only"} ({a.ext}) - {formatSize(a.filesize || a.filesize_approx)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -561,24 +593,24 @@ export default function ParsedFileDetail() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="hidden sm:grid sm:grid-cols-1 gap-3">
                   {presetList.map((preset) => {
                     const isSelected = selectedPreset === preset.value;
                     return (
                       <div
                         key={preset.value}
-                        className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-4 flex flex-row items-center justify-between gap-4 text-left hover:scale-[1.005] active:scale-[0.995] shadow-sm ${
+                        className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-4 text-left hover:scale-[1.005] active:scale-[0.995] shadow-sm min-w-0 ${
                           isSelected
                             ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-md"
                             : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                         }`}
                         onClick={() => setSelectedPreset(preset.value)}
                       >
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm font-bold text-zinc-900 dark:text-white">
+                        <div className="flex flex-col gap-1 min-w-0 break-words">
+                          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white leading-tight">
                             {preset.label}
                           </span>
-                          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
+                          <span className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
                             RULE FORMAT: {preset.value}
                           </span>
                         </div>
@@ -586,6 +618,20 @@ export default function ParsedFileDetail() {
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="block sm:hidden w-full">
+                  <select
+                    value={selectedPreset}
+                    onChange={(e) => setSelectedPreset(e.target.value)}
+                    className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-lg px-2 py-2 outline-none text-[10px] font-semibold max-w-full text-ellipsis overflow-hidden"
+                  >
+                    {presetList.map((preset) => (
+                      <option key={preset.value} value={preset.value}>
+                        {preset.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -618,10 +664,10 @@ export default function ParsedFileDetail() {
                   {/* Primary Download trigger */}
                   <button
                     onClick={() => startDownload(getGeneratedFormatString(), getGeneratedFormatString().includes("bestaudio") && !getGeneratedFormatString().includes("bestvideo"))}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold w-full py-4 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold w-full py-4 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300 overflow-hidden px-2"
                   >
-                    <Download className="w-4 h-4" />
-                    Initialize Extraction Download
+                    <Download className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm">Initialize Extraction Download</span>
                   </button>
                 </div>
               </div>
@@ -647,7 +693,7 @@ export default function ParsedFileDetail() {
                         <select
                           value={selectedSub}
                           onChange={(e) => setSelectedSub(e.target.value)}
-                          className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl px-3 py-2 outline-none text-sm font-semibold"
+                          className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl px-3 py-2 outline-none text-xs sm:text-sm font-semibold w-full max-w-full overflow-hidden text-ellipsis"
                         >
                           <option value="">Choose language option</option>
                           {subOptions.map((opt) => (
