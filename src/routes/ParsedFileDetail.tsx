@@ -258,6 +258,64 @@ export default function ParsedFileDetail() {
     navigate("/downloads");
   };
 
+  const downloadSubtitle = async (targetUrl: string, trackTitle: string) => {
+    if (!selectedSub) {
+      alert("Please select a subtitle language in the sidebar first!");
+      return;
+    }
+
+    // 1. Auto-Pairing Scanner: Find if the video is already in the queue
+    const queue = useQueueStore.getState().queue;
+    const parentJob = queue.find(j => j.parsedFileSlug === file.slug && j.url === targetUrl && j.fileType !== "subtitle");
+    
+    const uniqueSlug = `dl-sub-${Date.now()}`;
+    const jobName = `${trackTitle} (Sub - ${selectedSub.toUpperCase()})`;
+    
+    const newJob: DownloadJob = {
+      slug: uniqueSlug,
+      name: jobName,
+      url: targetUrl,
+      progress: 0,
+      status: "pending",
+      message: "Queued for subtitle extraction...",
+      fileType: "subtitle",
+      formatString: `bestvideo+bestaudio/best`,
+      createdAt: new Date().toISOString(),
+      associatedMediaJobSlug: parentJob ? parentJob.slug : undefined,
+      parsedFileSlug: file.slug,
+      isPlaylist: file.isPlaylist,
+      playlistName: file.isPlaylist ? file.title : undefined,
+    };
+
+    addJob(newJob);
+
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        await invoke("insert_job_record", {
+          payload: {
+            slug: newJob.slug,
+            url: newJob.url,
+            parsed_file_slug: newJob.parsedFileSlug,
+            file_type: newJob.fileType,
+            associated_media_job_slug: newJob.associatedMediaJobSlug || null,
+            is_from_playlist: newJob.isPlaylist,
+            format_string: newJob.formatString,
+            download_path: useUIStore.getState().downloadPath,
+            created_at: newJob.createdAt,
+          }
+        });
+        await invoke("trigger_job_start", { jobSlug: uniqueSlug });
+      } catch (e: any) {
+        console.error("Subtitle extraction failed:", e);
+        useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
+        useQueueStore.getState().updateJobProgress(uniqueSlug, 0, e.message || "Failed to start subtitle extraction");
+      }
+    }
+    
+    navigate("/downloads");
+  };
+
   const subOptions = payload.subtitles
     ? Object.keys(payload.subtitles).map((lang) => ({
         lang,
@@ -394,6 +452,28 @@ export default function ParsedFileDetail() {
             </div>
           </div>
 
+          {/* Subtitle Selector for Playlist Mode */}
+          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-emerald-500" />
+              <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">Global Subtitle Selection</h3>
+            </div>
+            {subOptions.length > 0 ? (
+              <select
+                value={selectedSub}
+                onChange={(e) => setSelectedSub(e.target.value)}
+                className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl px-3 py-2 outline-none text-xs sm:text-sm font-semibold w-full sm:w-auto"
+              >
+                <option value="">(None) Select Subtitle</option>
+                {subOptions.map((opt) => (
+                  <option key={opt.lang} value={opt.lang}>{opt.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-xs text-zinc-500 italic">No subtitles available</span>
+            )}
+          </div>
+
           {/* Playlist Tracks Listing */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
@@ -456,12 +536,22 @@ export default function ParsedFileDetail() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => startDownload(selectedPreset, false, track.title)}
-                      className="p-1.5 sm:p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-lg sm:rounded-xl"
-                    >
-                      <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <button
+                        onClick={() => downloadSubtitle(track.url, track.title)}
+                        title="Download Subtitles"
+                        className="p-1.5 sm:p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold border border-purple-500/20 rounded-lg sm:rounded-xl transition-colors"
+                      >
+                        <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </button>
+                      <button
+                        onClick={() => startDownload(selectedPreset, false, track.title)}
+                        title="Download Video"
+                        className="p-1.5 sm:p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-lg sm:rounded-xl transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -750,7 +840,7 @@ export default function ParsedFileDetail() {
                       </div>
 
                       <button
-                        onClick={() => startDownload(`bestvideo+bestaudio/best`, false, `${file.title} (Subtitles - ${selectedSub.toUpperCase()})`)}
+                        onClick={() => downloadSubtitle(file.url, file.title)}
                         disabled={!selectedSub}
                         className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold w-full py-2 rounded-xl transition-all duration-300 disabled:opacity-50"
                       >
