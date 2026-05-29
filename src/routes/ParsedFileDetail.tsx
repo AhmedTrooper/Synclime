@@ -466,7 +466,7 @@ export default function ParsedFileDetail() {
               <button
                 type="button"
                 onClick={() => setSelectionMode("custom")}
-                className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-3 sm:py-2 rounded-xl text-[10px] sm:text-xs font-bold tracking-wider transition-all select-none ${
+                className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-3 sm:py-2 rounded-md text-[10px] sm:text-xs font-bold tracking-wider transition-all select-none ${
                   selectionMode === "custom"
                     ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
                     : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
@@ -478,7 +478,7 @@ export default function ParsedFileDetail() {
               <button
                 type="button"
                 onClick={() => setSelectionMode("fallback")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all select-none ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold tracking-wider transition-all select-none ${
                   selectionMode === "fallback"
                     ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
                     : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
@@ -509,10 +509,10 @@ export default function ParsedFileDetail() {
                       return (
                         <div
                           key={v.format_id}
-                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm min-w-0 ${
+                          className={`border cursor-pointer select-none transition-colors rounded-lg p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-3 text-left min-w-0 ${
                             isSelected
-                              ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                              : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                              ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-500/10"
+                              : "border-zinc-200 dark:border-white/5 bg-white dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                           }`}
                           onClick={() => setSelectedVideo(isSelected ? "" : v.format_id)}
                         >
@@ -568,10 +568,10 @@ export default function ParsedFileDetail() {
                       return (
                         <div
                           key={a.format_id}
-                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm min-w-0 ${
+                          className={`border cursor-pointer select-none transition-colors rounded-lg p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-3 text-left min-w-0 ${
                             isSelected
-                              ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-                              : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                              ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                              : "border-zinc-200 dark:border-white/5 bg-white dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                           }`}
                           onClick={() => setSelectedAudio(isSelected ? "" : a.format_id)}
                         >
@@ -630,10 +630,10 @@ export default function ParsedFileDetail() {
                     return (
                       <div
                         key={preset.value}
-                        className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-4 text-left hover:scale-[1.005] active:scale-[0.995] shadow-sm min-w-0 ${
+                        className={`border cursor-pointer select-none transition-colors rounded-lg p-3 sm:p-4 flex flex-row items-center justify-between gap-2 sm:gap-4 text-left min-w-0 ${
                           isSelected
-                            ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-md"
-                            : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                            ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-500/10"
+                            : "border-zinc-200 dark:border-white/5 bg-white dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                         }`}
                         onClick={() => setSelectedPreset(preset.value)}
                       >
