@@ -4,7 +4,7 @@ use rusqlite::Connection;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
-use tauri::Manager;
+use tauri::Manager; // Cleaned: Only imported once right here
 use tokio::process::Child;
 use tokio::sync::{mpsc, Semaphore};
 
@@ -254,7 +254,8 @@ pub fn run() {
     builder = builder.invoke_handler(tauri::generate_handler![
         commands::clipboard::process_clipboard_paste,
         commands::queue::trigger_job_start,
-        commands::queue::request_job_pause
+        commands::queue::request_job_pause,
+        commands::discovery::discover_asset_metadata
     ]);
 
     match builder.run(tauri::generate_context!()) {

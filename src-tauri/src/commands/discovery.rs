@@ -1,0 +1,153 @@
+use crate::engine::structures::{parse_extraction_payload, DiscoveryResult};
+use crate::AppEngineState;
+use rusqlite::{params, Connection};
+use std::process::Stdio;
+use tauri::AppHandle;
+use tauri::Manager; // FIXED: Brought the Manager trait into scope to activate .state() lookups
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::Command;
+
+#[derive(serde::Serialize)]
+pub struct DiscoveryResponse {
+    pub success: bool,
+    pub payload: Option<DiscoveryResult>,
+    pub error_message: Option<String>,
+}
+
+struct OptionalSiteConfig {
+    cookie_data: Option<String>,
+    proxy_string: Option<String>,
+}
+
+/// Dynamic Configuration Resolver: Scans SQLite for default site configs or specific profile hooks
+fn resolve_discovery_configs(db_path: &std::path::Path, target_url: &str) -> OptionalSiteConfig {
+    let mut config = OptionalSiteConfig {
+        cookie_data: None,
+        proxy_string: None,
+    };
+
+    let parsed_url = match url::Url::parse(target_url) {
+        Ok(u) => u,
+        Err(_) => return config,
+    };
+
+    let host_domain = match parsed_url.host_str() {
+        Some(h) => h.replace("www.", ""),
+        None => return config,
+    };
+
+    if let Ok(conn) = Connection::open(db_path) {
+        let query = "
+            SELECT c.cookie_data, pr.proxy_string
+            FROM site_configs s
+            LEFT JOIN cookie_profiles c ON s.cookie_profile_slug = c.slug
+            LEFT JOIN proxy_profiles pr ON s.proxy_profile_slug = pr.slug
+            WHERE s.domain LIKE ?1 OR s.is_default = 1
+            ORDER BY s.is_default ASC
+            LIMIT 1;
+        ";
+
+        if let Ok(mut stmt) = conn.prepare(query) {
+            let search_pattern = format!("%{}%", host_domain);
+            if let Ok(mut rows) = stmt.query(params![search_pattern]) {
+                if let Ok(Some(row)) = rows.next() {
+                    config.cookie_data = row.get(0).ok();
+                    config.proxy_string = row.get(1).ok();
+                }
+            }
+        }
+    }
+    config
+}
+
+/// Tauri IPC Command: Spawns a high-speed json extraction worker pool thread to read site parameters
+#[tauri::command]
+pub async fn discover_asset_metadata(
+    app_handle: AppHandle,
+    target_url: String,
+) -> Result<DiscoveryResponse, String> {
+    let state = app_handle.state::<AppEngineState>();
+
+    // 1. Automatically fetch proxy and cookie parameters matching the domain
+    let site_config = resolve_discovery_configs(&state.db_path, &target_url);
+
+    // 2. Assemble optimized yt-dlp arguments for safe structural metadata extraction
+    let mut cmd = Command::new("yt-dlp");
+    cmd.arg("--dump-json");
+    cmd.arg("--no-playlist"); // Only fetch the direct link target parameters during high-speed probing
+
+    if let Some(ref proxy) = site_config.proxy_string {
+        cmd.arg("--proxy").arg(proxy);
+    }
+    if let Some(ref cookies) = site_config.cookie_data {
+        cmd.arg("--cookies-from-viewer").arg(cookies);
+    }
+
+    cmd.arg(&target_url);
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    // 3. Spawn the child container process safely
+    let mut child = match cmd.spawn() {
+        Ok(c) => c,
+        Err(err) => {
+            return Ok(DiscoveryResponse {
+                success: false,
+                payload: None,
+                error_message: Some(format!(
+                    "Failed to initialize extraction sub-engine: {}",
+                    err
+                )),
+            })
+        }
+    };
+
+    let stdout_pipe = match child.stdout.take() {
+        Some(out) => out,
+        None => {
+            return Ok(DiscoveryResponse {
+                success: false,
+                payload: None,
+                error_message: Some(
+                    "Failed to hook standard output allocation handle.".to_string(),
+                ),
+            })
+        }
+    };
+
+    // 4. In-Memory Aggregator: Read the json text stream lines chunk-by-chunk
+    let mut reader = BufReader::new(stdout_pipe).lines();
+    let mut raw_json_accumulator = String::new();
+
+    while let Ok(Some(line)) = reader.next_line().await {
+        raw_json_accumulator.push_str(&line);
+    }
+
+    // Await process exit completion status safely
+    let _ = child.wait().await;
+
+    if raw_json_accumulator.is_empty() {
+        return Ok(DiscoveryResponse {
+            success: false,
+            payload: None,
+            error_message: Some(
+                "Extraction sub-engine returned a completely empty stream buffer data block."
+                    .to_string(),
+            ),
+        });
+    }
+
+    // 5. Evaluate accumulator data through our resilient fallback property prober engine
+    match parse_extraction_payload(&raw_json_accumulator) {
+        Ok(discovery_variant) => Ok(DiscoveryResponse {
+            success: true,
+            payload: Some(discovery_variant),
+            error_message: None,
+        }),
+        Err(parse_err) => Ok(DiscoveryResponse {
+            success: false,
+            payload: None,
+            error_message: Some(parse_err),
+        }),
+    }
+}
