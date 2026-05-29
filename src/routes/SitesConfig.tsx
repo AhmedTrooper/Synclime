@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useUIStore } from "../store/useUIStore";
-import { Plus, Trash2, Edit2, Save, X, Settings2, ShieldCheck, Database, GlobeLock } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, Settings2, ShieldCheck, Database, GlobeLock, CheckSquare, Square } from "lucide-react";
 
 export interface CookieProfile {
   slug: string;
@@ -348,9 +348,10 @@ export default function SitesConfig() {
                 />
                 <button
                   type="submit"
-                  className="w-full sm:w-auto self-end bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-sm shadow-md shadow-emerald-500/20"
+                  className="w-full sm:w-auto self-end flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 sm:p-2 rounded-xl sm:rounded-lg transition-colors shadow-md shadow-emerald-500/20"
+                  title="Save Profile"
                 >
-                  Save Profile
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </form>
             </div>
@@ -365,17 +366,18 @@ export default function SitesConfig() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={toggleSelectAll}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                      className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-md transition-colors"
+                      title={selectedCookies.length === cookies.length ? "Deselect All" : "Select All"}
                     >
-                      {selectedCookies.length === cookies.length ? "Deselect All" : "Select All"}
+                      {selectedCookies.length === cookies.length ? <Square className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
                     </button>
                     {selectedCookies.length > 0 && (
                       <button
                         onClick={handleBatchDeleteCookies}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold rounded-md transition-colors text-xs"
+                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-md transition-colors"
+                        title="Delete Selected"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete ({selectedCookies.length})
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -437,10 +439,10 @@ export default function SitesConfig() {
                         />
                         <button
                           onClick={() => handleUpdateCookie(cookie.slug)}
-                          className="w-full sm:w-auto self-end flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 sm:py-1.5 rounded-lg transition-colors text-xs shadow-md shadow-blue-500/20"
+                          className="w-full sm:w-auto self-end flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white p-2 sm:p-1.5 rounded-lg transition-colors shadow-md shadow-blue-500/20"
+                          title="Save Updates"
                         >
-                          <Save className="w-3.5 h-3.5" />
-                          Update String
+                          <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                         </button>
                       </div>
                     )}
@@ -507,9 +509,10 @@ export default function SitesConfig() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto self-end bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-sm shadow-md shadow-emerald-500/20"
+                  className="w-full sm:w-auto self-end flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 sm:p-2 rounded-xl sm:rounded-lg transition-colors shadow-md shadow-emerald-500/20"
+                  title="Create Rule"
                 >
-                  Create Rule
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </form>
             </div>
@@ -604,9 +607,10 @@ export default function SitesConfig() {
                 />
                 <button
                   type="submit"
-                  className="w-full sm:w-auto self-end bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-sm shadow-md shadow-emerald-500/20"
+                  className="w-full sm:w-auto self-end flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 sm:p-2 rounded-xl sm:rounded-lg transition-colors shadow-md shadow-emerald-500/20"
+                  title="Save Profile"
                 >
-                  Save Profile
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </form>
             </div>
@@ -621,17 +625,18 @@ export default function SitesConfig() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={toggleSelectAllProxies}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                      className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-md transition-colors"
+                      title={selectedProxies.length === proxies.length ? "Deselect All" : "Select All"}
                     >
-                      {selectedProxies.length === proxies.length ? "Deselect All" : "Select All"}
+                      {selectedProxies.length === proxies.length ? <Square className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
                     </button>
                     {selectedProxies.length > 0 && (
                       <button
                         onClick={handleBatchDeleteProxies}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold rounded-md transition-colors text-xs"
+                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-md transition-colors"
+                        title="Delete Selected"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete ({selectedProxies.length})
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -694,10 +699,10 @@ export default function SitesConfig() {
                         />
                         <button
                           onClick={() => handleUpdateProxy(proxy.slug)}
-                          className="w-full sm:w-auto self-end flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 sm:py-1.5 rounded-lg transition-colors text-xs shadow-md shadow-blue-500/20"
+                          className="w-full sm:w-auto self-end flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white p-2 sm:p-1.5 rounded-lg transition-colors shadow-md shadow-blue-500/20"
+                          title="Save Updates"
                         >
-                          <Save className="w-3.5 h-3.5" />
-                          Update String
+                          <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                         </button>
                       </div>
                     )}
