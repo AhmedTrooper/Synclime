@@ -103,10 +103,8 @@ pub async fn execute_download_worker(
     app_handle: AppHandle,
     job_slug: String,
 ) -> Result<(), EngineError> {
-    // FIXED: Changed from match state lookup to a direct state fetch to adapt to Tauri v2 definitions
     let state = app_handle.state::<AppEngineState>();
 
-    // 1. Resolve every format, URL, proxy, and cookie parameter from SQLite using zero unwrap statements
     let config = match resolve_job_parameters(&state.db_path, &job_slug) {
         Ok(cfg) => cfg,
         Err(err) => return Err(EngineError::ProcessSpawnFailed(err)),
@@ -117,34 +115,27 @@ pub async fn execute_download_worker(
         Err(e) => return Err(EngineError::ProcessSpawnFailed(e.to_string())),
     };
 
-    // 2. Assemble our multi-threaded command arguments array dynamically
     let mut cmd = Command::new("yt-dlp");
     cmd.arg("-f").arg(&config.format_string);
     cmd.arg("--newline");
 
-    // 3. Conditionally append Proxy arguments if established on the config profile
     if let Some(ref proxy_url) = config.proxy_string {
         cmd.arg("--proxy").arg(proxy_url);
     }
 
-    // 4. Conditionally handle security cookie authentication strings safely if present
     if let Some(ref cookies) = config.cookie_data {
         cmd.arg("--cookies-from-viewer").arg(cookies);
     }
 
-    // Append our target extraction address destination parameter
     cmd.arg(&config.target_url);
-
-    // 5. Configure standard descriptor pipelines
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
-    let mut child = match cmd.spawn() {
+    let child = match cmd.spawn() {
         Ok(c) => c,
         Err(e) => return Err(EngineError::ProcessSpawnFailed(e.to_string())),
     };
 
-    // Safe Process ID caching steps
     let mut child_process = {
         let mut active_instances = state.active_processes.instances.write();
         active_instances.insert(job_slug.clone(), child);
@@ -199,15 +190,17 @@ pub async fn execute_download_worker(
         }
     }
 
-    let clean_exit = {
+    let remaining_process = {
         let mut active_instances = state.active_processes.instances.write();
-        match active_instances.remove(&job_slug) {
-            Some(mut remaining_child) => match remaining_child.wait().await {
-                Ok(status) => status.success(),
-                Err(_) => false,
-            },
-            None => false,
-        }
+        active_instances.remove(&job_slug)
+    };
+
+    let clean_exit = match remaining_process {
+        Some(mut remaining_child) => match remaining_child.wait().await {
+            Ok(status) => status.success(),
+            Err(_) => false,
+        },
+        None => false,
     };
 
     if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {

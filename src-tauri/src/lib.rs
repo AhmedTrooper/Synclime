@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS parsed_files (
     title TEXT NOT NULL,
     sanitized_title TEXT NOT NULL,
     is_playlist INTEGER NOT NULL CHECK (is_playlist IN (0, 1)),
-    parent_playlist_slug TEXT REFERENCES parsed_files(slug) ON DELETE SET NULL,
+    parent_playlist_slug REFERENCES parsed_files(slug) ON DELETE SET NULL,
     playlist_name TEXT,
     sanitized_playlist_name TEXT,
     json_metadata TEXT,
@@ -217,7 +217,6 @@ pub fn run() {
             start_cancellation_worker(signal_rx, worker_registry).await;
         });
 
-        // FIXED: Added full explicit type annotations to satisfy the compiler type inference check
         let progress_cache: Arc<parking_lot::Mutex<HashMap<String, ProgressSnapshot>>> =
             Arc::new(parking_lot::Mutex::new(HashMap::new()));
 
@@ -253,7 +252,9 @@ pub fn run() {
     });
 
     builder = builder.invoke_handler(tauri::generate_handler![
-        commands::clipboard::process_clipboard_paste
+        commands::clipboard::process_clipboard_paste,
+        commands::queue::trigger_job_start,
+        commands::queue::request_job_pause
     ]);
 
     match builder.run(tauri::generate_context!()) {
