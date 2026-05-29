@@ -20,6 +20,17 @@ export interface ProxyProfile {
   updated_at: string;
 }
 
+export interface SiteConfig {
+  slug: string;
+  title: string;
+  domain: string;
+  cookie_profile_slug: string | null;
+  proxy_profile_slug: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function SitesConfig() {
   const { setActivePath } = useUIStore();
   const [activeTab, setActiveTab] = useState<"sites" | "cookies" | "proxies">("cookies");
@@ -45,10 +56,18 @@ export default function SitesConfig() {
   const [editingProxy, setEditingProxy] = useState<string | null>(null);
   const [editProxyData, setEditProxyData] = useState("");
 
+  // Site Router State
+  const [sites, setSites] = useState<SiteConfig[]>([]);
+  const [newSiteTitle, setNewSiteTitle] = useState("");
+  const [newSiteDomain, setNewSiteDomain] = useState("");
+  const [newSiteCookieSlug, setNewSiteCookieSlug] = useState("");
+  const [newSiteProxySlug, setNewSiteProxySlug] = useState("");
+
   useEffect(() => {
     setActivePath("/sites_config");
     loadCookies();
     loadProxies();
+    loadSites();
   }, [setActivePath]);
 
   const loadCookies = async () => {
@@ -196,6 +215,58 @@ export default function SitesConfig() {
       setSelectedProxies([]);
     } else {
       setSelectedProxies(proxies.map(p => p.slug));
+    }
+  };
+
+  const loadSites = async () => {
+    try {
+      const data = await invoke<SiteConfig[]>("get_site_configs");
+      setSites(data);
+    } catch (err) {
+      console.error("Failed to load sites", err);
+    }
+  };
+
+  const handleAddSite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSiteTitle || !newSiteDomain) return;
+    try {
+      await invoke("add_site_config", {
+        title: newSiteTitle,
+        domain: newSiteDomain,
+        cookieProfileSlug: newSiteCookieSlug || null,
+        proxyProfileSlug: newSiteProxySlug || null,
+        isDefault: false,
+      });
+      setNewSiteTitle("");
+      setNewSiteDomain("");
+      setNewSiteCookieSlug("");
+      setNewSiteProxySlug("");
+      loadSites();
+    } catch (err) {
+      console.error("Failed to add site", err);
+    }
+  };
+
+  const handleDeleteSite = async (slug: string) => {
+    try {
+      await invoke("delete_site_config", { slug });
+      loadSites();
+    } catch (err) {
+      console.error("Failed to delete site", err);
+    }
+  };
+
+  const handleUpdateSite = async (slug: string, cookieSlug: string | null, proxySlug: string | null) => {
+    try {
+      await invoke("update_site_config", {
+        slug,
+        cookieProfileSlug: cookieSlug,
+        proxyProfileSlug: proxySlug,
+      });
+      loadSites();
+    } catch (err) {
+      console.error("Failed to update site", err);
     }
   };
 
@@ -387,8 +458,122 @@ export default function SitesConfig() {
         )}
         
         {activeTab === "sites" && (
-          <div className="text-center py-10 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
-            <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Site Router coming next.</span>
+          <div className="flex flex-col gap-6">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-sm">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-emerald-500" />
+                Add New Domain Rule
+              </h3>
+              <form onSubmit={handleAddSite} className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Rule Title (e.g. YouTube Restricted)"
+                    value={newSiteTitle}
+                    onChange={(e) => setNewSiteTitle(e.target.value)}
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Domain Match (e.g. youtube.com)"
+                    value={newSiteDomain}
+                    onChange={(e) => setNewSiteDomain(e.target.value)}
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm font-mono"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <select
+                    value={newSiteCookieSlug}
+                    onChange={(e) => setNewSiteCookieSlug(e.target.value)}
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
+                  >
+                    <option value="">No Cookie Profile Assigned</option>
+                    {cookies.map(c => (
+                      <option key={c.slug} value={c.slug}>{c.title} ({c.domain})</option>
+                    ))}
+                  </select>
+                  <select
+                    value={newSiteProxySlug}
+                    onChange={(e) => setNewSiteProxySlug(e.target.value)}
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
+                  >
+                    <option value="">No Proxy Profile Assigned</option>
+                    {proxies.map(p => (
+                      <option key={p.slug} value={p.slug}>{p.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto self-end bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-sm shadow-md shadow-emerald-500/20"
+                >
+                  Create Rule
+                </button>
+              </form>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                Active Domain Rules ({sites.length})
+              </h3>
+              
+              <div className="flex flex-col gap-3">
+                {sites.map(site => (
+                  <div key={site.slug} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white">{site.title}</span>
+                        <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">{site.domain}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteSite(site.slug)}
+                        className="p-1.5 text-red-500/70 hover:text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 rounded-md transition-colors flex-shrink-0"
+                        title="Delete Rule"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Cookie Override</span>
+                        <select
+                          value={site.cookie_profile_slug || ""}
+                          onChange={(e) => handleUpdateSite(site.slug, e.target.value || null, site.proxy_profile_slug)}
+                          className="w-full px-2 py-1.5 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs text-zinc-900 dark:text-white"
+                        >
+                          <option value="">None</option>
+                          {cookies.map(c => (
+                            <option key={c.slug} value={c.slug}>{c.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Proxy Override</span>
+                        <select
+                          value={site.proxy_profile_slug || ""}
+                          onChange={(e) => handleUpdateSite(site.slug, site.cookie_profile_slug, e.target.value || null)}
+                          className="w-full px-2 py-1.5 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs text-zinc-900 dark:text-white"
+                        >
+                          <option value="">None</option>
+                          {proxies.map(p => (
+                            <option key={p.slug} value={p.slug}>{p.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {sites.length === 0 && (
+                  <div className="text-center py-10 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">No domain rules configured.</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

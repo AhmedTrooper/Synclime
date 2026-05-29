@@ -269,7 +269,11 @@ pub fn run() {
         commands::config::get_proxy_profiles,
         commands::config::update_proxy_data,
         commands::config::delete_proxy_profile,
-        commands::config::batch_delete_proxy_profiles
+        commands::config::batch_delete_proxy_profiles,
+        commands::config::add_site_config,
+        commands::config::get_site_configs,
+        commands::config::update_site_config,
+        commands::config::delete_site_config
     ]);
 
     match builder.run(tauri::generate_context!()) {
