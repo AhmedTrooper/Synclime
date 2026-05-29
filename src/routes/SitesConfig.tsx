@@ -55,7 +55,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, compact = false }
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute z-50 w-full mt-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-xl overflow-hidden py-1 max-h-60 overflow-y-auto custom-scrollbar animate-fade-in origin-top">
+          <div className="absolute z-50 w-full mt-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar animate-fade-in origin-top">
             <button
               type="button"
               onClick={() => { onChange(""); setIsOpen(false); }}
