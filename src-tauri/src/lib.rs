@@ -10,6 +10,7 @@ use tokio::sync::{mpsc, Semaphore};
 
 pub mod commands;
 pub mod database;
+pub mod engine;
 
 pub enum QueueSignal {
     PauseJob(String),
@@ -19,11 +20,17 @@ pub struct ActiveProcessRegistry {
     pub instances: Arc<RwLock<HashMap<String, Child>>>,
 }
 
+pub struct ProgressSnapshot {
+    pub progress: f64,
+    pub status_message: String,
+}
+
 pub struct AppEngineState {
     pub pool_semaphore: Arc<Semaphore>,
     pub db_path: std::path::PathBuf,
     pub active_processes: Arc<ActiveProcessRegistry>,
     pub signal_tx: mpsc::Sender<QueueSignal>,
+    pub progress_cache: Arc<parking_lot::Mutex<HashMap<String, ProgressSnapshot>>>,
 }
 
 const DATABASE_MIGRATION_SCHEMA: &str = r#"
@@ -210,17 +217,41 @@ pub fn run() {
             start_cancellation_worker(signal_rx, worker_registry).await;
         });
 
+        // FIXED: Added full explicit type annotations to satisfy the compiler type inference check
+        let progress_cache: Arc<parking_lot::Mutex<HashMap<String, ProgressSnapshot>>> =
+            Arc::new(parking_lot::Mutex::new(HashMap::new()));
+
+        let flush_db_path = db_path.clone();
+        let flush_cache = Arc::clone(&progress_cache);
+        tauri::async_runtime::spawn(async move {
+            loop {
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                let mut cache = flush_cache.lock();
+                if !cache.is_empty() {
+                    if let Ok(conn) = rusqlite::Connection::open(&flush_db_path) {
+                        for (slug, snapshot) in cache.iter() {
+                            let _ = conn.execute(
+                                "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, updated_at = datetime('now') WHERE slug = ?3;",
+                                rusqlite::params![snapshot.progress, snapshot.status_message, slug]
+                            );
+                        }
+                        cache.clear();
+                    }
+                }
+            }
+        });
+
         app.manage(AppEngineState {
             pool_semaphore: Arc::new(Semaphore::new(3)),
             db_path,
             active_processes: process_registry,
             signal_tx,
+            progress_cache,
         });
 
         Ok(())
     });
 
-    // RESTORED: Wire the commands route hub back into the execution container framework
     builder = builder.invoke_handler(tauri::generate_handler![
         commands::clipboard::process_clipboard_paste
     ]);
