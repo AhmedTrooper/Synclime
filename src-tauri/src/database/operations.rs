@@ -91,7 +91,7 @@ pub fn create_download_job(db_path: &Path, job: &DownloadJobRow) -> Result<(), D
     };
 
     let query = "
-        INSERT INTO download_jobs (
+        INSERT OR IGNORE INTO download_jobs (
             slug, parsed_file_slug, file_type, associated_media_job_slug,
             is_direct_url, direct_url, is_from_playlist, current_part, total_parts,
             base_download_path, custom_download_path, cookie_profile_slug, proxy_profile_slug,

@@ -15,41 +15,30 @@ pub async fn trigger_job_start(
     state: State<'_, AppEngineState>,
     job_slug: String,
 ) -> Result<CommandResponse, String> {
-    // 1. Instantly verify and mark the database state row as 'downloading' to prevent double-triggering
-    let conn = match rusqlite::Connection::open(&state.db_path) {
-        Ok(c) => c,
-        Err(e) => {
-            return Ok(CommandResponse {
-                success: false,
-                message: e.to_string(),
-            })
-        }
+    // 1. Check the true in-memory registry to see if the process is currently alive
+    // This entirely bypasses SQLite disk-write lag race conditions where a killed worker 
+    // hasn't finished writing its 'paused' state yet.
+    let is_running = {
+        let instances = state.active_processes.instances.read();
+        instances.contains_key(&job_slug)
     };
 
-    let update_res = conn.execute(
-        "UPDATE download_jobs SET status = 'downloading', updated_at = datetime('now') WHERE slug = ?1 AND status != 'downloading';",
-        rusqlite::params![job_slug]
-    );
-
-    match update_res {
-        Ok(rows_affected) => {
-            if rows_affected == 0 {
-                return Ok(CommandResponse {
-                    success: false,
-                    message: "Job is already actively downloading or missing from record lines."
-                        .to_string(),
-                });
-            }
-        }
-        Err(e) => {
-            return Ok(CommandResponse {
-                success: false,
-                message: e.to_string(),
-            })
-        }
+    if is_running {
+        return Ok(CommandResponse {
+            success: true,
+            message: "Job is already actively running in memory. Ignored duplicate trigger.".to_string(),
+        });
     }
 
-    // 2. Offload the heavy execution tracking thread task safely onto Tauri's managed background worker pool
+    // 2. Safely enforce the downloading state in SQLite now that we know it's not running
+    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+        let _ = conn.execute(
+            "UPDATE download_jobs SET status = 'downloading', updated_at = datetime('now') WHERE slug = ?1;",
+            rusqlite::params![job_slug]
+        );
+    }
+
+    // 3. Offload the heavy execution tracking thread task safely onto Tauri's managed background worker pool
     let worker_slug = job_slug.clone();
     tauri::async_runtime::spawn(async move {
         let _ = execute_download_worker(app_handle, worker_slug).await;
