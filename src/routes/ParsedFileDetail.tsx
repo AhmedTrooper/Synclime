@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useParseStore } from "../store/useParseStore";
-import { useQueueStore, DownloadJob } from "../store/useQueueStore";
+import { useQueueStore } from "../store/useQueueStore";
 import { useUIStore } from "../store/useUIStore";
 
 import { ArrowLeft, Download, Film, Music, Globe, List, Clock, PlayCircle, Settings, CheckCircle2, Sliders, ToggleLeft, CheckSquare, Square } from "lucide-react";
@@ -11,7 +11,6 @@ export default function ParsedFileDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { parsedFiles } = useParseStore();
-  const { addJob } = useQueueStore();
 
   const file = parsedFiles.find((f) => f.slug === slug);
   const [selectedSubs, setSelectedSubs] = useState<string[]>([]);
@@ -94,92 +93,42 @@ export default function ParsedFileDetail() {
     return "bestvideo+bestaudio/best"; // Global fallback
   };
 
-  // Triggers the download queue addition
-  const startDownload = async (formatString: string, isAudio = false, customName?: string) => {
-    try {
-      const uniqueSlug = `dl-${Date.now()}`;
-      const jobName = customName || file.title;
-      
-      const newJob: DownloadJob = {
-        slug: uniqueSlug,
-        name: jobName,
-        url: file.url,
-        progress: 0,
-        status: "pending",
-        message: "Queued for extraction download...",
-        fileType: isAudio ? "audio" : "video",
-        formatString: formatString,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Add to store
-      addJob(newJob);
-
-      const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
-
-      if (isTauri) {
-        // Pre-register job in the SQLite registry
-        try {
-          const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", {
-            payload: {
-              slug: newJob.slug,
-              url: newJob.url,
-              parsed_file_slug: file.slug,
-              file_type: newJob.fileType,
-              associated_media_job_slug: null,
-              is_from_playlist: file.isPlaylist,
-              format_string: newJob.formatString || "bestvideo+bestaudio/best",
-              download_path: useUIStore.getState().downloadPath,
-              created_at: newJob.createdAt,
-            }
-          });
-          if (!insertRes.success) throw new Error(insertRes.message);
-        } catch (e: any) {
-          console.error("Database pre-registration error:", e);
-          const errMsg = e.message || "Failed to construct the initial job record in SQLite.";
-          useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
-          useQueueStore.getState().updateJobProgress(uniqueSlug, 0, errMsg);
-          return;
-        }
-
-        // Attempt calling Tauri invoke start command
-        try {
-          const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: uniqueSlug });
-          if (!res.success) {
-            throw new Error(res.message);
-          }
-        } catch (e: any) {
-          console.error("trigger_job_start invoke error:", e);
-          const errMsg = e.message || "Failed to initialize native extraction downloader.";
-          useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
-          useQueueStore.getState().updateJobProgress(uniqueSlug, 0, errMsg);
-        }
-      } else {
-        // Simulate progress on web fallback (browser preview only)
-        let currentProgress = 0;
-        const interval = setInterval(() => {
-          currentProgress += Math.floor(Math.random() * 15) + 5;
-          if (currentProgress >= 100) {
-            currentProgress = 100;
-            useQueueStore.getState().updateJobProgress(uniqueSlug, 100, "Download task completed.");
-            useQueueStore.getState().updateJobStatus(uniqueSlug, "completed");
-            clearInterval(interval);
-          } else {
-            useQueueStore.getState().updateJobProgress(
-              uniqueSlug,
-              currentProgress,
-              `${(Math.random() * 8 + 3).toFixed(2)}MB/s ETA 00:0${Math.floor((100 - currentProgress) / 10)}`
-            );
-            useQueueStore.getState().updateJobStatus(uniqueSlug, "downloading");
-          }
-        }, 1500);
+  // Unified Backend Dispatcher
+  const dispatchDownloadJob = async (jobPayload: any) => {
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", { payload: jobPayload });
+        if (!insertRes.success) throw new Error(insertRes.message);
+        
+        const startRes = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: jobPayload.slug });
+        if (!startRes.success) throw new Error(startRes.message);
+      } catch (e: any) {
+        console.error(`Dispatch failed for ${jobPayload.slug}:`, e);
       }
-
-      // Redirect to downloads queue page
-      navigate("/downloads");
-    } catch (err: any) {
-      console.error("Failed to inject job:", err);
+    } else {
+      // Browser fallback - simulate backend
+      console.log(`[Browser Preview] Job ${jobPayload.slug} dispatched to backend mock.`);
     }
+  };
+
+  // Triggers the download queue addition
+  const startDownload = async (formatString: string, isAudio = false, _customName?: string) => {
+    const uniqueSlug = `dl-${Date.now()}`;
+    
+    await dispatchDownloadJob({
+      slug: uniqueSlug,
+      url: file.url,
+      parsed_file_slug: file.slug,
+      file_type: isAudio ? "audio" : "video",
+      associated_media_job_slug: null,
+      is_from_playlist: file.isPlaylist,
+      format_string: formatString || "bestvideo+bestaudio/best",
+      download_path: useUIStore.getState().downloadPath,
+      created_at: new Date().toISOString(),
+    });
+
+    navigate("/downloads");
   };
 
   // Bulk downloads all playlist tracks using the selected fallback rule
@@ -190,75 +139,28 @@ export default function ParsedFileDetail() {
     }
     if (targetTracks.length === 0) return;
     
-    // Pass the active adaptive format string preset selected by the user
     const playlistFormatString = selectedPreset;
-    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
 
     for (const track of targetTracks) {
       const trackSlug = `track-${track.id}-${Date.now()}`;
-      const newJob: DownloadJob = {
+      
+      await dispatchDownloadJob({
         slug: trackSlug,
-        name: track.title,
         url: track.url,
-        progress: 0,
-        status: "pending",
-        message: "Playlist batch job initialized...",
-        fileType: "video",
-        formatString: playlistFormatString,
-        createdAt: new Date().toISOString(),
-      };
-
-      addJob(newJob);
-
-      if (isTauri) {
-        // Pre-register job in the SQLite registry
-        try {
-          const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", {
-            payload: {
-              slug: newJob.slug,
-              url: newJob.url,
-              parsed_file_slug: file.slug,
-              file_type: newJob.fileType,
-              associated_media_job_slug: null,
-              is_from_playlist: file.isPlaylist,
-              format_string: newJob.formatString || "bestvideo+bestaudio/best",
-              download_path: useUIStore.getState().downloadPath,
-              created_at: newJob.createdAt,
-            }
-          });
-          if (!insertRes.success) throw new Error(insertRes.message);
-        } catch (e: any) {
-          console.error(`Database pre-registration error for playlist item ${track.title}:`, e);
-          const errMsg = e.message || "Failed to construct the initial job record in SQLite.";
-          useQueueStore.getState().updateJobStatus(trackSlug, "error");
-          useQueueStore.getState().updateJobProgress(trackSlug, 0, errMsg);
-          continue;
-        }
-
-        try {
-          const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: trackSlug });
-          if (!res.success) {
-            throw new Error(res.message);
-          }
-        } catch (e: any) {
-          console.error(`trigger_job_start invoke error on playlist item ${track.title}:`, e);
-          const errMsg = e.message || "Failed to initialize native extraction downloader.";
-          useQueueStore.getState().updateJobStatus(trackSlug, "error");
-          useQueueStore.getState().updateJobProgress(trackSlug, 0, errMsg);
-        }
-      } else {
-        // Direct complete simulation (browser preview only)
-        setTimeout(() => {
-          useQueueStore.getState().updateJobProgress(trackSlug, 100, "Finished batch item.");
-          useQueueStore.getState().updateJobStatus(trackSlug, "completed");
-        }, 2000 + Math.random() * 3000);
-      }
+        parsed_file_slug: file.slug,
+        file_type: "video",
+        associated_media_job_slug: null,
+        is_from_playlist: file.isPlaylist,
+        format_string: playlistFormatString || "bestvideo+bestaudio/best",
+        download_path: useUIStore.getState().downloadPath,
+        created_at: new Date().toISOString(),
+      });
     }
 
     navigate("/downloads");
   };
 
-  const downloadSubtitle = async (targetUrl: string, trackTitle: string) => {
+  const downloadSubtitle = async (targetUrl: string, _trackTitle: string) => {
     if (selectedSubs.length === 0) {
       alert("Please select at least one subtitle language from the checkbox list first!");
       return;
@@ -270,50 +172,19 @@ export default function ParsedFileDetail() {
     
     const uniqueSlug = `dl-sub-${Date.now()}`;
     const joinedSubs = selectedSubs.includes("all") ? "all" : selectedSubs.join(",");
-    const jobName = `${trackTitle} (Sub - ${selectedSubs.includes("all") ? "ALL" : (selectedSubs.length === 1 ? selectedSubs[0].toUpperCase() : selectedSubs.length + ' Langs')})`;
     
-    const newJob: DownloadJob = {
+    await dispatchDownloadJob({
       slug: uniqueSlug,
-      name: jobName,
       url: targetUrl,
-      progress: 0,
-      status: "pending",
-      message: "Queued for subtitle extraction...",
-      fileType: "subtitle",
-      formatString: `bestvideo+bestaudio/best`,
-      createdAt: new Date().toISOString(),
-      associatedMediaJobSlug: parentJob ? parentJob.slug : undefined,
-      parsedFileSlug: file.slug,
-      isPlaylist: file.isPlaylist,
-      playlistName: file.isPlaylist ? file.title : undefined,
-    };
-
-    addJob(newJob);
-
-    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
-    if (isTauri) {
-      try {
-        await invoke("insert_job_record", {
-          payload: {
-            slug: newJob.slug,
-            url: newJob.url,
-            parsed_file_slug: newJob.parsedFileSlug,
-            file_type: newJob.fileType,
-            associated_media_job_slug: newJob.associatedMediaJobSlug || null,
-            is_from_playlist: newJob.isPlaylist,
-            format_string: newJob.formatString,
-            download_path: useUIStore.getState().downloadPath,
-            created_at: newJob.createdAt,
-            selected_subtitles: joinedSubs,
-          }
-        });
-        await invoke("trigger_job_start", { jobSlug: uniqueSlug });
-      } catch (e: any) {
-        console.error("Subtitle extraction failed:", e);
-        useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
-        useQueueStore.getState().updateJobProgress(uniqueSlug, 0, e.message || "Failed to start subtitle extraction");
-      }
-    }
+      parsed_file_slug: file.slug,
+      file_type: "subtitle",
+      associated_media_job_slug: parentJob ? parentJob.slug : null,
+      is_from_playlist: file.isPlaylist,
+      format_string: "bestvideo+bestaudio/best",
+      download_path: useUIStore.getState().downloadPath,
+      created_at: new Date().toISOString(),
+      selected_subtitles: joinedSubs,
+    });
     
     navigate("/downloads");
   };
