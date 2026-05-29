@@ -42,7 +42,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, compact = false }
   const selected = options.find(o => o.value === value);
 
   return (
-    <div className="relative w-full">
+    <div className={`relative w-full ${isOpen ? "z-50" : "z-10"}`}>
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -55,7 +55,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, compact = false }
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute z-50 w-full mt-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar animate-fade-in origin-top">
+          <div className="absolute z-50 w-full mt-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar overscroll-contain animate-fade-in origin-top pointer-events-auto">
             <button
               type="button"
               onClick={() => { onChange(""); setIsOpen(false); }}
@@ -361,7 +361,7 @@ export default function SitesConfig() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex flex-col gap-6 pb-10">
+      <div className="flex flex-col gap-6 pb-64">
         {activeTab === "cookies" && (
           <div className="flex flex-col gap-6">
             {/* Add Form */}
