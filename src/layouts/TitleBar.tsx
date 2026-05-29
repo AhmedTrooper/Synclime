@@ -1,9 +1,11 @@
-import { Minus, Square, X } from "lucide-react";
+import { Minus, Square, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function TitleBar() {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkFullscreen = async () => {
@@ -56,10 +58,31 @@ export default function TitleBar() {
       data-fullscreen={isFullscreen}
       className="flex items-center justify-between w-full h-10 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 select-none relative z-50 transition-colors duration-300"
     >
-      {/* Title / Drag region */}
-      <div data-tauri-drag-region className="flex items-center gap-2 cursor-default font-semibold text-xs tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-        <span data-tauri-drag-region className="bg-blue-500 w-1.5 h-1.5 rounded-full" />
-        <span data-tauri-drag-region>Synclime</span>
+      {/* Navigation & Drag region */}
+      <div data-tauri-drag-region className="flex items-center gap-3 sm:gap-4 cursor-default">
+        {/* History Controls */}
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-1 rounded-md hover:bg-zinc-800/10 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200"
+            title="Go Back"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigate(1)}
+            className="p-1 rounded-md hover:bg-zinc-800/10 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200"
+            title="Go Forward"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* App Title */}
+        <div data-tauri-drag-region className="flex items-center gap-2 font-semibold text-xs tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
+          <span data-tauri-drag-region className="bg-blue-500 w-1.5 h-1.5 rounded-full" />
+          <span data-tauri-drag-region className="hidden sm:inline">Synclime</span>
+        </div>
       </div>
 
       {/* Control Buttons */}

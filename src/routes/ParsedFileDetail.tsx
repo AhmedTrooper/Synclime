@@ -260,10 +260,15 @@ export default function ParsedFileDetail() {
     : [];
 
   const presetList = [
-    { label: "Best Quality Available", value: "bestvideo+bestaudio/best" },
-    { label: "Prefer 1080p or Lower", value: "bestvideo[height<=1080]+bestaudio/best" },
-    { label: "Prefer 720p or Lower", value: "bestvideo[height<=720]+bestaudio/best" },
-    { label: "Extract Audio Only", value: "bestaudio/best" },
+    { label: "Best Quality (Unlimited / 4K+)", value: "bestvideo+bestaudio/best" },
+    { label: "Best MP4 Format (Highly Compatible)", value: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" },
+    { label: "Max 1440p (QHD)", value: "bestvideo[height<=1440]+bestaudio/best" },
+    { label: "Max 1080p (FHD)", value: "bestvideo[height<=1080]+bestaudio/best" },
+    { label: "Max 720p (HD)", value: "bestvideo[height<=720]+bestaudio/best" },
+    { label: "Max 480p (SD - Data Saver)", value: "bestvideo[height<=480]+bestaudio/best" },
+    { label: "Max 360p (Low - Feature Phone Saver)", value: "bestvideo[height<=360]+bestaudio/best" },
+    { label: "Extract Audio Only (Highest)", value: "bestaudio/best" },
+    { label: "Extract Audio Only (M4A Native)", value: "bestaudio[ext=m4a]/bestaudio/best" },
   ];
 
   // Filtering clean streams for Layer 1 Selection Grid
