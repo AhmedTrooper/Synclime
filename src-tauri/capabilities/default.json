@@ -63,6 +63,12 @@
     "os:allow-hostname",
     "os:allow-locale",
     "os:allow-platform",
-    "os:allow-version"
+    "os:allow-version",
+    "shell:allow-open",
+    "opener:allow-reveal-item-in-dir",
+    "opener:allow-open-path",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save"
   ]
 }
