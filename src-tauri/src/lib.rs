@@ -8,6 +8,8 @@ use tauri::Manager;
 use tokio::process::Child;
 use tokio::sync::{mpsc, Semaphore};
 
+pub mod commands;
+
 pub enum QueueSignal {
     PauseJob(String),
 }
@@ -203,8 +205,6 @@ pub fn run() {
 
         let worker_registry = Arc::clone(&process_registry);
 
-        // FIX: Switch from tokio::spawn to tauri::async_runtime::spawn
-        // to safely hook into Tauri's managed async thread reactor pool.
         tauri::async_runtime::spawn(async move {
             start_cancellation_worker(signal_rx, worker_registry).await;
         });
@@ -218,6 +218,11 @@ pub fn run() {
 
         Ok(())
     });
+
+    // RESTORED: Wire the commands route hub back into the execution container framework
+    builder = builder.invoke_handler(tauri::generate_handler![
+        commands::clipboard::process_clipboard_paste
+    ]);
 
     match builder.run(tauri::generate_context!()) {
         Ok(_) => {}
