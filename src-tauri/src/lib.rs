@@ -9,6 +9,7 @@ use tokio::process::Child;
 use tokio::sync::{mpsc, Semaphore};
 
 pub mod commands;
+pub mod database;
 
 pub enum QueueSignal {
     PauseJob(String),
