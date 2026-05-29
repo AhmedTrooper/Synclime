@@ -118,3 +118,116 @@ pub async fn batch_delete_cookie_profiles(
     
     Ok(())
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct ProxyProfile {
+    pub slug: String,
+    pub title: String,
+    pub proxy_string: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[tauri::command]
+pub async fn add_proxy_profile(
+    state: State<'_, AppEngineState>,
+    title: String,
+    proxy_string: String,
+) -> Result<String, String> {
+    let slug = format!("px_{}", chrono::Utc::now().timestamp_millis());
+    let now = chrono::Utc::now().to_rfc3339();
+
+    let conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    conn.execute(
+        "INSERT INTO proxy_profiles (slug, title, proxy_string, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![slug, title, proxy_string, now, now],
+    ).map_err(|e| format!("Failed to insert proxy profile: {}", e))?;
+
+    Ok(slug)
+}
+
+#[tauri::command]
+pub async fn get_proxy_profiles(state: State<'_, AppEngineState>) -> Result<Vec<ProxyProfile>, String> {
+    let conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    let mut stmt = conn.prepare("SELECT slug, title, proxy_string, created_at, updated_at FROM proxy_profiles ORDER BY created_at DESC")
+        .map_err(|e| format!("Failed to prepare statement: {}", e))?;
+
+    let iter = stmt.query_map([], |row| {
+        Ok(ProxyProfile {
+            slug: row.get(0)?,
+            title: row.get(1)?,
+            proxy_string: row.get(2)?,
+            created_at: row.get(3)?,
+            updated_at: row.get(4)?,
+        })
+    }).map_err(|e| format!("Query failed: {}", e))?;
+
+    let mut profiles = Vec::new();
+    for p in iter {
+        if let Ok(profile) = p {
+            profiles.push(profile);
+        }
+    }
+
+    Ok(profiles)
+}
+
+#[tauri::command]
+pub async fn update_proxy_data(
+    state: State<'_, AppEngineState>,
+    slug: String,
+    proxy_string: String,
+) -> Result<(), String> {
+    let now = chrono::Utc::now().to_rfc3339();
+    let conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    conn.execute(
+        "UPDATE proxy_profiles SET proxy_string = ?1, updated_at = ?2 WHERE slug = ?3",
+        params![proxy_string, now, slug],
+    ).map_err(|e| format!("Failed to update proxy profile: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_proxy_profile(
+    state: State<'_, AppEngineState>,
+    slug: String,
+) -> Result<(), String> {
+    let conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    conn.execute("DELETE FROM proxy_profiles WHERE slug = ?1", params![slug])
+        .map_err(|e| format!("Failed to delete proxy profile: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn batch_delete_proxy_profiles(
+    state: State<'_, AppEngineState>,
+    slugs: Vec<String>,
+) -> Result<(), String> {
+    let mut conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    let tx = conn.transaction().map_err(|e| format!("Transaction failed: {}", e))?;
+    
+    {
+        let mut stmt = tx.prepare("DELETE FROM proxy_profiles WHERE slug = ?1")
+            .map_err(|e| format!("Prepare failed: {}", e))?;
+            
+        for slug in slugs {
+            let _ = stmt.execute(params![slug]);
+        }
+    }
+    
+    tx.commit().map_err(|e| format!("Commit failed: {}", e))?;
+    
+    Ok(())
+}

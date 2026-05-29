@@ -264,7 +264,12 @@ pub fn run() {
         commands::config::get_cookie_profiles,
         commands::config::update_cookie_data,
         commands::config::delete_cookie_profile,
-        commands::config::batch_delete_cookie_profiles
+        commands::config::batch_delete_cookie_profiles,
+        commands::config::add_proxy_profile,
+        commands::config::get_proxy_profiles,
+        commands::config::update_proxy_data,
+        commands::config::delete_proxy_profile,
+        commands::config::batch_delete_proxy_profiles
     ]);
 
     match builder.run(tauri::generate_context!()) {

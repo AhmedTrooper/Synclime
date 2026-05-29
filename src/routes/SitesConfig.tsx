@@ -12,6 +12,14 @@ export interface CookieProfile {
   updated_at: string;
 }
 
+export interface ProxyProfile {
+  slug: string;
+  title: string;
+  proxy_string: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function SitesConfig() {
   const { setActivePath } = useUIStore();
   const [activeTab, setActiveTab] = useState<"sites" | "cookies" | "proxies">("cookies");
@@ -29,9 +37,18 @@ export default function SitesConfig() {
   const [editingCookie, setEditingCookie] = useState<string | null>(null);
   const [editCookieData, setEditCookieData] = useState("");
 
+  // Proxy State
+  const [proxies, setProxies] = useState<ProxyProfile[]>([]);
+  const [selectedProxies, setSelectedProxies] = useState<string[]>([]);
+  const [newProxyTitle, setNewProxyTitle] = useState("");
+  const [newProxyData, setNewProxyData] = useState("");
+  const [editingProxy, setEditingProxy] = useState<string | null>(null);
+  const [editProxyData, setEditProxyData] = useState("");
+
   useEffect(() => {
     setActivePath("/sites_config");
     loadCookies();
+    loadProxies();
   }, [setActivePath]);
 
   const loadCookies = async () => {
@@ -106,6 +123,79 @@ export default function SitesConfig() {
       setSelectedCookies([]);
     } else {
       setSelectedCookies(cookies.map(c => c.slug));
+    }
+  };
+
+  const loadProxies = async () => {
+    try {
+      const data = await invoke<ProxyProfile[]>("get_proxy_profiles");
+      setProxies(data);
+    } catch (err) {
+      console.error("Failed to load proxies", err);
+    }
+  };
+
+  const handleAddProxy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProxyTitle || !newProxyData) return;
+    try {
+      await invoke("add_proxy_profile", {
+        title: newProxyTitle,
+        proxyString: newProxyData,
+      });
+      setNewProxyTitle("");
+      setNewProxyData("");
+      loadProxies();
+    } catch (err) {
+      console.error("Failed to add proxy", err);
+    }
+  };
+
+  const handleDeleteProxy = async (slug: string) => {
+    try {
+      await invoke("delete_proxy_profile", { slug });
+      setSelectedProxies((prev) => prev.filter((id) => id !== slug));
+      loadProxies();
+    } catch (err) {
+      console.error("Failed to delete proxy", err);
+    }
+  };
+
+  const handleBatchDeleteProxies = async () => {
+    if (selectedProxies.length === 0) return;
+    try {
+      await invoke("batch_delete_proxy_profiles", { slugs: selectedProxies });
+      setSelectedProxies([]);
+      loadProxies();
+    } catch (err) {
+      console.error("Failed to batch delete proxies", err);
+    }
+  };
+
+  const handleUpdateProxy = async (slug: string) => {
+    if (!editProxyData) return;
+    try {
+      await invoke("update_proxy_data", {
+        slug,
+        proxyString: editProxyData,
+      });
+      setEditingProxy(null);
+      setEditProxyData("");
+      loadProxies();
+    } catch (err) {
+      console.error("Failed to update proxy", err);
+    }
+  };
+
+  const toggleSelectProxy = (slug: string) => {
+    setSelectedProxies(prev => prev.includes(slug) ? prev.filter(id => id !== slug) : [...prev, slug]);
+  };
+
+  const toggleSelectAllProxies = () => {
+    if (selectedProxies.length === proxies.length) {
+      setSelectedProxies([]);
+    } else {
+      setSelectedProxies(proxies.map(p => p.slug));
     }
   };
 
@@ -303,8 +393,139 @@ export default function SitesConfig() {
         )}
 
         {activeTab === "proxies" && (
-          <div className="text-center py-10 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
-            <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Proxy Networks coming next.</span>
+          <div className="flex flex-col gap-6">
+            {/* Add Form */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-sm">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-emerald-500" />
+                Add New Proxy Configuration
+              </h3>
+              <form onSubmit={handleAddProxy} className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="Profile Title (e.g. US Residential VPN)"
+                  value={newProxyTitle}
+                  onChange={(e) => setNewProxyTitle(e.target.value)}
+                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Proxy String (e.g. socks5://user:pass@192.168.1.1:1080)"
+                  value={newProxyData}
+                  onChange={(e) => setNewProxyData(e.target.value)}
+                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm font-mono"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto self-end bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-sm shadow-md shadow-emerald-500/20"
+                >
+                  Save Profile
+                </button>
+              </form>
+            </div>
+
+            {/* List */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                  Stored Proxy Networks ({proxies.length})
+                </h3>
+                {proxies.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={toggleSelectAllProxies}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      {selectedProxies.length === proxies.length ? "Deselect All" : "Select All"}
+                    </button>
+                    {selectedProxies.length > 0 && (
+                      <button
+                        onClick={handleBatchDeleteProxies}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold rounded-md transition-colors text-xs"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete ({selectedProxies.length})
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {proxies.map(proxy => (
+                  <div key={proxy.slug} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 shadow-sm flex flex-col gap-3">
+                    <div className="flex items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={selectedProxies.includes(proxy.slug)}
+                          onChange={() => toggleSelectProxy(proxy.slug)}
+                          className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-blue-600 flex-shrink-0"
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white truncate">{proxy.title}</span>
+                          <span className="text-[10px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400 truncate">{proxy.proxy_string}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        {editingProxy !== proxy.slug ? (
+                          <button
+                            onClick={() => {
+                              setEditingProxy(proxy.slug);
+                              setEditProxyData(proxy.proxy_string);
+                            }}
+                            className="p-1.5 text-zinc-500 hover:text-blue-500 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md transition-colors"
+                            title="Edit Proxy String"
+                          >
+                            <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setEditingProxy(null)}
+                            className="p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 rounded-md transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteProxy(proxy.slug)}
+                          className="p-1.5 text-red-500/70 hover:text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 rounded-md transition-colors"
+                          title="Delete Profile"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {editingProxy === proxy.slug && (
+                      <div className="flex flex-col gap-3 mt-1 sm:mt-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 animate-fade-in">
+                        <input
+                          type="text"
+                          value={editProxyData}
+                          onChange={(e) => setEditProxyData(e.target.value)}
+                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs font-mono"
+                        />
+                        <button
+                          onClick={() => handleUpdateProxy(proxy.slug)}
+                          className="w-full sm:w-auto self-end flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 sm:py-1.5 rounded-lg transition-colors text-xs shadow-md shadow-blue-500/20"
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          Update String
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {proxies.length === 0 && (
+                  <div className="text-center py-10 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">No proxy networks saved.</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
