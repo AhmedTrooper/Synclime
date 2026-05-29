@@ -66,7 +66,9 @@ fn resolve_job_parameters(
             c.cookie_data,
             pr.proxy_string,
             j.base_download_path,
-            j.custom_download_path
+            j.custom_download_path,
+            p.sanitized_title,
+            p.sanitized_playlist_name
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         LEFT JOIN cookie_profiles c ON j.cookie_profile_slug = c.slug
@@ -100,19 +102,33 @@ fn resolve_job_parameters(
             // Extract the user configuration directory paths
             let base_path: Option<String> = row.get(4).ok();
             let custom_path: Option<String> = row.get(5).ok();
+            let sanitized_title: Option<String> = row.get(6).ok();
+            let sanitized_playlist: Option<String> = row.get(7).ok();
 
             // Prioritize custom user selection, then explicit base paths, and finally fall back to the system Downloads directory
-            let target_destination = custom_path
+            let root_destination = custom_path
                 .filter(|s| !s.trim().is_empty())
                 .or(base_path.filter(|s| !s.trim().is_empty()))
                 .unwrap_or_else(get_system_downloads_fallback);
+
+            let mut final_path = std::path::PathBuf::from(root_destination);
+            
+            if let Some(playlist_name) = sanitized_playlist.filter(|s| !s.trim().is_empty()) {
+                final_path = final_path.join(playlist_name);
+            } else if let Some(video_title) = sanitized_title.filter(|s| !s.trim().is_empty()) {
+                final_path = final_path.join(video_title);
+            }
+
+            if !final_path.exists() {
+                let _ = std::fs::create_dir_all(&final_path);
+            }
 
             Ok(ResolvedJobConfig {
                 target_url: url,
                 format_string: format,
                 cookie_data: cookie,
                 proxy_string: proxy,
-                resolved_path: target_destination,
+                resolved_path: final_path.to_string_lossy().into_owned(),
             })
         }
         Ok(None) => Err(

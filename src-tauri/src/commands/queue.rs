@@ -91,7 +91,9 @@ pub async fn request_job_pause(
 pub struct InsertJobPayload {
     pub slug: String,
     pub url: String,
+    pub parsed_file_slug: Option<String>,
     pub file_type: String,
+    pub associated_media_job_slug: Option<String>,
     pub format_string: String,
     pub download_path: String,
     pub created_at: String,
@@ -105,10 +107,10 @@ pub async fn insert_job_record(
 ) -> Result<CommandResponse, String> {
     let row = crate::database::operations::DownloadJobRow {
         slug: payload.slug,
-        parsed_file_slug: None,
+        parsed_file_slug: payload.parsed_file_slug.clone(),
         file_type: payload.file_type,
-        associated_media_job_slug: None,
-        is_direct_url: 1,
+        associated_media_job_slug: payload.associated_media_job_slug,
+        is_direct_url: if payload.parsed_file_slug.is_some() { 0 } else { 1 },
         direct_url: Some(payload.url),
         is_from_playlist: 0,
         current_part: 1,

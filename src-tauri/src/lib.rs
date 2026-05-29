@@ -260,6 +260,7 @@ pub fn run() {
         commands::queue::delete_job_record,
         commands::queue::clear_all_jobs_records,
         commands::discovery::discover_asset_metadata,
+        commands::discovery::insert_parsed_file,
         commands::config::add_cookie_profile,
         commands::config::get_cookie_profiles,
         commands::config::update_cookie_data,

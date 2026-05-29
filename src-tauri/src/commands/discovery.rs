@@ -14,6 +14,51 @@ pub struct DiscoveryResponse {
     pub error_message: Option<String>,
 }
 
+#[derive(serde::Deserialize)]
+pub struct InsertParsedFilePayload {
+    pub slug: String,
+    pub url: String,
+    pub title: String,
+    pub sanitized_title: String,
+    pub is_playlist: i32,
+    pub parent_playlist_slug: Option<String>,
+    pub playlist_name: Option<String>,
+    pub sanitized_playlist_name: Option<String>,
+    pub json_metadata: Option<String>,
+    pub created_at: String,
+}
+
+/// Tauri IPC Command: Saves a parsed video/playlist directly to the parsed_files SQLite table
+#[tauri::command]
+pub async fn insert_parsed_file(
+    state: tauri::State<'_, AppEngineState>,
+    payload: InsertParsedFilePayload,
+) -> Result<crate::commands::queue::CommandResponse, String> {
+    let row = crate::database::operations::ParsedFileRow {
+        slug: payload.slug,
+        url: payload.url,
+        title: payload.title,
+        sanitized_title: payload.sanitized_title,
+        is_playlist: payload.is_playlist,
+        parent_playlist_slug: payload.parent_playlist_slug,
+        playlist_name: payload.playlist_name,
+        sanitized_playlist_name: payload.sanitized_playlist_name,
+        json_metadata: payload.json_metadata,
+        created_at: payload.created_at,
+    };
+
+    match crate::database::operations::save_parsed_file(&state.db_path, &row) {
+        Ok(_) => Ok(crate::commands::queue::CommandResponse {
+            success: true,
+            message: "Parsed file registered in SQLite successfully.".to_string(),
+        }),
+        Err(e) => Ok(crate::commands::queue::CommandResponse {
+            success: false,
+            message: e.0,
+        }),
+    }
+}
+
 struct OptionalSiteConfig {
     cookie_data: Option<String>,
     proxy_string: Option<String>,
