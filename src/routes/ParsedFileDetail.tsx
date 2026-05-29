@@ -269,7 +269,7 @@ export default function ParsedFileDetail() {
   );
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto px-4 py-2 text-zinc-950 dark:text-white transition-colors duration-300">
+    <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-4xl mx-auto px-1 sm:px-4 py-1 sm:py-2 text-zinc-950 dark:text-white transition-colors duration-300">
       {/* Back Header Nav */}
       <div className="flex justify-between items-center w-full">
         <Link
@@ -282,8 +282,8 @@ export default function ParsedFileDetail() {
       </div>
 
       {/* Asset Hero Section Card */}
-      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-lg p-5">
-        <div className="flex flex-col md:flex-row gap-6 items-start text-left">
+      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-lg p-3 sm:p-5">
+        <div className="flex flex-col md:flex-row gap-3 sm:gap-6 items-start text-left">
           {file.thumbnail && (
             <img
               src={file.thumbnail}
@@ -334,10 +334,10 @@ export default function ParsedFileDetail() {
         // ==========================================
         // 1. PLAYLIST LAYOUT VIEW WITH LAYER 2 ADAPTIVE RULES
         // ==========================================
-        <div className="flex flex-col gap-6 text-left">
+        <div className="flex flex-col gap-4 sm:gap-6 text-left">
           {/* Playlist Controls & Fallback Selector */}
-          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl p-5">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-5">
               <div className="flex flex-col gap-2 max-w-md">
                 <div className="flex items-center gap-2 text-purple-500">
                   <Sliders className="w-5 h-5" />
@@ -350,7 +350,7 @@ export default function ParsedFileDetail() {
                 </p>
               </div>
 
-              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3.5 min-w-[280px]">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-3.5 min-w-0 w-full md:w-auto">
                 <select
                   value={selectedPreset}
                   onChange={(e) => setSelectedPreset(e.target.value)}
@@ -389,8 +389,8 @@ export default function ParsedFileDetail() {
                   key={track.id}
                   className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl"
                 >
-                  <div className="p-3 md:p-4 flex flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-grow text-left">
+                  <div className="p-2 sm:p-3 md:p-4 flex flex-row items-center justify-between gap-2 sm:gap-4">
+                    <div className="flex items-center gap-1.5 sm:gap-3 flex-grow text-left min-w-0">
                       <span className="text-xs font-bold text-zinc-400 font-mono w-5">
                         {(index + 1).toString().padStart(2, "0")}
                       </span>
@@ -427,9 +427,9 @@ export default function ParsedFileDetail() {
         // ==========================================
         // 2. VIDEO DETAIL LAYOUT WITH LAYER 1 & 2 SELECTORS
         // ==========================================
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 text-left">
           {/* Main Selectors (Layers 1 & 2) */}
-          <div className="md:col-span-2 flex flex-col gap-6">
+          <div className="md:col-span-2 flex flex-col gap-4 sm:gap-6">
             {/* Explicit Switcher Interface Tab bar */}
             <div className="flex flex-col sm:flex-row bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/5 p-1 rounded-2xl w-full sm:self-start shadow-inner gap-1 sm:gap-0">
               <button
@@ -485,8 +485,8 @@ export default function ParsedFileDetail() {
                           }`}
                           onClick={() => setSelectedVideo(isSelected ? "" : v.format_id)}
                         >
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                          <div className="flex flex-col gap-0.5 min-w-0 break-words">
+                            <span className="text-[11px] sm:text-xs font-bold text-zinc-900 dark:text-white leading-tight">
                               {v.format_note || `${v.height}p`} ({v.ext})
                             </span>
                             <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
@@ -603,8 +603,8 @@ export default function ParsedFileDetail() {
                 </h3>
               </div>
 
-              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-4">
-                <div className="flex flex-col gap-5">
+              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:gap-5">
                   {/* Generated Monospace Format String Preview */}
                   <div className="flex flex-col gap-2 text-left">
                     <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -636,7 +636,7 @@ export default function ParsedFileDetail() {
                 </h3>
               </div>
 
-              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-3">
+              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3">
                 <div className="flex flex-col gap-4">
                   {subOptions.length > 0 ? (
                     <>
