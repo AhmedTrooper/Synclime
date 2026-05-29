@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { nativeStorageAdapter } from "./storageAdapter";
 
 interface BadgeState {
   home: number;
@@ -73,6 +74,7 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: "synclime-ui-storage",
+      storage: createJSONStorage(() => nativeStorageAdapter),
       partialize: (state) => ({
         theme: state.theme,
         activePath: state.activePath,

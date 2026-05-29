@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { nativeStorageAdapter } from "./storageAdapter";
 
 export interface DownloadJob {
   slug: string;
@@ -71,6 +72,7 @@ export const useQueueStore = create<QueueState>()(
     }),
     {
       name: "synclime-queue-storage",
+      storage: createJSONStorage(() => nativeStorageAdapter),
       partialize: (state) => ({ queue: state.queue }),
     }
   )

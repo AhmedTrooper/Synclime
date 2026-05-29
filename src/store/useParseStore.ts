@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { nativeStorageAdapter } from "./storageAdapter";
 
 export interface ParsedFile {
   slug: string;
@@ -37,6 +38,7 @@ export const useParseStore = create<ParseState>()(
     }),
     {
       name: "synclime-parse-storage",
+      storage: createJSONStorage(() => nativeStorageAdapter),
       partialize: (state) => ({ parsedFiles: state.parsedFiles }),
     }
   )
