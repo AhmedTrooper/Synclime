@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useUIStore } from "../store/useUIStore";
-import { Plus, Trash2, Edit2, Save, X, Settings2, ShieldCheck, Database, GlobeLock, CheckSquare, Square } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, Settings2, ShieldCheck, Database, GlobeLock, CheckSquare, Square, ChevronDown } from "lucide-react";
 
 export interface CookieProfile {
   slug: string;
@@ -30,6 +30,56 @@ export interface SiteConfig {
   created_at: string;
   updated_at: string;
 }
+
+const CustomSelect = ({ value, onChange, options, placeholder, compact = false }: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  options: { value: string, label: string }[];
+  placeholder: string;
+  compact?: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+
+  return (
+    <div className="relative w-full">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between ${compact ? "px-2 py-1.5 text-[11px] sm:text-xs" : "px-3 py-2.5 sm:py-2 text-xs sm:text-sm"} bg-zinc-50 dark:bg-black/20 hover:bg-zinc-100 dark:hover:bg-white/5 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-zinc-900 dark:text-white transition-all`}
+      >
+        <span className="truncate">{selected ? selected.label : placeholder}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-zinc-500 transition-transform duration-200 flex-shrink-0 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-50 w-full mt-1.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-xl overflow-hidden py-1 max-h-60 overflow-y-auto custom-scrollbar animate-fade-in origin-top">
+            <button
+              type="button"
+              onClick={() => { onChange(""); setIsOpen(false); }}
+              className={`w-full text-left px-3 py-2 ${compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"} transition-all ${!value ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"}`}
+            >
+              {placeholder}
+            </button>
+            {options.length > 0 && <div className="h-[1px] bg-zinc-200 dark:bg-zinc-800 w-full my-1" />}
+            {options.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                className={`w-full text-left px-3 py-2 ${compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"} transition-all truncate ${value === opt.value ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function SitesConfig() {
   const { setActivePath } = useUIStore();
@@ -486,26 +536,18 @@ export default function SitesConfig() {
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <select
+                  <CustomSelect
                     value={newSiteCookieSlug}
-                    onChange={(e) => setNewSiteCookieSlug(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
-                  >
-                    <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">No Cookie Profile Assigned</option>
-                    {cookies.map(c => (
-                      <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={c.slug} value={c.slug}>{c.title} ({c.domain})</option>
-                    ))}
-                  </select>
-                  <select
+                    onChange={setNewSiteCookieSlug}
+                    options={cookies.map(c => ({ value: c.slug, label: `${c.title} (${c.domain})` }))}
+                    placeholder="No Cookie Profile Assigned"
+                  />
+                  <CustomSelect
                     value={newSiteProxySlug}
-                    onChange={(e) => setNewSiteProxySlug(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
-                  >
-                    <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">No Proxy Profile Assigned</option>
-                    {proxies.map(p => (
-                      <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={p.slug} value={p.slug}>{p.title}</option>
-                    ))}
-                  </select>
+                    onChange={setNewSiteProxySlug}
+                    options={proxies.map(p => ({ value: p.slug, label: p.title }))}
+                    placeholder="No Proxy Profile Assigned"
+                  />
                 </div>
                 <button
                   type="submit"
@@ -542,29 +584,23 @@ export default function SitesConfig() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Cookie Override</span>
-                        <select
+                        <CustomSelect
                           value={site.cookie_profile_slug || ""}
-                          onChange={(e) => handleUpdateSite(site.slug, e.target.value || null, site.proxy_profile_slug)}
-                          className="w-full px-2 py-1.5 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs text-zinc-900 dark:text-white"
-                        >
-                          <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">None</option>
-                          {cookies.map(c => (
-                            <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={c.slug} value={c.slug}>{c.title}</option>
-                          ))}
-                        </select>
+                          onChange={(val) => handleUpdateSite(site.slug, val || null, site.proxy_profile_slug)}
+                          options={cookies.map(c => ({ value: c.slug, label: c.title }))}
+                          placeholder="None"
+                          compact={true}
+                        />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Proxy Override</span>
-                        <select
+                        <CustomSelect
                           value={site.proxy_profile_slug || ""}
-                          onChange={(e) => handleUpdateSite(site.slug, site.cookie_profile_slug, e.target.value || null)}
-                          className="w-full px-2 py-1.5 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs text-zinc-900 dark:text-white"
-                        >
-                          <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">None</option>
-                          {proxies.map(p => (
-                            <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={p.slug} value={p.slug}>{p.title}</option>
-                          ))}
-                        </select>
+                          onChange={(val) => handleUpdateSite(site.slug, site.cookie_profile_slug, val || null)}
+                          options={proxies.map(p => ({ value: p.slug, label: p.title }))}
+                          placeholder="None"
+                          compact={true}
+                        />
                       </div>
                     </div>
                   </div>
