@@ -17,25 +17,25 @@ export function DownloadRow({ id, name, progress, status, message, onPauseToggle
   return (
     <div
       data-id={id}
-      className={`flex items-center justify-between gap-3 px-3 py-2 bg-white dark:bg-zinc-900 border-b last:border-b-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${
+      className={`flex items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 border-b last:border-b-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${
         isError ? "border-red-200 dark:border-red-900/30" : "border-zinc-200 dark:border-zinc-800"
       }`}
     >
-      <div className="flex flex-col gap-1 flex-grow overflow-hidden text-left">
-        <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{name}</span>
-        <div className="flex items-center gap-3">
-          <div className="w-32 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+      <div className="flex flex-col gap-1 flex-grow overflow-hidden text-left min-w-0">
+        <span className="text-[11px] sm:text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{name}</span>
+        <div className="flex items-center gap-1.5 sm:gap-3 w-full">
+          <div className="flex-1 max-w-[128px] min-w-[32px] h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div
               className={`h-full ${isError ? "bg-red-500" : "bg-blue-500"}`}
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono w-8">{progress}%</span>
-          <span className={`text-[10px] uppercase tracking-wide ${isError ? "text-red-500" : "text-zinc-500"}`}>
+          <span className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-mono w-5 sm:w-8 flex-shrink-0">{progress}%</span>
+          <span className={`text-[8px] sm:text-[10px] uppercase tracking-wide truncate flex-shrink-0 ${isError ? "text-red-500" : "text-zinc-500"}`}>
             {status}
           </span>
           {isError && message && (
-             <span className="text-[10px] text-red-500 truncate max-w-[200px] ml-2" title={message}>- {message}</span>
+             <span className="hidden sm:inline text-[10px] text-red-500 truncate max-w-[150px] ml-2 flex-shrink-0" title={message}>- {message}</span>
           )}
         </div>
       </div>
