@@ -1,17 +1,44 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+export interface ParsedFile {
+  slug: string;
+  url: string;
+  title: string;
+  sanitizedTitle: string;
+  isPlaylist: boolean;
+  thumbnail: string;
+  duration: number; // in seconds
+  author: string;
+  views: number;
+  payload: any; // VideoMetadata or GenericPlaylistMetadata
+  parsedAt: string; // ISO string
+}
 
 interface ParseState {
-  tokens: string[];
+  parsedFiles: ParsedFile[];
   isParsing: boolean;
-  addToken: (token: string) => void;
-  clearTokens: () => void;
+  addParsedFile: (file: ParsedFile) => void;
+  clearParsedFiles: () => void;
   setParsing: (parsing: boolean) => void;
 }
 
-export const useParseStore = create<ParseState>((set) => ({
-  tokens: [],
-  isParsing: false,
-  addToken: (token) => set((state) => ({ tokens: [...state.tokens, token] })),
-  clearTokens: () => set({ tokens: [] }),
-  setParsing: (parsing) => set({ isParsing: parsing }),
-}));
+export const useParseStore = create<ParseState>()(
+  persist(
+    (set) => ({
+      parsedFiles: [],
+      isParsing: false,
+      addParsedFile: (file) =>
+        set((state) => ({
+          parsedFiles: [file, ...state.parsedFiles.filter((f) => f.slug !== file.slug)],
+        })),
+      clearParsedFiles: () => set({ parsedFiles: [] }),
+      setParsing: (parsing) => set({ isParsing: parsing }),
+    }),
+    {
+      name: "synclime-parse-storage",
+      partialize: (state) => ({ parsedFiles: state.parsedFiles }),
+    }
+  )
+);
+
