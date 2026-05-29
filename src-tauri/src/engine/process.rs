@@ -13,6 +13,8 @@ pub enum EngineError {
 pub struct ResolvedJobConfig {
     pub target_url: String,
     pub format_string: String,
+    pub file_type: String,
+    pub selected_subtitles: Option<String>,
     pub cookie_data: Option<String>,
     pub proxy_string: Option<String>,
     pub resolved_path: String,
@@ -68,7 +70,9 @@ pub fn resolve_job_parameters(
             j.base_download_path,
             j.custom_download_path,
             p.sanitized_title,
-            p.sanitized_playlist_name
+            p.sanitized_playlist_name,
+            j.file_type,
+            j.selected_subtitles
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         LEFT JOIN cookie_profiles c ON j.cookie_profile_slug = c.slug
@@ -104,6 +108,8 @@ pub fn resolve_job_parameters(
             let custom_path: Option<String> = row.get(5).ok();
             let sanitized_title: Option<String> = row.get(6).ok();
             let sanitized_playlist: Option<String> = row.get(7).ok();
+            let file_type: String = row.get(8).unwrap_or_default();
+            let selected_subtitles: Option<String> = row.get(9).ok();
 
             // Prioritize custom user selection, then explicit base paths, and finally fall back to the system Downloads directory
             let root_destination = custom_path
@@ -126,6 +132,8 @@ pub fn resolve_job_parameters(
             Ok(ResolvedJobConfig {
                 target_url: url,
                 format_string: format,
+                file_type,
+                selected_subtitles,
                 cookie_data: cookie,
                 proxy_string: proxy,
                 resolved_path: final_path.to_string_lossy().into_owned(),
@@ -161,6 +169,16 @@ pub async fn execute_download_worker(
 
     // Explicit Destination Path Argument for yt-dlp execution mapping
     cmd.arg("-P").arg(&config.resolved_path);
+
+    if config.file_type == "subtitle" {
+        cmd.arg("--write-subs");
+        cmd.arg("--skip-download");
+        if let Some(ref subs) = config.selected_subtitles {
+            cmd.arg("--sub-langs").arg(subs);
+        } else {
+            cmd.arg("--sub-langs").arg("all");
+        }
+    }
 
     if let Some(ref proxy_url) = config.proxy_string {
         cmd.arg("--proxy").arg(proxy_url);

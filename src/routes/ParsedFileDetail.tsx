@@ -14,7 +14,7 @@ export default function ParsedFileDetail() {
   const { addJob } = useQueueStore();
 
   const file = parsedFiles.find((f) => f.slug === slug);
-  const [selectedSub, setSelectedSub] = useState<string>("");
+  const [selectedSubs, setSelectedSubs] = useState<string[]>([]);
 
   // Layer Switch State: "custom" (Layer 1) vs "fallback" (Layer 2)
   const [selectionMode, setSelectionMode] = useState<"custom" | "fallback">("custom");
@@ -259,8 +259,8 @@ export default function ParsedFileDetail() {
   };
 
   const downloadSubtitle = async (targetUrl: string, trackTitle: string) => {
-    if (!selectedSub) {
-      alert("Please select a subtitle language from the dropdown menu first!");
+    if (selectedSubs.length === 0) {
+      alert("Please select at least one subtitle language from the checkbox list first!");
       return;
     }
 
@@ -269,7 +269,8 @@ export default function ParsedFileDetail() {
     const parentJob = queue.find(j => j.parsedFileSlug === file.slug && j.url === targetUrl && j.fileType !== "subtitle");
     
     const uniqueSlug = `dl-sub-${Date.now()}`;
-    const jobName = `${trackTitle} (Sub - ${selectedSub.toUpperCase()})`;
+    const joinedSubs = selectedSubs.join(",");
+    const jobName = `${trackTitle} (Sub - ${selectedSubs.length === 1 ? selectedSubs[0].toUpperCase() : selectedSubs.length + ' Langs'})`;
     
     const newJob: DownloadJob = {
       slug: uniqueSlug,
@@ -303,6 +304,7 @@ export default function ParsedFileDetail() {
             format_string: newJob.formatString,
             download_path: useUIStore.getState().downloadPath,
             created_at: newJob.createdAt,
+            selected_subtitles: joinedSubs,
           }
         });
         await invoke("trigger_job_start", { jobSlug: uniqueSlug });
@@ -453,22 +455,25 @@ export default function ParsedFileDetail() {
           </div>
 
           {/* Subtitle Selector for Playlist Mode */}
-          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-emerald-500" />
               <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">Global Subtitle Selection</h3>
             </div>
             {subOptions.length > 0 ? (
-              <select
-                value={selectedSub}
-                onChange={(e) => setSelectedSub(e.target.value)}
-                className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl px-3 py-2 outline-none text-xs sm:text-sm font-semibold w-full sm:w-auto"
-              >
-                <option value="">(None) Select Subtitle</option>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto py-1">
                 {subOptions.map((opt) => (
-                  <option key={opt.lang} value={opt.lang}>{opt.name}</option>
+                  <label key={opt.lang} className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-2 rounded-lg border border-zinc-200 dark:border-white/5 cursor-pointer hover:border-purple-500 transition-colors shadow-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedSubs.includes(opt.lang)}
+                      onChange={() => setSelectedSubs(prev => prev.includes(opt.lang) ? prev.filter(l => l !== opt.lang) : [...prev, opt.lang])}
+                      className="accent-purple-500 w-4 h-4 cursor-pointer"
+                    />
+                    {opt.name} ({opt.lang.toUpperCase()})
+                  </label>
                 ))}
-              </select>
+              </div>
             ) : (
               <span className="text-xs text-zinc-500 italic">No subtitles available</span>
             )}
@@ -825,25 +830,26 @@ export default function ParsedFileDetail() {
                     <>
                       <div className="flex flex-col gap-2 text-left">
                         <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                          Select Language
+                          Select Languages
                         </label>
-                        <select
-                          value={selectedSub}
-                          onChange={(e) => setSelectedSub(e.target.value)}
-                          className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl px-3 py-2 outline-none text-xs sm:text-sm font-semibold w-full max-w-full overflow-hidden text-ellipsis"
-                        >
-                          <option value="">Choose language option</option>
+                        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl">
                           {subOptions.map((opt) => (
-                            <option key={opt.lang} value={opt.lang}>
+                            <label key={opt.lang} className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/5 cursor-pointer hover:border-purple-500 transition-colors shadow-sm">
+                              <input
+                                type="checkbox"
+                                checked={selectedSubs.includes(opt.lang)}
+                                onChange={() => setSelectedSubs(prev => prev.includes(opt.lang) ? prev.filter(l => l !== opt.lang) : [...prev, opt.lang])}
+                                className="accent-purple-500 w-3.5 h-3.5 cursor-pointer"
+                              />
                               {opt.name} ({opt.lang.toUpperCase()})
-                            </option>
+                            </label>
                           ))}
-                        </select>
+                        </div>
                       </div>
 
                       <button
                         onClick={() => downloadSubtitle(file.url, file.title)}
-                        disabled={!selectedSub}
+                        disabled={selectedSubs.length === 0}
                         className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold w-full py-2 rounded-xl transition-all duration-300 disabled:opacity-50"
                       >
                         <Download className="w-3.5 h-3.5" />
