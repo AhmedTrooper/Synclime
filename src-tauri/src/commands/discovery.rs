@@ -73,8 +73,8 @@ pub async fn discover_asset_metadata(
 
     // 2. Assemble optimized yt-dlp arguments for safe structural metadata extraction
     let mut cmd = Command::new("yt-dlp");
-    cmd.arg("--dump-json");
-    cmd.arg("--no-playlist"); // Only fetch the direct link target parameters during high-speed probing
+    cmd.arg("--dump-single-json");
+    cmd.arg("--flat-playlist"); // Enables instantaneous metadata extraction for 100+ item playlists
 
     if let Some(ref proxy) = site_config.proxy_string {
         cmd.arg("--proxy").arg(proxy);

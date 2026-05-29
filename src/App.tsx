@@ -5,7 +5,7 @@ import { useUIStore } from "./store/useUIStore";
 
 export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const { downloadPath, setDownloadPath } = useUIStore();
+  const { downloadPath, setDownloadPath, _hasHydrated } = useUIStore();
 
   useEffect(() => {
     // Disable standard browser reloading & inspector key combinations
@@ -23,7 +23,7 @@ export default function App() {
 
     // Resolve default downloads folder on app startup if not set in local storage
     const resolveDefaultDirectory = async () => {
-      if (!downloadPath) {
+      if (_hasHydrated && !downloadPath) {
         try {
           if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
             const { downloadDir } = await import("@tauri-apps/api/path");
@@ -52,7 +52,7 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
-  }, [downloadPath, setDownloadPath]);
+  }, [downloadPath, setDownloadPath, _hasHydrated]);
 
   return (
     <>

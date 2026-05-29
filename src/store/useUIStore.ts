@@ -22,6 +22,8 @@ interface UIStore {
   setBadge: (tab: keyof BadgeState, count: number) => void;
   toggleTheme: () => void;
   setDownloadPath: (path: string) => void;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useUIStore = create<UIStore>()(
@@ -37,6 +39,8 @@ export const useUIStore = create<UIStore>()(
       },
       theme: "dark",
       downloadPath: "",
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
       setActivePath: (path) => set({ activePath: path }),
       incrementBadge: (tab) =>
         set((state) => ({
@@ -80,6 +84,11 @@ export const useUIStore = create<UIStore>()(
         activePath: state.activePath,
         downloadPath: state.downloadPath,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHasHydrated(true);
+        }
+      },
     }
   )
 );
