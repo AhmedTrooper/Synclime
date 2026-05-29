@@ -1,7 +1,7 @@
 use crate::{AppEngineState, ProgressSnapshot};
 use rusqlite::{params, Connection};
 use std::process::Stdio;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
@@ -10,12 +10,12 @@ pub enum EngineError {
     ProcessSpawnFailed(String),
 }
 
-struct ResolvedJobConfig {
-    target_url: String,
-    format_string: String,
-    cookie_data: Option<String>,
-    proxy_string: Option<String>,
-    resolved_path: String,
+pub struct ResolvedJobConfig {
+    pub target_url: String,
+    pub format_string: String,
+    pub cookie_data: Option<String>,
+    pub proxy_string: Option<String>,
+    pub resolved_path: String,
 }
 
 /// Helper function to parse raw text lines into metrics strings cleanly
@@ -50,7 +50,7 @@ fn get_system_downloads_fallback() -> String {
 }
 
 /// Query SQLite to extract all configuration parameters attached to this explicit job row
-fn resolve_job_parameters(
+pub fn resolve_job_parameters(
     db_path: &std::path::Path,
     job_slug: &str,
 ) -> Result<ResolvedJobConfig, String> {

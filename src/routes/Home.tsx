@@ -233,6 +233,29 @@ export default function Home() {
 
         addParsedFile(parsedFile);
 
+        // SYNC TO SQLITE BACKEND
+        const isTauriEnvironment = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+        if (isTauriEnvironment) {
+          try {
+            await invoke("insert_parsed_file", {
+              payload: {
+                slug: parsedFile.slug,
+                url: parsedFile.url,
+                title: parsedFile.title,
+                sanitized_title: parsedFile.sanitizedTitle,
+                is_playlist: parsedFile.isPlaylist ? 1 : 0,
+                parent_playlist_slug: null,
+                playlist_name: parsedFile.isPlaylist ? parsedFile.title : null,
+                sanitized_playlist_name: parsedFile.isPlaylist ? parsedFile.sanitizedTitle : null,
+                json_metadata: JSON.stringify(payload),
+                created_at: parsedFile.parsedAt,
+              }
+            });
+          } catch (e) {
+            console.error("Failed to insert parsed file into SQLite:", e);
+          }
+        }
+
         // Redirect to detail page
         navigate(`/parsed_file/${parsedFile.slug}`);
       } catch (err: any) {

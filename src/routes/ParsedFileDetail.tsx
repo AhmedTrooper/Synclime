@@ -124,7 +124,9 @@ export default function ParsedFileDetail() {
             payload: {
               slug: newJob.slug,
               url: newJob.url,
+              parsed_file_slug: file.slug,
               file_type: newJob.fileType,
+              associated_media_job_slug: null,
               format_string: newJob.formatString || "bestvideo+bestaudio/best",
               download_path: useUIStore.getState().downloadPath,
               created_at: newJob.createdAt,
@@ -214,7 +216,9 @@ export default function ParsedFileDetail() {
             payload: {
               slug: newJob.slug,
               url: newJob.url,
+              parsed_file_slug: file.slug,
               file_type: newJob.fileType,
+              associated_media_job_slug: null,
               format_string: newJob.formatString || "bestvideo+bestaudio/best",
               download_path: useUIStore.getState().downloadPath,
               created_at: newJob.createdAt,

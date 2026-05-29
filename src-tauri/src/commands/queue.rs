@@ -243,3 +243,14 @@ pub async fn get_all_jobs(
 
     Ok(jobs)
 }
+
+#[tauri::command]
+pub async fn get_job_download_path(
+    state: State<'_, AppEngineState>,
+    job_slug: String,
+) -> Result<String, String> {
+    match crate::engine::process::resolve_job_parameters(&state.db_path, &job_slug) {
+        Ok(cfg) => Ok(cfg.resolved_path),
+        Err(e) => Err(e),
+    }
+}
