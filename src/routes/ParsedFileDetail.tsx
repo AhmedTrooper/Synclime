@@ -115,7 +115,10 @@ export default function ParsedFileDetail() {
 
       // Attempt calling Tauri invoke start command
       try {
-        await invoke("trigger_job_start", { jobSlug: uniqueSlug });
+        const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: uniqueSlug });
+        if (!res.success) {
+          throw new Error(res.message);
+        }
       } catch (e) {
         console.warn("trigger_job_start invoke error (browser simulation active):", e);
         // Simulate progress on web fallback
@@ -169,7 +172,10 @@ export default function ParsedFileDetail() {
       addJob(newJob);
 
       try {
-        await invoke("trigger_job_start", { jobSlug: trackSlug });
+        const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: trackSlug });
+        if (!res.success) {
+          throw new Error(res.message);
+        }
       } catch (e) {
         console.warn(`trigger_job_start invoke error on playlist item ${track.title} (browser simulation):`, e);
         // Direct complete simulation

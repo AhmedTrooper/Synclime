@@ -25,10 +25,16 @@ export default function Downloads() {
     try {
       if (isDownloading) {
         // Call pause IPC route
-        await invoke("request_job_pause", { jobSlug: job.slug });
+        const res = await invoke<{ success: boolean; message: string }>("request_job_pause", { jobSlug: job.slug });
+        if (!res.success) {
+          throw new Error(res.message);
+        }
       } else {
         // Call start IPC route
-        await invoke("trigger_job_start", { jobSlug: job.slug });
+        const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: job.slug });
+        if (!res.success) {
+          throw new Error(res.message);
+        }
       }
     } catch (e) {
       console.warn(`Pause/Resume toggle failed for job ${job.slug} (Simulation environment fallback):`, e);

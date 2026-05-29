@@ -68,7 +68,10 @@ export default function Home() {
 
         // Attempt triggering background downloader task on Tauri side
         try {
-          await invoke("trigger_job_start", { jobSlug: uniqueSlug });
+          const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: uniqueSlug });
+          if (!res.success) {
+            throw new Error(res.message);
+          }
         } catch (e) {
           console.warn("trigger_job_start invoke error (browser fallback simulation active):", e);
           // Simulate progress on web fallback so the UI looks active
