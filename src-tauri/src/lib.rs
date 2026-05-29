@@ -259,7 +259,12 @@ pub fn run() {
         commands::queue::insert_job_record,
         commands::queue::delete_job_record,
         commands::queue::clear_all_jobs_records,
-        commands::discovery::discover_asset_metadata
+        commands::discovery::discover_asset_metadata,
+        commands::config::add_cookie_profile,
+        commands::config::get_cookie_profiles,
+        commands::config::update_cookie_data,
+        commands::config::delete_cookie_profile,
+        commands::config::batch_delete_cookie_profiles
     ]);
 
     match builder.run(tauri::generate_context!()) {

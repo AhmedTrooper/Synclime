@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen, GlobeLock } from "lucide-react";
 import { useUIStore } from "@/store/useUIStore";
 
 export default function Sidebar() {
@@ -9,15 +9,21 @@ export default function Sidebar() {
     { path: "/", label: "New Task", icon: Home, badgeKey: "home" as const },
     { path: "/downloads", label: "Queue", icon: Download, badgeKey: "downloads" as const },
     { path: "/parsed_files", label: "Library", icon: FileText, badgeKey: "parsedFiles" as const },
+  ];
+
+  const bottomNavItems = [
+    { path: "/sites_config", label: "Sites & Rules", icon: GlobeLock, badgeKey: "sites" as const },
     { path: "/settings", label: "Preferences", icon: Settings, badgeKey: "settings" as const },
     { path: "/about", label: "About", icon: Info, badgeKey: "about" as const },
   ];
+
+  const allItems = [...navItems, ...bottomNavItems];
 
   return (
     <div className={`w-full ${isSidebarExpanded ? "sm:w-56" : "sm:w-16"} transition-all duration-300 ease-in-out h-auto sm:h-full border-t sm:border-t-0 sm:border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex flex-row sm:flex-col flex-shrink-0 sm:pt-4 sm:pb-4 select-none z-20 shadow-[0_-1px_10px_rgba(0,0,0,0.02)] sm:shadow-[1px_0_10px_rgba(0,0,0,0.02)] relative`}>
       <div className={`flex-1 overflow-x-auto sm:overflow-y-auto px-1 ${isSidebarExpanded ? "sm:px-3" : "sm:px-2"} py-1 sm:py-0 flex items-center sm:items-stretch scrollbar-hide`}>
         <nav className="flex flex-row sm:flex-col gap-1 sm:gap-1 w-full justify-around sm:justify-start">
-          {navItems.map((item) => {
+          {allItems.map((item) => {
             const isActive =
               item.path === "/"
                 ? activePath === "/"

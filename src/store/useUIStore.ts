@@ -8,6 +8,7 @@ interface BadgeState {
   downloads: number;
   parsedFiles: number;
   settings: number;
+  sites: number;
 }
 
 interface UIStore {
@@ -38,6 +39,7 @@ export const useUIStore = create<UIStore>()(
         downloads: 0,
         parsedFiles: 0,
         settings: 0,
+        sites: 0,
       },
       theme: "dark",
       downloadPath: "",

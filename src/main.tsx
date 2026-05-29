@@ -10,6 +10,7 @@ import DownloadsDetail from "./routes/DownloadsDetail";
 import Settings from "./routes/Settings";
 import ParsedFileDetail from "./routes/ParsedFileDetail";
 import ParsedFiles from "./routes/ParsedFiles";
+import SitesConfig from "./routes/SitesConfig";
 import "@fontsource-variable/inter";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
@@ -47,6 +48,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             <Route
               path="parsed_files"
               element={<ParsedFiles />}
+            />
+            <Route
+              path="sites_config"
+              element={<SitesConfig />}
             />
           </Route>
         </Routes>

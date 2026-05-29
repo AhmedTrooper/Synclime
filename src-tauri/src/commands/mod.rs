@@ -1,6 +1,7 @@
 pub mod clipboard;
 pub mod discovery;
 pub mod queue;
+pub mod config;
 
 // Re-export all commands cleanly for our main execution router mapping
 pub use clipboard::process_clipboard_paste;
