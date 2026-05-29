@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useUIStore } from "../store/useUIStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
-import { DownloadCloud, Trash2, Folder, Film, Music, Globe } from "lucide-react";
+import { DownloadCloud, Trash2, Folder } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useMemo } from "react";
 
@@ -114,20 +114,7 @@ export default function Downloads() {
     }
   };
 
-  const handleRemove = async (slug: string) => {
-    // 1. Instantly remove from UI store optimistically
-    removeJob(slug);
-    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
-    
-    if (isTauri) {
-      // 2. Call Tauri backend to permanently delete from SQLite job registry
-      try {
-        await invoke("delete_job_record", { jobSlug: slug });
-      } catch (e) {
-        console.error(`Failed to delete job ${slug} from SQLite backend:`, e);
-      }
-    }
-  };
+
 
   const renderTree = (nodes: TreeNode[], depth: number = 0) => {
     return nodes.map(node => (
@@ -145,10 +132,14 @@ export default function Downloads() {
         ) : (
           <div className="w-full">
             <DownloadRow
-              job={node.job!}
-              onPauseToggle={handlePauseToggle}
-              onRemove={handleRemove}
-              onReveal={handleReveal}
+              id={node.job!.slug}
+              name={node.job!.name}
+              progress={node.job!.progress}
+              status={node.job!.status === "pending" ? "paused" : node.job!.status}
+              message={node.job!.message}
+              onPauseToggle={() => handlePauseToggle(node.job!)}
+              onReveal={() => handleReveal(node.job!)}
+              onDelete={() => handleDelete(node.job!.slug)}
             />
           </div>
         )}
@@ -213,28 +204,18 @@ export default function Downloads() {
       </div>
 
       {/* Queue Listing */}
-      <div className="grid grid-cols-1 gap-4 w-full">
-        {queue.map((job) => (
-          <DownloadRow
-            key={job.slug}
-            id={job.slug}
-            name={job.name}
-            progress={job.progress}
-            status={job.status === "pending" ? "paused" : job.status}
-            message={job.message}
-            onPauseToggle={() => handlePauseToggle(job)}
-            onReveal={() => handleReveal(job)}
-            onDelete={() => handleDelete(job.slug)}
-          />
-        ))}
-
-        {queue.length === 0 && (
+      <div className="flex flex-col w-full mt-2">
+        {queue.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
             <DownloadCloud className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2" />
             <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">No active downloads</h3>
             <p className="text-[11px] text-zinc-400 max-w-xs">
               Downloads and extraction tasks will appear here.
             </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 w-full">
+            {renderTree(treeNodes, 0)}
           </div>
         )}
       </div>
