@@ -145,3 +145,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AI CLI
+.antigravity
+.antigravitycli/
