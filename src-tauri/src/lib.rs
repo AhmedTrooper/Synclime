@@ -4,7 +4,7 @@ use rusqlite::Connection;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
-use tauri::Manager; // Cleaned: Only imported once right here
+use tauri::{Manager, Emitter}; // Cleaned: Only imported once right here
 use tokio::process::Child;
 use tokio::sync::{mpsc, Semaphore};
 
@@ -223,6 +223,7 @@ pub fn run() {
 
         let flush_db_path = db_path.clone();
         let flush_cache = Arc::clone(&progress_cache);
+        let tic_emitter = app.handle().clone();
         tauri::async_runtime::spawn(async move {
             loop {
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
@@ -233,6 +234,16 @@ pub fn run() {
                             let _ = conn.execute(
                                 "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, updated_at = datetime('now') WHERE slug = ?3;",
                                 rusqlite::params![snapshot.progress, snapshot.status_message, slug]
+                            );
+                            
+                            // Emit the 1-second batched update down to React UI
+                            let _ = tic_emitter.emit(
+                                "download-progress-token",
+                                serde_json::json!({
+                                    "slug": slug,
+                                    "progress": snapshot.progress,
+                                    "message": snapshot.status_message
+                                })
                             );
                         }
                         cache.clear();

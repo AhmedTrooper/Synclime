@@ -221,15 +221,6 @@ pub async fn execute_download_worker(
                     },
                 );
             }
-
-            let _ = app_handle.emit(
-                "download-progress-token",
-                serde_json::json!({
-                    "slug": job_slug,
-                    "progress": percentage,
-                    "message": status_text
-                }),
-            );
         }
     }
 
