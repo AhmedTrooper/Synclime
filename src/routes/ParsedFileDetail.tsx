@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { Button, Card, CardBody, Select, SelectItem } from "@heroui/react";
-import { ArrowLeft, Download, Film, Music, Globe, List, Monitor, Clock, PlayCircle } from "lucide-react";
+import { ArrowLeft, Download, Film, Music, Globe, List, Clock, PlayCircle, Settings, CheckCircle2, Sliders, ToggleLeft } from "lucide-react";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -14,6 +14,16 @@ export default function ParsedFileDetail() {
 
   const file = parsedFiles.find((f) => f.slug === slug);
   const [selectedSub, setSelectedSub] = useState<string>("");
+
+  // Layer Switch State: "custom" (Layer 1) vs "fallback" (Layer 2)
+  const [selectionMode, setSelectionMode] = useState<"custom" | "fallback">("custom");
+
+  // Custom Selection State (Layer 1)
+  const [selectedVideo, setSelectedVideo] = useState<string>("");
+  const [selectedAudio, setSelectedAudio] = useState<string>("");
+
+  // Preset Selection State (Layer 2)
+  const [selectedPreset, setSelectedPreset] = useState<string>("bestvideo+bestaudio/best");
 
   if (!file) {
     return (
@@ -65,8 +75,25 @@ export default function ParsedFileDetail() {
     return `${count.toFixed(1)} ${sizes[i]}`;
   };
 
+  // Helper to dynamically calculate target format string
+  const getGeneratedFormatString = () => {
+    if (selectionMode === "fallback") {
+      return selectedPreset;
+    }
+    
+    // Custom selection mode (Layer 1)
+    if (selectedVideo && selectedAudio) {
+      return `${selectedVideo}+${selectedAudio}`;
+    } else if (selectedVideo) {
+      return selectedVideo;
+    } else if (selectedAudio) {
+      return selectedAudio;
+    }
+    return "bestvideo+bestaudio/best"; // Global fallback
+  };
+
   // Triggers the download queue addition
-  const startDownload = async (_formatId: string, isAudio = false, customName?: string) => {
+  const startDownload = async (formatString: string, isAudio = false, customName?: string) => {
     try {
       const uniqueSlug = `dl-${Date.now()}`;
       const jobName = customName || file.title;
@@ -79,6 +106,7 @@ export default function ParsedFileDetail() {
         status: "pending",
         message: "Queued for extraction download...",
         fileType: isAudio ? "audio" : "video",
+        formatString: formatString,
         createdAt: new Date().toISOString(),
       };
 
@@ -117,10 +145,13 @@ export default function ParsedFileDetail() {
     }
   };
 
-  // Bulk downloads all playlist tracks
+  // Bulk downloads all playlist tracks using the selected fallback rule
   const downloadAllPlaylist = async () => {
     if (!payload.entries || payload.entries.length === 0) return;
     
+    // Pass the active adaptive format string preset selected by the user
+    const playlistFormatString = selectedPreset;
+
     for (const track of payload.entries) {
       const trackSlug = `track-${track.id}-${Date.now()}`;
       const newJob: DownloadJob = {
@@ -131,6 +162,7 @@ export default function ParsedFileDetail() {
         status: "pending",
         message: "Playlist batch job initialized...",
         fileType: "video",
+        formatString: playlistFormatString,
         createdAt: new Date().toISOString(),
       };
 
@@ -157,6 +189,22 @@ export default function ParsedFileDetail() {
         name: payload.subtitles[lang][0]?.name || lang.toUpperCase(),
       }))
     : [];
+
+  const presetList = [
+    { label: "Best Quality Available", value: "bestvideo+bestaudio/best" },
+    { label: "Prefer 1080p or Lower", value: "bestvideo[height<=1080]+bestaudio/best" },
+    { label: "Prefer 720p or Lower", value: "bestvideo[height<=720]+bestaudio/best" },
+    { label: "Extract Audio Only", value: "bestaudio/best" },
+  ];
+
+  // Filtering clean streams for Layer 1 Selection Grid
+  const formats = payload.formats || [];
+  const videoStreams = formats.filter(
+    (f: any) => f.vcodec !== "none" && (f.format_note || f.resolution)
+  );
+  const audioStreams = formats.filter(
+    (f: any) => f.acodec !== "none" && f.vcodec === "none"
+  );
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto px-4 py-2 text-zinc-950 dark:text-white transition-colors duration-300">
@@ -223,184 +271,373 @@ export default function ParsedFileDetail() {
 
       {/* Conditional Detailed Lists */}
       {file.isPlaylist ? (
-        // 1. PLAYLIST LAYOUT VIEW
-        <div className="flex flex-col gap-4 text-left">
-          <div className="flex justify-between items-center">
+        // ==========================================
+        // 1. PLAYLIST LAYOUT VIEW WITH LAYER 2 ADAPTIVE RULES
+        // ==========================================
+        <div className="flex flex-col gap-6 text-left">
+          {/* Playlist Controls & Fallback Selector */}
+          <Card className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl p-5">
+            <CardBody className="p-0 flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div className="flex flex-col gap-2 max-w-md">
+                <div className="flex items-center gap-2 text-purple-500">
+                  <Sliders className="w-5 h-5" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
+                    Playlist Fallback Preferences
+                  </h3>
+                </div>
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Select a fallback preset below. This adaptive quality rule will be mapped sequentially as the format target to all tracks inside this batch queue download.
+                </p>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3.5 min-w-[280px]">
+                <Select
+                  placeholder="Choose fallback preset"
+                  selectedKeys={[selectedPreset]}
+                  onChange={(e) => setSelectedPreset(e.target.value)}
+                  size="sm"
+                  classNames={{
+                    trigger: "bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl min-h-[40px]",
+                  }}
+                >
+                  {presetList.map((preset) => (
+                    <SelectItem key={preset.value} key-id={preset.value} textValue={preset.label}>
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                <Button
+                  onClick={downloadAllPlaylist}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-5.5 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300"
+                  startContent={<Download className="w-4 h-4" />}
+                >
+                  Download All Tracks
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Playlist Tracks Listing */}
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <List className="w-4 h-4 text-purple-500" />
               <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
                 Playlist Tracks ({payload.entries?.length || 0})
               </h3>
             </div>
-            <Button
-              onClick={downloadAllPlaylist}
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 rounded-xl transition-all duration-300"
-              startContent={<Download className="w-4 h-4" />}
-            >
-              Download All Tracks
-            </Button>
-          </div>
 
-          <div className="grid grid-cols-1 gap-3 w-full">
-            {payload.entries?.map((track: any, index: number) => (
-              <Card
-                key={track.id}
-                className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl"
-              >
-                <CardBody className="p-3 md:p-4 flex flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 flex-grow text-left">
-                    <span className="text-xs font-bold text-zinc-400 font-mono w-5">
-                      {(index + 1).toString().padStart(2, "0")}
-                    </span>
-                    {track.thumbnails?.[0]?.url && (
-                      <img
-                        src={track.thumbnails[0].url}
-                        alt={track.title}
-                        className="w-14 aspect-video object-cover rounded-lg border border-zinc-200 dark:border-white/5 flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-bold text-zinc-900 dark:text-white line-clamp-1 leading-snug">
-                        {track.title}
+            <div className="grid grid-cols-1 gap-3 w-full">
+              {payload.entries?.map((track: any, index: number) => (
+                <Card
+                  key={track.id}
+                  className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl"
+                >
+                  <CardBody className="p-3 md:p-4 flex flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-grow text-left">
+                      <span className="text-xs font-bold text-zinc-400 font-mono w-5">
+                        {(index + 1).toString().padStart(2, "0")}
                       </span>
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        {formatDuration(track.duration)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={() => startDownload("bestvideo", false, track.title)}
-                    size="sm"
-                    isIconOnly
-                    className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-xl"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                  </Button>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ) : (
-        // 2. SINGLE VIDEO FORMAT LIST LAYOUT VIEW
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          {/* Format Selection Column */}
-          <div className="md:col-span-2 flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Monitor className="w-4 h-4 text-blue-500" />
-              <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
-                Available Video & Audio Format Streams
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {payload.formats
-                ?.filter((f: any) => f.vcodec !== "none" || f.acodec !== "none")
-                .map((f: any) => {
-                  const isAudioOnly = f.vcodec === "none";
-                  return (
-                    <Card
-                      key={f.format_id}
-                      className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl"
-                    >
-                      <CardBody className="p-3 md:p-4 flex items-center justify-between flex-row gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2.5 rounded-xl ${isAudioOnly ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-blue-500/10 text-blue-500 border-blue-500/20"} border`}>
-                            {isAudioOnly ? <Music className="w-4 h-4" /> : <Film className="w-4 h-4" />}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs font-bold text-zinc-900 dark:text-white leading-snug">
-                              {isAudioOnly ? "Audio Stream" : `Video Stream (${f.format_note || f.resolution || "Unknown resolution"})`}
-                            </span>
-                            <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5 uppercase">
-                              <span className="font-bold text-blue-500">{f.ext}</span>
-                              <span>•</span>
-                              <span>{formatSize(f.filesize || f.filesize_approx)}</span>
-                              {f.fps && (
-                                <>
-                                  <span>•</span>
-                                  <span>{f.fps} FPS</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <Button
-                          onClick={() => startDownload(f.format_id, isAudioOnly)}
-                          size="sm"
-                          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-bold border border-zinc-200 dark:border-white/10 rounded-xl"
-                          startContent={<Download className="w-3.5 h-3.5" />}
-                        >
-                          Get
-                        </Button>
-                      </CardBody>
-                    </Card>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Subtitles & Extras Column */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-emerald-500" />
-              <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
-                Language Subtitles
-              </h3>
-            </div>
-
-            <Card className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-3">
-              <CardBody className="flex flex-col gap-4">
-                {subOptions.length > 0 ? (
-                  <>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Select Language
-                      </label>
-                      <Select
-                        placeholder="Choose language option"
-                        selectedKeys={selectedSub ? [selectedSub] : []}
-                        onChange={(e) => setSelectedSub(e.target.value)}
-                        size="sm"
-                        classNames={{
-                          trigger: "bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl",
-                        }}
-                      >
-                        {subOptions.map((opt) => (
-                          <SelectItem key={opt.lang} key-id={opt.lang} textValue={opt.name}>
-                            {opt.name} ({opt.lang.toUpperCase()})
-                          </SelectItem>
-                        ))}
-                      </Select>
+                      {track.thumbnails?.[0]?.url && (
+                        <img
+                          src={track.thumbnails[0].url}
+                          alt={track.title}
+                          className="w-14 aspect-video object-cover rounded-lg border border-zinc-200 dark:border-white/5 flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-bold text-zinc-900 dark:text-white line-clamp-1 leading-snug">
+                          {track.title}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                          {formatDuration(track.duration)}
+                        </span>
+                      </div>
                     </div>
 
                     <Button
-                      onClick={() => startDownload(`sub-${selectedSub}`, false, `${file.title} (Subtitles - ${selectedSub.toUpperCase()})`)}
-                      disabled={!selectedSub}
+                      onClick={() => startDownload(selectedPreset, false, track.title)}
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-500 text-white font-bold w-full rounded-xl transition-all duration-300"
-                      startContent={<Download className="w-3.5 h-3.5" />}
+                      isIconOnly
+                      className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-xl"
                     >
-                      Download Subtitle
+                      <Download className="w-3.5 h-3.5" />
                     </Button>
-                  </>
-                ) : (
-                  <div className="text-center py-6 flex flex-col items-center gap-2">
-                    <Globe className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400 italic">
-                      No subtitles found in this file extraction.
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        // ==========================================
+        // 2. VIDEO DETAIL LAYOUT WITH LAYER 1 & 2 SELECTORS
+        // ==========================================
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          {/* Main Selectors (Layers 1 & 2) */}
+          <div className="md:col-span-2 flex flex-col gap-6">
+            {/* Explicit Switcher Interface Tab bar */}
+            <div className="flex bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/5 p-1 rounded-2xl self-start shadow-inner">
+              <button
+                type="button"
+                onClick={() => setSelectionMode("custom")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all select-none ${
+                  selectionMode === "custom"
+                    ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
+                    : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                Custom Formats (Layer 1)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectionMode("fallback")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all select-none ${
+                  selectionMode === "fallback"
+                    ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
+                    : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                }`}
+              >
+                <ToggleLeft className="w-3.5 h-3.5" />
+                Adaptive Presets (Layer 2)
+              </button>
+            </div>
+
+            {selectionMode === "custom" ? (
+              // ------------------------------------------
+              // LAYER 1: USER SELECTED SPECIFIC STREAM FORMATS
+              // ------------------------------------------
+              <div className="flex flex-col gap-6">
+                {/* Video Streams selection */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-zinc-500">
+                    <Film className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Select Video Stream
                     </span>
                   </div>
-                )}
-              </CardBody>
-            </Card>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {videoStreams.map((v: any) => {
+                      const isSelected = selectedVideo === v.format_id;
+                      return (
+                        <Card
+                          key={v.format_id}
+                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl ${
+                            isSelected
+                              ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                              : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                          }`}
+                          onClick={() => setSelectedVideo(isSelected ? "" : v.format_id)}
+                        >
+                          <CardBody className="p-3.5 flex flex-row items-center justify-between gap-3 text-left">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                                {v.format_note || `${v.height}p`} ({v.ext})
+                              </span>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
+                                RESOLUTION: {v.resolution || `${v.width}x${v.height}`} • SIZE: {formatSize(v.filesize || v.filesize_approx)}
+                              </span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-4.5 h-4.5 text-blue-500 flex-shrink-0" />}
+                          </CardBody>
+                        </Card>
+                      );
+                    })}
+
+                    {videoStreams.length === 0 && (
+                      <span className="text-xs italic text-zinc-500 dark:text-zinc-400">
+                        No separate video-only streams discovered.
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Audio Streams selection */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-zinc-500">
+                    <Music className="w-4 h-4 text-emerald-500" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Select Audio Stream
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {audioStreams.map((a: any) => {
+                      const isSelected = selectedAudio === a.format_id;
+                      return (
+                        <Card
+                          key={a.format_id}
+                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl ${
+                            isSelected
+                              ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                              : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                          }`}
+                          onClick={() => setSelectedAudio(isSelected ? "" : a.format_id)}
+                        >
+                          <CardBody className="p-3.5 flex flex-row items-center justify-between gap-3 text-left">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs font-bold text-zinc-900 dark:text-white font-semibold">
+                                {a.format_note || "Audio Only"} ({a.ext})
+                              </span>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
+                                BITRATE: {a.abr ? `${a.abr.toFixed(0)}kbps` : "HQ"} • SIZE: {formatSize(a.filesize || a.filesize_approx)}
+                              </span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 flex-shrink-0" />}
+                          </CardBody>
+                        </Card>
+                      );
+                    })}
+
+                    {audioStreams.length === 0 && (
+                      <span className="text-xs italic text-zinc-500 dark:text-zinc-400">
+                        No separate audio-only streams discovered.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // ------------------------------------------
+              // LAYER 2: FALLBACK PREFERENCE TOGGLE SELECTOR
+              // ------------------------------------------
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2 text-zinc-500">
+                  <Sliders className="w-4 h-4 text-blue-500" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Select Fallback Preference Preset
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  {presetList.map((preset) => {
+                    const isSelected = selectedPreset === preset.value;
+                    return (
+                      <Card
+                        key={preset.value}
+                        className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl ${
+                          isSelected
+                            ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-md"
+                            : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                        }`}
+                        onClick={() => setSelectedPreset(preset.value)}
+                      >
+                        <CardBody className="p-4 flex flex-row items-center justify-between gap-4 text-left">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm font-bold text-zinc-900 dark:text-white">
+                              {preset.label}
+                            </span>
+                            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
+                              RULE FORMAT: {preset.value}
+                            </span>
+                          </div>
+                          {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />}
+                        </CardBody>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action & Sidebar Details Panel */}
+          <div className="flex flex-col gap-6">
+            {/* Generate & Download Panel */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-zinc-500" />
+                <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
+                  Download Manager
+                </h3>
+              </div>
+
+              <Card className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-4">
+                <CardBody className="p-0 flex flex-col gap-5">
+                  {/* Generated Monospace Format String Preview */}
+                  <div className="flex flex-col gap-2 text-left">
+                    <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      Generated Format String
+                    </label>
+                    <div className="bg-zinc-900 text-zinc-200 dark:bg-black border border-zinc-800 p-3 rounded-2xl font-mono text-[10px] break-all select-text shadow-inner">
+                      {getGeneratedFormatString()}
+                    </div>
+                  </div>
+
+                  {/* Primary Download trigger */}
+                  <Button
+                    onClick={() => startDownload(getGeneratedFormatString(), getGeneratedFormatString().includes("bestaudio") && !getGeneratedFormatString().includes("bestvideo"))}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold w-full py-5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300"
+                    startContent={<Download className="w-4 h-4" />}
+                  >
+                    Initialize Extraction Download
+                  </Button>
+                </CardBody>
+              </Card>
+            </div>
+
+            {/* Subtitles Panel */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-emerald-500" />
+                <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
+                  Language Subtitles
+                </h3>
+              </div>
+
+              <Card className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-3">
+                <CardBody className="flex flex-col gap-4">
+                  {subOptions.length > 0 ? (
+                    <>
+                      <div className="flex flex-col gap-2 text-left">
+                        <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                          Select Language
+                        </label>
+                        <Select
+                          placeholder="Choose language option"
+                          selectedKeys={selectedSub ? [selectedSub] : []}
+                          onChange={(e) => setSelectedSub(e.target.value)}
+                          size="sm"
+                          classNames={{
+                            trigger: "bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl",
+                          }}
+                        >
+                          {subOptions.map((opt) => (
+                            <SelectItem key={opt.lang} key-id={opt.lang} textValue={opt.name}>
+                              {opt.name} ({opt.lang.toUpperCase()})
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+
+                      <Button
+                        onClick={() => startDownload(`bestvideo+bestaudio/best`, false, `${file.title} (Subtitles - ${selectedSub.toUpperCase()})`)}
+                        disabled={!selectedSub}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold w-full rounded-xl transition-all duration-300"
+                        startContent={<Download className="w-3.5 h-3.5" />}
+                      >
+                        Download Subtitle
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center py-6 flex flex-col items-center gap-2">
+                      <Globe className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 italic">
+                        No subtitles found in this file extraction.
+                      </span>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 

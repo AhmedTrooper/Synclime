@@ -9,6 +9,7 @@ export interface DownloadJob {
   status: "pending" | "downloading" | "paused" | "completed" | "error";
   message: string;
   fileType: "video" | "audio" | "subtitle" | "direct_document";
+  formatString?: string;
   createdAt: string;
 }
 
