@@ -6,7 +6,6 @@ import TitleBar from "./TitleBar";
 
 export default function MainLayout() {
   const theme = useUIStore((state) => state.theme);
-  const activePath = useUIStore((state) => state.activePath);
   const setActivePath = useUIStore((state) => state.setActivePath);
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,15 +48,16 @@ export default function MainLayout() {
   useEffect(() => {
     if (!hasRestored.current) {
       hasRestored.current = true;
+      const initialPath = useUIStore.getState().activePath;
       if (
-        activePath &&
+        initialPath &&
         window.location.pathname === "/" &&
-        activePath !== "/"
+        initialPath !== "/"
       ) {
-        navigate(activePath, { replace: true });
+        navigate(initialPath, { replace: true });
       }
     }
-  }, [activePath, navigate]);
+  }, [navigate]);
 
   return (
     <div className="relative h-screen w-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden flex flex-col font-sans select-none">

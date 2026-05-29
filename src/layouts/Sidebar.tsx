@@ -38,12 +38,12 @@ export default function Sidebar() {
                 to={item.path}
                 className={`flex items-center gap-3 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 relative group overflow-hidden ${
                   isActive
-                    ? "bg-zinc-900 dark:bg-white/10 text-white dark:text-white font-bold shadow-md"
+                    ? "bg-white dark:bg-white/10 text-blue-600 dark:text-white font-bold shadow-sm"
                     : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-medium"
                 }`}
               >
                 <div className="relative flex items-center justify-center">
-                  <Icon className={`w-5 h-5 sm:w-4 sm:h-4 ${isActive ? "text-white" : "text-zinc-400 dark:text-zinc-500"}`} />
+                  <Icon className={`w-5 h-5 sm:w-4 sm:h-4 ${isActive ? "text-blue-600 dark:text-white" : "text-zinc-400 dark:text-zinc-500"}`} />
                   {badgeCount > 0 && (
                     <span
                       className={`absolute -top-1.5 -right-2.5 flex h-3.5 min-w-3.5 px-1 items-center justify-center rounded-full text-[8px] sm:text-[10px] font-bold sm:h-4 sm:min-w-4 ${
