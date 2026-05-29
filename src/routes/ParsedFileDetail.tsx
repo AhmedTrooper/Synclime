@@ -269,8 +269,8 @@ export default function ParsedFileDetail() {
     const parentJob = queue.find(j => j.parsedFileSlug === file.slug && j.url === targetUrl && j.fileType !== "subtitle");
     
     const uniqueSlug = `dl-sub-${Date.now()}`;
-    const joinedSubs = selectedSubs.join(",");
-    const jobName = `${trackTitle} (Sub - ${selectedSubs.length === 1 ? selectedSubs[0].toUpperCase() : selectedSubs.length + ' Langs'})`;
+    const joinedSubs = selectedSubs.includes("all") ? "all" : selectedSubs.join(",");
+    const jobName = `${trackTitle} (Sub - ${selectedSubs.includes("all") ? "ALL" : (selectedSubs.length === 1 ? selectedSubs[0].toUpperCase() : selectedSubs.length + ' Langs')})`;
     
     const newJob: DownloadJob = {
       slug: uniqueSlug,
@@ -324,6 +324,22 @@ export default function ParsedFileDetail() {
         name: payload.subtitles[lang][0]?.name || lang.toUpperCase(),
       }))
     : [];
+
+  const PREDEFINED_SUBS = [
+    { lang: "all", name: "All Available Subtitles" },
+    { lang: "en", name: "English" },
+    { lang: "bn", name: "Bengali" },
+    { lang: "es", name: "Spanish" },
+    { lang: "hi", name: "Hindi" },
+    { lang: "fr", name: "French" },
+    { lang: "ar", name: "Arabic" },
+    { lang: "ru", name: "Russian" },
+    { lang: "pt", name: "Portuguese" },
+    { lang: "de", name: "German" },
+    { lang: "ja", name: "Japanese" },
+  ];
+
+  const displaySubOptions = subOptions.length > 0 ? subOptions : PREDEFINED_SUBS;
 
   const presetList = [
     { label: "Best Quality (Unlimited / 4K+)", value: "bestvideo+bestaudio/best" },
@@ -458,19 +474,21 @@ export default function ParsedFileDetail() {
           <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-emerald-500" />
-              <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">Global Subtitle Selection</h3>
+              <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                {subOptions.length > 0 ? "Global Subtitle Selection" : "Global Subtitle Selection (Pre-Given List)"}
+              </h3>
             </div>
-            {subOptions.length > 0 ? (
+            {displaySubOptions.length > 0 ? (
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto py-1">
-                {subOptions.map((opt) => (
-                  <label key={opt.lang} className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-3 py-2 rounded-lg border border-zinc-200 dark:border-white/5 cursor-pointer hover:border-purple-500 transition-colors shadow-sm">
+                {displaySubOptions.map((opt) => (
+                  <label key={opt.lang} className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg border cursor-pointer transition-colors shadow-sm ${selectedSubs.includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400" : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-white/5 text-zinc-700 dark:text-zinc-300 hover:border-purple-500"}`}>
                     <input
                       type="checkbox"
                       checked={selectedSubs.includes(opt.lang)}
                       onChange={() => setSelectedSubs(prev => prev.includes(opt.lang) ? prev.filter(l => l !== opt.lang) : [...prev, opt.lang])}
                       className="accent-purple-500 w-4 h-4 cursor-pointer"
                     />
-                    {opt.name} ({opt.lang.toUpperCase()})
+                    {opt.name} {opt.lang !== "all" && `(${opt.lang.toUpperCase()})`}
                   </label>
                 ))}
               </div>
@@ -542,7 +560,7 @@ export default function ParsedFileDetail() {
                     </div>
 
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                      {subOptions.length > 0 && (
+                      {displaySubOptions.length > 0 && (
                         <button
                           onClick={() => downloadSubtitle(track.url, track.title)}
                           title="Download Subtitles"
@@ -833,15 +851,15 @@ export default function ParsedFileDetail() {
                           Select Languages
                         </label>
                         <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl">
-                          {subOptions.map((opt) => (
-                            <label key={opt.lang} className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/5 cursor-pointer hover:border-purple-500 transition-colors shadow-sm">
+                          {displaySubOptions.map((opt) => (
+                            <label key={opt.lang} className={`flex items-center gap-2 text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors shadow-sm ${selectedSubs.includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400" : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-white/5 text-zinc-700 dark:text-zinc-300 hover:border-purple-500"}`}>
                               <input
                                 type="checkbox"
                                 checked={selectedSubs.includes(opt.lang)}
                                 onChange={() => setSelectedSubs(prev => prev.includes(opt.lang) ? prev.filter(l => l !== opt.lang) : [...prev, opt.lang])}
                                 className="accent-purple-500 w-3.5 h-3.5 cursor-pointer"
                               />
-                              {opt.name} ({opt.lang.toUpperCase()})
+                              {opt.name} {opt.lang !== "all" && `(${opt.lang.toUpperCase()})`}
                             </label>
                           ))}
                         </div>
