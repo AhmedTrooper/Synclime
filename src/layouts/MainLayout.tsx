@@ -56,7 +56,7 @@ export default function MainLayout() {
         <Sidebar />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 sm:px-6 sm:py-6 w-full relative bg-white dark:bg-black/20 shadow-inner">
+        <main className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2 sm:px-6 sm:py-6 w-full relative bg-white dark:bg-black/20 shadow-inner">
           <Outlet />
         </main>
       </div>

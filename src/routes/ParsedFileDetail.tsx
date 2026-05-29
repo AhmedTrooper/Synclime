@@ -274,7 +274,7 @@ export default function ParsedFileDetail() {
       <div className="flex justify-between items-center w-full">
         <Link
           to="/parsed_files"
-          className="flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 px-3 py-1.5 rounded-lg transition-all duration-300 text-sm"
+          className="flex items-center justify-center sm:justify-start gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 w-full sm:w-auto px-3 py-3 sm:py-1.5 rounded-lg transition-all duration-300 text-[12px] sm:text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Repository
@@ -365,7 +365,7 @@ export default function ParsedFileDetail() {
 
                 <button
                   onClick={downloadAllPlaylist}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300"
                 >
                   <Download className="w-4 h-4" />
                   Download All Tracks
@@ -431,11 +431,11 @@ export default function ParsedFileDetail() {
           {/* Main Selectors (Layers 1 & 2) */}
           <div className="md:col-span-2 flex flex-col gap-6">
             {/* Explicit Switcher Interface Tab bar */}
-            <div className="flex bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/5 p-1 rounded-2xl self-start shadow-inner">
+            <div className="flex flex-col sm:flex-row bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/5 p-1 rounded-2xl w-full sm:self-start shadow-inner gap-1 sm:gap-0">
               <button
                 type="button"
                 onClick={() => setSelectionMode("custom")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all select-none ${
+                className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-3 sm:py-2 rounded-xl text-[10px] sm:text-xs font-bold tracking-wider transition-all select-none ${
                   selectionMode === "custom"
                     ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
                     : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"

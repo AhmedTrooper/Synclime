@@ -245,7 +245,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-3xl h-full py-2">
+    <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-3xl h-full py-1 sm:py-2">
       {/* Top Toolbar / Header */}
       <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
         <div className="flex items-center gap-2.5">
@@ -262,14 +262,15 @@ export default function Home() {
             {/* Input Bar */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Target URL Address</label>
-              <input
-                type="text"
-                placeholder="https://..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={loading}
-                className="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm text-zinc-900 dark:text-white shadow-sm"
-              />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="url"
+                  placeholder="Paste video, document, or media URL..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="w-full px-3 py-3 sm:py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm text-zinc-900 dark:text-white shadow-sm"
+                />
+              </div>
             </div>
 
             {/* Error Message Panel */}
@@ -298,14 +299,16 @@ export default function Home() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50 text-[13px] shadow-sm"
-              >
-                {!loading && (directDownload ? <FileDown className="w-4 h-4" /> : <Play className="w-4 h-4" />)}
-                {directDownload ? "Download" : "Extract Metadata"}
-              </button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={loading || !url.trim()}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-3 sm:py-2 rounded-md transition-colors disabled:opacity-50 text-[13px] shadow-sm"
+                >
+                  {!loading && (directDownload ? <FileDown className="w-4 h-4" /> : <Play className="w-4 h-4" />)}
+                  {loading ? "Discovering..." : (directDownload ? "Direct Download" : "Parse Extractor")}
+                </button>
+              </div>
             </div>
           </form>
         </div>

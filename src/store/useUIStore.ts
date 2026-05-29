@@ -22,6 +22,8 @@ interface UIStore {
   setBadge: (tab: keyof BadgeState, count: number) => void;
   toggleTheme: () => void;
   setDownloadPath: (path: string) => void;
+  isSidebarExpanded: boolean;
+  toggleSidebar: () => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
 }
@@ -39,6 +41,7 @@ export const useUIStore = create<UIStore>()(
       },
       theme: "dark",
       downloadPath: "",
+      isSidebarExpanded: true,
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       setActivePath: (path) => set({ activePath: path }),
@@ -74,6 +77,10 @@ export const useUIStore = create<UIStore>()(
         set((state) => ({
           theme: state.theme === "dark" ? "light" : "dark",
         })),
+      toggleSidebar: () =>
+        set((state) => ({
+          isSidebarExpanded: !state.isSidebarExpanded,
+        })),
       setDownloadPath: (path) => set({ downloadPath: path }),
     }),
     {
@@ -83,6 +90,7 @@ export const useUIStore = create<UIStore>()(
         theme: state.theme,
         activePath: state.activePath,
         downloadPath: state.downloadPath,
+        isSidebarExpanded: state.isSidebarExpanded,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
