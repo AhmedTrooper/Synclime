@@ -8,11 +8,19 @@ import { invoke } from "@tauri-apps/api/core";
 
 export default function Downloads() {
   const { setActivePath } = useUIStore();
-  const { queue, updateJobStatus, removeJob, clearQueue } = useQueueStore();
+  const { queue, updateJobStatus, removeJob, clearQueue, setQueue } = useQueueStore();
 
   useEffect(() => {
     setActivePath("/downloads");
-  }, [setActivePath]);
+    
+    // Fetch truth from SQLite on mount
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      invoke<DownloadJob[]>("get_all_jobs")
+        .then(jobs => setQueue(jobs))
+        .catch(err => console.error("Failed to fetch jobs from SQLite:", err));
+    }
+  }, [setActivePath, setQueue]);
 
   const handlePauseToggle = async (job: DownloadJob) => {
     const isDownloading = job.status === "downloading";

@@ -174,3 +174,72 @@ pub async fn clear_all_jobs_records(
         }),
     }
 }
+
+#[derive(serde::Serialize)]
+pub struct FrontDownloadJob {
+    pub slug: String,
+    pub name: String,
+    pub url: String,
+    pub progress: f64,
+    pub status: String,
+    pub message: String,
+    #[serde(rename = "fileType")]
+    pub file_type: String,
+    #[serde(rename = "formatString")]
+    pub format_string: Option<String>,
+    #[serde(rename = "createdAt")]
+    pub created_at: String,
+}
+
+#[tauri::command]
+pub async fn get_all_jobs(
+    state: State<'_, AppEngineState>,
+) -> Result<Vec<FrontDownloadJob>, String> {
+    let conn = match rusqlite::Connection::open(&state.db_path) {
+        Ok(c) => c,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let query = "
+        SELECT
+            j.slug,
+            COALESCE(p.title, j.direct_url, 'Unknown File') as name,
+            COALESCE(j.direct_url, p.url) as url,
+            j.progress,
+            j.status,
+            COALESCE(j.tracking_message, '') as message,
+            j.file_type,
+            j.format_string,
+            j.created_at
+        FROM download_jobs j
+        LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
+        ORDER BY j.created_at DESC;
+    ";
+
+    let mut stmt = match conn.prepare(query) {
+        Ok(s) => s,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let mut rows = match stmt.query([]) {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let mut jobs = Vec::new();
+    while let Ok(Some(row)) = rows.next() {
+        jobs.push(FrontDownloadJob {
+            slug: row.get(0).unwrap_or_default(),
+            name: row.get(1).unwrap_or_default(),
+            url: row.get(2).unwrap_or_default(),
+            progress: row.get(3).unwrap_or_default(),
+            status: row.get(4).unwrap_or_default(),
+            message: row.get(5).unwrap_or_default(),
+            file_type: row.get(6).unwrap_or_default(),
+            format_string: row.get(7).ok(),
+            created_at: row.get(8).unwrap_or_default(),
+        });
+    }
+
+    Ok(jobs)
+}
