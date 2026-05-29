@@ -54,7 +54,7 @@ export default function TitleBar() {
     <div
       data-tauri-drag-region
       data-fullscreen={isFullscreen}
-      className="flex items-center justify-between w-full h-10 bg-white/70 dark:bg-black/40 border-b border-zinc-200/80 dark:border-white/10 backdrop-blur-xl px-4 select-none relative z-50 transition-colors duration-300"
+      className="flex items-center justify-between w-full h-10 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 select-none relative z-50 transition-colors duration-300"
     >
       {/* Title / Drag region */}
       <div data-tauri-drag-region className="flex items-center gap-2 cursor-default font-semibold text-xs tracking-wider uppercase text-zinc-500 dark:text-zinc-400">

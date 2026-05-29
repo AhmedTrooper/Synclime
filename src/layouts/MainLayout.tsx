@@ -47,7 +47,7 @@ export default function MainLayout() {
   }, [activePath, navigate]);
 
   return (
-    <div className="relative h-screen w-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden flex flex-col font-sans select-none">
+    <div className="relative h-screen w-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden flex flex-col font-sans select-none">
       {/* Custom OS Titlebar */}
       <TitleBar />
 
@@ -56,7 +56,7 @@ export default function MainLayout() {
         <Sidebar />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2 sm:px-6 sm:py-6 w-full relative bg-white dark:bg-black/20 shadow-inner">
+        <main className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2 sm:px-6 sm:py-6 w-full relative bg-white dark:bg-zinc-800/20 shadow-inner">
           <Outlet />
         </main>
       </div>
