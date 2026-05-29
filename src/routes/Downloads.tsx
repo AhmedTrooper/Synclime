@@ -3,8 +3,18 @@ import { useEffect } from "react";
 import { useUIStore } from "../store/useUIStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
-import { DownloadCloud, Trash2 } from "lucide-react";
+import { DownloadCloud, Trash2, Folder, Film, Music, Globe } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { useMemo } from "react";
+
+type TreeNode = {
+  id: string;
+  type: "playlist" | "video" | "audio" | "subtitle" | "direct_document";
+  name: string;
+  isPlaylistGroup?: boolean;
+  job?: DownloadJob;
+  children: TreeNode[];
+};
 
 export default function Downloads() {
   const { setActivePath } = useUIStore();
@@ -51,6 +61,48 @@ export default function Downloads() {
     }
   };
 
+  const treeNodes = useMemo(() => {
+    const jobNodes: Record<string, TreeNode> = {};
+    queue.forEach(job => {
+      jobNodes[job.slug] = {
+        id: job.slug,
+        type: job.fileType as any,
+        name: job.name,
+        job,
+        children: []
+      };
+    });
+
+    const rootNodes: TreeNode[] = [];
+    const playlistGroups: Record<string, TreeNode> = {};
+
+    queue.forEach(job => {
+      const node = jobNodes[job.slug];
+      
+      if (job.associatedMediaJobSlug && jobNodes[job.associatedMediaJobSlug]) {
+        jobNodes[job.associatedMediaJobSlug].children.push(node);
+      } 
+      else if (job.parsedFileSlug && job.isPlaylist) {
+        if (!playlistGroups[job.parsedFileSlug]) {
+          playlistGroups[job.parsedFileSlug] = {
+            id: `playlist-${job.parsedFileSlug}`,
+            type: "playlist",
+            name: job.playlistName || "Playlist Batch",
+            isPlaylistGroup: true,
+            children: []
+          };
+          rootNodes.push(playlistGroups[job.parsedFileSlug]);
+        }
+        playlistGroups[job.parsedFileSlug].children.push(node);
+      } 
+      else {
+        rootNodes.push(node);
+      }
+    });
+
+    return rootNodes;
+  }, [queue]);
+
   const handleReveal = async (job: DownloadJob) => {
     try {
       // Offload entirely to the Rust unsandboxed backend!
@@ -60,6 +112,54 @@ export default function Downloads() {
       console.error(e);
       alert(`Asset location could not be revealed: ${e.message || e}`);
     }
+  };
+
+  const handleRemove = async (slug: string) => {
+    // 1. Instantly remove from UI store optimistically
+    removeJob(slug);
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    
+    if (isTauri) {
+      // 2. Call Tauri backend to permanently delete from SQLite job registry
+      try {
+        await invoke("delete_job_record", { jobSlug: slug });
+      } catch (e) {
+        console.error(`Failed to delete job ${slug} from SQLite backend:`, e);
+      }
+    }
+  };
+
+  const renderTree = (nodes: TreeNode[], depth: number = 0) => {
+    return nodes.map(node => (
+      <div key={node.id} className={`flex flex-col ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1" : "py-1"} w-full`}>
+        {node.isPlaylistGroup ? (
+          <div className="flex items-center gap-3 bg-purple-500/10 dark:bg-purple-500/10 p-3 sm:p-4 rounded-xl border border-purple-500/20 w-full shadow-sm mb-2 mt-2">
+            <div className="p-2 bg-purple-500 text-white rounded-lg shadow-sm">
+               <Folder className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white leading-tight line-clamp-1">{node.name}</span>
+              <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider">Playlist Group ({node.children.length} items)</span>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full">
+            <DownloadRow
+              job={node.job!}
+              onPauseToggle={handlePauseToggle}
+              onRemove={handleRemove}
+              onReveal={handleReveal}
+            />
+          </div>
+        )}
+        
+        {node.children.length > 0 && (
+          <div className="flex flex-col gap-1 mt-1 w-full">
+            {renderTree(node.children, depth + 1)}
+          </div>
+        )}
+      </div>
+    ));
   };
 
   const handleDelete = async (slug: string) => {

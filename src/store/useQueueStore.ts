@@ -10,6 +10,10 @@ export interface DownloadJob {
   fileType: "video" | "audio" | "subtitle" | "direct_document";
   formatString?: string;
   createdAt: string;
+  associatedMediaJobSlug?: string;
+  parsedFileSlug?: string;
+  isPlaylist?: boolean;
+  playlistName?: string;
 }
 
 interface QueueState {
