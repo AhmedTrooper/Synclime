@@ -301,7 +301,7 @@ export default function ParsedFileDetail() {
         // ==========================================
         <div className="flex flex-col gap-4 sm:gap-6 text-left">
           {/* Playlist Controls & Fallback Selector */}
-          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5">
+          <div className="w-full bg-white dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-lg p-3 sm:p-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-5">
               <div className="flex flex-col gap-2 max-w-md">
                 <div className="flex items-center gap-2 text-purple-500">
@@ -330,7 +330,7 @@ export default function ParsedFileDetail() {
 
                 <button
                   onClick={downloadAllPlaylist}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300 overflow-hidden"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium px-4 sm:px-6 py-2 rounded-lg shadow-sm transition-all duration-300 overflow-hidden"
                 >
                   <Download className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate text-[12px] sm:text-sm">
@@ -342,7 +342,7 @@ export default function ParsedFileDetail() {
           </div>
 
           {/* Subtitle Selector for Playlist Mode */}
-          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-5 flex flex-col gap-3">
+          <div className="w-full bg-white dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-lg p-3 sm:p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-emerald-500" />
               <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
@@ -395,9 +395,9 @@ export default function ParsedFileDetail() {
               {payload.entries?.map((track: any, index: number) => (
                 <div
                   key={track.id}
-                  className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-2xl"
+                  className="border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-lg"
                 >
-                  <div className="p-1.5 sm:p-3 md:p-4 flex flex-row items-center justify-between gap-1.5 sm:gap-4">
+                  <div className="p-1.5 sm:p-3 flex flex-row items-center justify-between gap-1.5 sm:gap-4">
                     <button
                       onClick={() => setSelectedTracks(prev => prev.includes(track.id) ? prev.filter(id => id !== track.id) : [...prev, track.id])}
                       className="p-1 text-zinc-400 hover:text-purple-500 transition-colors flex-shrink-0"
@@ -680,7 +680,7 @@ export default function ParsedFileDetail() {
                 </h3>
               </div>
 
-              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3 sm:p-4">
+              <div className="border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-lg p-3 sm:p-4">
                 <div className="flex flex-col gap-3 sm:gap-5">
                   {/* Generated Monospace Format String Preview */}
                   <div className="flex flex-col gap-2 text-left">
@@ -695,10 +695,10 @@ export default function ParsedFileDetail() {
                   {/* Primary Download trigger */}
                   <button
                     onClick={() => startDownload(getGeneratedFormatString(), getGeneratedFormatString().includes("bestaudio") && !getGeneratedFormatString().includes("bestvideo"))}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold w-full py-4 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300 overflow-hidden px-2"
+                    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium w-full py-2.5 rounded-lg shadow-sm transition-all duration-300 overflow-hidden px-2"
                   >
                     <Download className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate text-xs sm:text-sm">Initialize Extraction Download</span>
+                    <span className="truncate text-xs sm:text-sm">Download Media</span>
                   </button>
                 </div>
               </div>
@@ -713,7 +713,7 @@ export default function ParsedFileDetail() {
                 </h3>
               </div>
 
-              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-3xl p-3">
+              <div className="border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-lg p-3">
                 <div className="flex flex-col gap-4">
                   {displaySubOptions.length > 0 ? (
                     <>
@@ -739,7 +739,7 @@ export default function ParsedFileDetail() {
                       <button
                         onClick={() => downloadSubtitle(file.url, file.title)}
                         disabled={selectedSubs.length === 0}
-                        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold w-full py-2 rounded-xl transition-all duration-300 disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-medium border border-zinc-200 dark:border-zinc-700 w-full py-2.5 rounded-lg transition-all duration-300 disabled:opacity-50"
                       >
                         <Download className="w-3.5 h-3.5" />
                         Download Subtitle

@@ -70,7 +70,7 @@ export const useQueueStore = create<QueueState>()((set) => ({
       delete updates[id];
       return { progressUpdates: updates };
     }),
-  clearQueue: () => set({ queue: [] }),
+  clearQueue: () => set((state) => ({ queue: state.queue.filter((j) => j.status !== "completed" && j.status !== "error") })),
 }));
 
 // High-speed Progress Event System (Tauri Emitter)

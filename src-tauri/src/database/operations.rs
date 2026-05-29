@@ -247,7 +247,7 @@ pub fn clear_all_download_jobs(db_path: &Path) -> Result<(), DbError> {
         Err(e) => return Err(DbError(e.to_string())),
     };
 
-    match conn.execute("DELETE FROM download_jobs;", []) {
+    match conn.execute("DELETE FROM download_jobs WHERE status IN ('completed', 'error');", []) {
         Ok(_) => Ok(()),
         Err(e) => Err(DbError(e.to_string())),
     }
