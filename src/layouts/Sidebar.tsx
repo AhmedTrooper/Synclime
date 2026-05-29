@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen, GlobeLock } from "lucide-react";
+import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen, GlobeLock, Moon, Sun } from "lucide-react";
 import { useUIStore } from "@/store/useUIStore";
 
 export default function Sidebar() {
-  const { activePath, badges, isSidebarExpanded, toggleSidebar } = useUIStore();
+  const { activePath, badges, isSidebarExpanded, toggleSidebar, theme, toggleTheme } = useUIStore();
 
   const navItems = [
     { path: "/", label: "New Task", icon: Home, badgeKey: "home" as const },
@@ -67,8 +67,15 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Desktop Toggle Button */}
+      {/* Desktop Controls */}
       <div className="hidden sm:flex flex-col gap-2 px-3 mt-auto pt-4">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center p-2 rounded-lg text-zinc-500 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-colors"
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
         <button
           onClick={toggleSidebar}
           className="flex items-center justify-center p-2 rounded-lg text-zinc-500 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-colors"
