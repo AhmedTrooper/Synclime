@@ -64,14 +64,14 @@ export default function TitleBar() {
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => navigate(-1)}
-            className="p-1 rounded-md hover:bg-zinc-800/10 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200"
+            className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
             title="Go Back"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate(1)}
-            className="p-1 rounded-md hover:bg-zinc-800/10 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200"
+            className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
             title="Go Forward"
           >
             <ChevronRight className="w-4 h-4" />
@@ -89,21 +89,21 @@ export default function TitleBar() {
       <div className="flex items-center gap-1.5">
         <button
           onClick={handleMinimize}
-          className="p-1 rounded hover:bg-zinc-800/10 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200"
+          className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
           title="Minimize"
         >
           <Minus className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={handleMaximize}
-          className="p-1 rounded hover:bg-zinc-800/10 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200"
+          className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
           title="Maximize"
         >
           <Square className="w-3 h-3" />
         </button>
         <button
           onClick={handleClose}
-          className="p-1 rounded hover:bg-red-500/20 text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors duration-200"
+          className="p-1 rounded hover:bg-red-500/20 text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
           title="Close"
         >
           <X className="w-3.5 h-3.5" />

@@ -30,14 +30,14 @@ export default function Sidebar() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col sm:flex-row items-center gap-1 ${isSidebarExpanded ? "sm:gap-3 px-2 sm:px-3" : "sm:gap-0 sm:px-0 sm:justify-center"} py-2 sm:py-2 rounded-lg text-[10px] sm:text-[13px] font-medium transition-colors min-w-[64px] sm:min-w-0 flex-1 sm:flex-none ${
+                className={`flex items-center gap-3 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 relative group overflow-hidden ${
                   isActive
-                    ? "text-blue-600 dark:text-blue-400 sm:bg-blue-600 sm:text-white shadow-none sm:shadow-sm"
-                    : "text-zinc-500 dark:text-zinc-400 sm:text-zinc-600 sm:dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800"
+                    ? "bg-zinc-900 dark:bg-white/10 text-white dark:text-white font-bold shadow-md"
+                    : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-medium"
                 }`}
               >
                 <div className="relative flex items-center justify-center">
-                  <Icon className={`w-5 h-5 sm:w-4 sm:h-4 ${isActive ? "text-blue-600 dark:text-blue-400 sm:text-white" : "text-zinc-400 dark:text-zinc-500"}`} />
+                  <Icon className={`w-5 h-5 sm:w-4 sm:h-4 ${isActive ? "text-white" : "text-zinc-400 dark:text-zinc-500"}`} />
                   {badgeCount > 0 && (
                     <span
                       className={`absolute -top-1.5 -right-2.5 flex h-3.5 min-w-3.5 px-1 items-center justify-center rounded-full text-[8px] sm:text-[10px] font-bold sm:h-4 sm:min-w-4 ${
