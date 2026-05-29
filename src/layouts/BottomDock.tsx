@@ -12,12 +12,13 @@ import {
   Minus,
   Maximize2,
   X,
+  Monitor,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useUIStore } from "@/store/useUIStore";
 
 export default function BottomDock() {
-  const { activePath, badges, theme, toggleTheme } = useUIStore();
+  const { activePath, badges, theme, setTheme } = useUIStore();
 
   const dockItems = [
     {
@@ -180,13 +181,19 @@ export default function BottomDock() {
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <button
-                    onClick={toggleTheme}
+                    onClick={() => {
+                      if (theme === "system") setTheme("dark");
+                      else if (theme === "dark") setTheme("light");
+                      else setTheme("system");
+                    }}
                     className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
                   >
                     {theme === "dark" ? (
                       <Sun className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    ) : (
+                    ) : theme === "light" ? (
                       <Moon className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                    ) : (
+                      <Monitor className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                     )}
                   </button>
                 </Tooltip.Trigger>

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useUIStore } from "../store/useUIStore";
-import * as Switch from "@radix-ui/react-switch";
 import { Settings as SettingsIcon, RefreshCw, CheckCircle2, FolderOpen } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 
 export default function Settings() {
-  const { setActivePath, downloadPath, setDownloadPath, theme, toggleTheme } = useUIStore();
+  const { setActivePath, downloadPath, setDownloadPath } = useUIStore();
   const [tempPath, setTempPath] = useState(downloadPath);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [concurrency, setConcurrency] = useState<number>(3);
@@ -169,20 +168,6 @@ export default function Settings() {
 
             <div className="h-[1px] w-full bg-zinc-200 dark:bg-zinc-800" />
 
-            {/* Setting Item 2: Theme */}
-            <div className="flex items-center justify-between p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-              <div className="flex flex-col gap-0.5 sm:gap-1">
-                <span className="text-[12px] sm:text-[13px] font-bold text-zinc-900 dark:text-zinc-100">Dark Mode</span>
-                <span className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Toggle dark UI theme globally</span>
-              </div>
-              <Switch.Root
-                checked={theme === "dark"}
-                onCheckedChange={toggleTheme}
-                className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors flex-shrink-0"
-              >
-                <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
-              </Switch.Root>
-            </div>
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row items-center gap-4 justify-end pt-2">

@@ -14,14 +14,14 @@ interface BadgeState {
 interface UIStore {
   activePath: string;
   badges: BadgeState;
-  theme: "dark" | "light";
+  theme: "dark" | "light" | "system";
   downloadPath: string;
   setActivePath: (path: string) => void;
   incrementBadge: (tab: keyof BadgeState) => void;
   decrementBadge: (tab: keyof BadgeState) => void;
   clearBadge: (tab: keyof BadgeState) => void;
   setBadge: (tab: keyof BadgeState, count: number) => void;
-  toggleTheme: () => void;
+  setTheme: (theme: "dark" | "light" | "system") => void;
   setDownloadPath: (path: string) => void;
   isSidebarExpanded: boolean;
   toggleSidebar: () => void;
@@ -41,7 +41,7 @@ export const useUIStore = create<UIStore>()(
         settings: 0,
         sites: 0,
       },
-      theme: "dark",
+      theme: "system",
       downloadPath: "",
       isSidebarExpanded: true,
       _hasHydrated: false,
@@ -75,10 +75,7 @@ export const useUIStore = create<UIStore>()(
             [tab]: Math.max(0, count),
           },
         })),
-      toggleTheme: () =>
-        set((state) => ({
-          theme: state.theme === "dark" ? "light" : "dark",
-        })),
+      setTheme: (theme) => set({ theme }),
       toggleSidebar: () =>
         set((state) => ({
           isSidebarExpanded: !state.isSidebarExpanded,
