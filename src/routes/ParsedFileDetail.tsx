@@ -3,7 +3,7 @@ import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { useUIStore } from "../store/useUIStore";
 
-import { ArrowLeft, Download, Film, Music, Globe, List, Clock, PlayCircle, Settings, CheckCircle2, Sliders, ToggleLeft } from "lucide-react";
+import { ArrowLeft, Download, Film, Music, Globe, List, Clock, PlayCircle, Settings, CheckCircle2, Sliders, ToggleLeft, CheckSquare, Square } from "lucide-react";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -25,6 +25,9 @@ export default function ParsedFileDetail() {
 
   // Preset Selection State (Layer 2)
   const [selectedPreset, setSelectedPreset] = useState<string>("bestvideo+bestaudio/best");
+
+  // Playlist Bulk Selection State
+  const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
 
   if (!file) {
     return (
@@ -178,13 +181,17 @@ export default function ParsedFileDetail() {
 
   // Bulk downloads all playlist tracks using the selected fallback rule
   const downloadAllPlaylist = async () => {
-    if (!payload.entries || payload.entries.length === 0) return;
+    let targetTracks = payload.entries || [];
+    if (selectedTracks.length > 0) {
+      targetTracks = targetTracks.filter((t: any) => selectedTracks.includes(t.id));
+    }
+    if (targetTracks.length === 0) return;
     
     // Pass the active adaptive format string preset selected by the user
     const playlistFormatString = selectedPreset;
     const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
 
-    for (const track of payload.entries) {
+    for (const track of targetTracks) {
       const trackSlug = `track-${track.id}-${Date.now()}`;
       const newJob: DownloadJob = {
         slug: trackSlug,
@@ -368,7 +375,9 @@ export default function ParsedFileDetail() {
                   className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300 overflow-hidden"
                 >
                   <Download className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate text-[12px] sm:text-sm">Download All Tracks</span>
+                  <span className="truncate text-[12px] sm:text-sm">
+                    {selectedTracks.length > 0 ? `Download Selected (${selectedTracks.length})` : "Download All Tracks"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -376,11 +385,25 @@ export default function ParsedFileDetail() {
 
           {/* Playlist Tracks Listing */}
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <List className="w-4 h-4 text-purple-500" />
-              <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
-                Playlist Tracks ({payload.entries?.length || 0})
-              </h3>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <List className="w-4 h-4 text-purple-500" />
+                <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
+                  Playlist Tracks ({payload.entries?.length || 0})
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  if (selectedTracks.length === (payload.entries?.length || 0)) {
+                    setSelectedTracks([]);
+                  } else {
+                    setSelectedTracks(payload.entries?.map((t: any) => t.id) || []);
+                  }
+                }}
+                className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-bold hover:underline select-none"
+              >
+                {selectedTracks.length === (payload.entries?.length || 0) ? "Deselect All" : "Select All"}
+              </button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 w-full">
@@ -390,6 +413,17 @@ export default function ParsedFileDetail() {
                   className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-2xl"
                 >
                   <div className="p-1.5 sm:p-3 md:p-4 flex flex-row items-center justify-between gap-1.5 sm:gap-4">
+                    <button
+                      onClick={() => setSelectedTracks(prev => prev.includes(track.id) ? prev.filter(id => id !== track.id) : [...prev, track.id])}
+                      className="p-1 text-zinc-400 hover:text-purple-500 transition-colors flex-shrink-0"
+                    >
+                      {selectedTracks.includes(track.id) ? (
+                        <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+                      ) : (
+                        <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+                      )}
+                    </button>
+
                     <div className="flex items-center gap-1.5 sm:gap-3 flex-grow text-left min-w-0">
                       <span className="text-[9px] sm:text-xs font-bold text-zinc-400 font-mono w-4 sm:w-5">
                         {(index + 1).toString().padStart(2, "0")}
