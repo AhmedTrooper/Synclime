@@ -255,6 +255,9 @@ pub fn run() {
         commands::clipboard::process_clipboard_paste,
         commands::queue::trigger_job_start,
         commands::queue::request_job_pause,
+        commands::queue::insert_job_record,
+        commands::queue::delete_job_record,
+        commands::queue::clear_all_jobs_records,
         commands::discovery::discover_asset_metadata
     ]);
 

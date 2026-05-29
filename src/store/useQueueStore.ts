@@ -22,6 +22,7 @@ interface QueueState {
   removeJob: (slug: string) => void;
   setProgress: (id: string, progress: number) => void;
   clearProgress: (id: string) => void;
+  clearQueue: () => void;
 }
 
 export const useQueueStore = create<QueueState>()(
@@ -66,6 +67,7 @@ export const useQueueStore = create<QueueState>()(
           delete updates[id];
           return { progressUpdates: updates };
         }),
+      clearQueue: () => set({ queue: [] }),
     }),
     {
       name: "synclime-queue-storage",

@@ -223,3 +223,29 @@ pub fn get_next_pending_job(db_path: &Path) -> Result<Option<DownloadJobRow>, Db
         Err(e) => Err(DbError(e.to_string())),
     }
 }
+
+/// Secure Queue Operation: Drops a single download job tracker from SQLite
+pub fn delete_download_job(db_path: &Path, job_slug: &str) -> Result<(), DbError> {
+    let conn = match Connection::open(db_path) {
+        Ok(c) => c,
+        Err(e) => return Err(DbError(e.to_string())),
+    };
+
+    match conn.execute("DELETE FROM download_jobs WHERE slug = ?1;", params![job_slug]) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(DbError(e.to_string())),
+    }
+}
+
+/// Secure Queue Operation: Drops all download tracker jobs completely
+pub fn clear_all_download_jobs(db_path: &Path) -> Result<(), DbError> {
+    let conn = match Connection::open(db_path) {
+        Ok(c) => c,
+        Err(e) => return Err(DbError(e.to_string())),
+    };
+
+    match conn.execute("DELETE FROM download_jobs;", []) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(DbError(e.to_string())),
+    }
+}

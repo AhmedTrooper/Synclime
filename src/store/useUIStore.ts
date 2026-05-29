@@ -13,12 +13,14 @@ interface UIStore {
   activePath: string;
   badges: BadgeState;
   theme: "dark" | "light";
+  downloadPath: string;
   setActivePath: (path: string) => void;
   incrementBadge: (tab: keyof BadgeState) => void;
   decrementBadge: (tab: keyof BadgeState) => void;
   clearBadge: (tab: keyof BadgeState) => void;
   setBadge: (tab: keyof BadgeState, count: number) => void;
   toggleTheme: () => void;
+  setDownloadPath: (path: string) => void;
 }
 
 export const useUIStore = create<UIStore>()(
@@ -33,6 +35,7 @@ export const useUIStore = create<UIStore>()(
         settings: 0,
       },
       theme: "dark",
+      downloadPath: "",
       setActivePath: (path) => set({ activePath: path }),
       incrementBadge: (tab) =>
         set((state) => ({
@@ -66,12 +69,18 @@ export const useUIStore = create<UIStore>()(
         set((state) => ({
           theme: state.theme === "dark" ? "light" : "dark",
         })),
+      setDownloadPath: (path) => set({ downloadPath: path }),
     }),
     {
       name: "synclime-ui-storage",
-      partialize: (state) => ({ theme: state.theme, activePath: state.activePath }),
+      partialize: (state) => ({
+        theme: state.theme,
+        activePath: state.activePath,
+        downloadPath: state.downloadPath,
+      }),
     }
   )
 );
+
 
 

@@ -4,12 +4,12 @@ import { useUIStore } from "../store/useUIStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
 import { Button } from "@heroui/react";
-import { ArrowLeft, DownloadCloud } from "lucide-react";
+import { ArrowLeft, DownloadCloud, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
 export default function Downloads() {
   const { setActivePath } = useUIStore();
-  const { queue, updateJobStatus, removeJob } = useQueueStore();
+  const { queue, updateJobStatus, removeJob, clearQueue } = useQueueStore();
 
   useEffect(() => {
     setActivePath("/downloads");
@@ -36,35 +36,11 @@ export default function Downloads() {
           throw new Error(res.message);
         }
       }
-    } catch (e) {
-      console.warn(`Pause/Resume toggle failed for job ${job.slug} (Simulation environment fallback):`, e);
-      
-      // Simulation mode fallback
-      if (nextStatus === "downloading") {
-        let currentProgress = job.progress;
-        const interval = setInterval(() => {
-          // Check if status is still downloading
-          const latestJob = useQueueStore.getState().queue.find((j) => j.slug === job.slug);
-          if (!latestJob || latestJob.status !== "downloading") {
-            clearInterval(interval);
-            return;
-          }
-
-          currentProgress += Math.floor(Math.random() * 10) + 3;
-          if (currentProgress >= 100) {
-            currentProgress = 100;
-            useQueueStore.getState().updateJobProgress(job.slug, 100, "Download task completed.");
-            useQueueStore.getState().updateJobStatus(job.slug, "completed");
-            clearInterval(interval);
-          } else {
-            useQueueStore.getState().updateJobProgress(
-              job.slug,
-              currentProgress,
-              `${(Math.random() * 6 + 2).toFixed(2)}MB/s ETA 00:0${Math.floor((100 - currentProgress) / 10)}`
-            );
-          }
-        }, 1500);
-      }
+    } catch (e: any) {
+      console.error(`Pause/Resume toggle failed for job ${job.slug}:`, e);
+      const errMsg = e.message || "Failed to communicate with native downloader pipeline.";
+      updateJobStatus(job.slug, "error");
+      useQueueStore.getState().updateJobProgress(job.slug, job.progress, errMsg);
     }
   };
 
@@ -77,8 +53,34 @@ export default function Downloads() {
     }
   };
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = async (slug: string) => {
+    // 1. Instantly remove from UI store optimistically
     removeJob(slug);
+    
+    // 2. Drop the record from backend SQLite database
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        await invoke("delete_job_record", { jobSlug: slug });
+      } catch (e) {
+        console.error(`Failed to delete job ${slug} from SQLite backend:`, e);
+      }
+    }
+  };
+
+  const handleClearAll = async () => {
+    // 1. Instantly drop everything from UI store
+    clearQueue();
+
+    // 2. Clear entire backend database table
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        await invoke("clear_all_jobs_records");
+      } catch (e) {
+        console.error("Failed to clear all jobs from SQLite backend:", e);
+      }
+    }
   };
 
   return (
@@ -104,6 +106,18 @@ export default function Downloads() {
         >
           Back to Analyzer
         </Button>
+        {queue.length > 0 && (
+          <Button
+            size="sm"
+            color="danger"
+            variant="flat"
+            className="font-semibold transition-all duration-300"
+            startContent={<Trash2 className="w-4 h-4" />}
+            onPress={handleClearAll}
+          >
+            Clear All
+          </Button>
+        )}
       </div>
 
       {/* Queue Listing */}
@@ -115,6 +129,7 @@ export default function Downloads() {
             name={job.name}
             progress={job.progress}
             status={job.status === "pending" ? "paused" : job.status}
+            message={job.message}
             onPauseToggle={() => handlePauseToggle(job)}
             onReveal={() => handleReveal(job)}
             onDelete={() => handleDelete(job.slug)}

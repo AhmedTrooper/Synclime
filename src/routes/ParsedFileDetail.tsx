@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
+import { useUIStore } from "../store/useUIStore";
 import { Button, Card, CardBody, Select, SelectItem } from "@heroui/react";
 import { ArrowLeft, Download, Film, Music, Globe, List, Clock, PlayCircle, Settings, CheckCircle2, Sliders, ToggleLeft } from "lucide-react";
 import { useState } from "react";
@@ -113,15 +114,44 @@ export default function ParsedFileDetail() {
       // Add to store
       addJob(newJob);
 
-      // Attempt calling Tauri invoke start command
-      try {
-        const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: uniqueSlug });
-        if (!res.success) {
-          throw new Error(res.message);
+      const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+
+      if (isTauri) {
+        // Pre-register job in the SQLite registry
+        try {
+          const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", {
+            payload: {
+              slug: newJob.slug,
+              url: newJob.url,
+              file_type: newJob.fileType,
+              format_string: newJob.formatString || "bestvideo+bestaudio/best",
+              download_path: useUIStore.getState().downloadPath,
+              created_at: newJob.createdAt,
+            }
+          });
+          if (!insertRes.success) throw new Error(insertRes.message);
+        } catch (e: any) {
+          console.error("Database pre-registration error:", e);
+          const errMsg = e.message || "Failed to construct the initial job record in SQLite.";
+          useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
+          useQueueStore.getState().updateJobProgress(uniqueSlug, 0, errMsg);
+          return;
         }
-      } catch (e) {
-        console.warn("trigger_job_start invoke error (browser simulation active):", e);
-        // Simulate progress on web fallback
+
+        // Attempt calling Tauri invoke start command
+        try {
+          const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: uniqueSlug });
+          if (!res.success) {
+            throw new Error(res.message);
+          }
+        } catch (e: any) {
+          console.error("trigger_job_start invoke error:", e);
+          const errMsg = e.message || "Failed to initialize native extraction downloader.";
+          useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
+          useQueueStore.getState().updateJobProgress(uniqueSlug, 0, errMsg);
+        }
+      } else {
+        // Simulate progress on web fallback (browser preview only)
         let currentProgress = 0;
         const interval = setInterval(() => {
           currentProgress += Math.floor(Math.random() * 15) + 5;
@@ -154,6 +184,7 @@ export default function ParsedFileDetail() {
     
     // Pass the active adaptive format string preset selected by the user
     const playlistFormatString = selectedPreset;
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
 
     for (const track of payload.entries) {
       const trackSlug = `track-${track.id}-${Date.now()}`;
@@ -171,14 +202,41 @@ export default function ParsedFileDetail() {
 
       addJob(newJob);
 
-      try {
-        const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: trackSlug });
-        if (!res.success) {
-          throw new Error(res.message);
+      if (isTauri) {
+        // Pre-register job in the SQLite registry
+        try {
+          const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", {
+            payload: {
+              slug: newJob.slug,
+              url: newJob.url,
+              file_type: newJob.fileType,
+              format_string: newJob.formatString || "bestvideo+bestaudio/best",
+              download_path: useUIStore.getState().downloadPath,
+              created_at: newJob.createdAt,
+            }
+          });
+          if (!insertRes.success) throw new Error(insertRes.message);
+        } catch (e: any) {
+          console.error(`Database pre-registration error for playlist item ${track.title}:`, e);
+          const errMsg = e.message || "Failed to construct the initial job record in SQLite.";
+          useQueueStore.getState().updateJobStatus(trackSlug, "error");
+          useQueueStore.getState().updateJobProgress(trackSlug, 0, errMsg);
+          continue;
         }
-      } catch (e) {
-        console.warn(`trigger_job_start invoke error on playlist item ${track.title} (browser simulation):`, e);
-        // Direct complete simulation
+
+        try {
+          const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: trackSlug });
+          if (!res.success) {
+            throw new Error(res.message);
+          }
+        } catch (e: any) {
+          console.error(`trigger_job_start invoke error on playlist item ${track.title}:`, e);
+          const errMsg = e.message || "Failed to initialize native extraction downloader.";
+          useQueueStore.getState().updateJobStatus(trackSlug, "error");
+          useQueueStore.getState().updateJobProgress(trackSlug, 0, errMsg);
+        }
+      } else {
+        // Direct complete simulation (browser preview only)
         setTimeout(() => {
           useQueueStore.getState().updateJobProgress(trackSlug, 100, "Finished batch item.");
           useQueueStore.getState().updateJobStatus(trackSlug, "completed");

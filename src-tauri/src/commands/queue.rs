@@ -97,3 +97,89 @@ pub async fn request_job_pause(
         }),
     }
 }
+
+#[derive(serde::Deserialize)]
+pub struct InsertJobPayload {
+    pub slug: String,
+    pub url: String,
+    pub file_type: String,
+    pub format_string: String,
+    pub download_path: String,
+    pub created_at: String,
+}
+
+/// Tauri IPC Command: Injects a brand new download job directly into the SQLite database securely
+#[tauri::command]
+pub async fn insert_job_record(
+    state: State<'_, AppEngineState>,
+    payload: InsertJobPayload,
+) -> Result<CommandResponse, String> {
+    let row = crate::database::operations::DownloadJobRow {
+        slug: payload.slug,
+        parsed_file_slug: None,
+        file_type: payload.file_type,
+        associated_media_job_slug: None,
+        is_direct_url: 1,
+        direct_url: Some(payload.url),
+        is_from_playlist: 0,
+        current_part: 1,
+        total_parts: 1,
+        base_download_path: payload.download_path,
+        custom_download_path: None,
+        cookie_profile_slug: None,
+        proxy_profile_slug: None,
+        status: "pending".to_string(),
+        format_string: payload.format_string,
+        audio_format: None,
+        video_format: None,
+        selected_subtitles: None,
+        created_at: payload.created_at.clone(),
+        updated_at: payload.created_at,
+    };
+
+    match crate::database::operations::create_download_job(&state.db_path, &row) {
+        Ok(_) => Ok(CommandResponse {
+            success: true,
+            message: "Job inserted into SQLite registry successfully.".to_string(),
+        }),
+        Err(e) => Ok(CommandResponse {
+            success: false,
+            message: e.0,
+        }),
+    }
+}
+
+/// Tauri IPC Command: Drops a single download job from the SQLite database
+#[tauri::command]
+pub async fn delete_job_record(
+    state: State<'_, AppEngineState>,
+    job_slug: String,
+) -> Result<CommandResponse, String> {
+    match crate::database::operations::delete_download_job(&state.db_path, &job_slug) {
+        Ok(_) => Ok(CommandResponse {
+            success: true,
+            message: "Job dropped from SQLite registry successfully.".to_string(),
+        }),
+        Err(e) => Ok(CommandResponse {
+            success: false,
+            message: e.0,
+        }),
+    }
+}
+
+/// Tauri IPC Command: Clears all download jobs completely from the SQLite database
+#[tauri::command]
+pub async fn clear_all_jobs_records(
+    state: State<'_, AppEngineState>,
+) -> Result<CommandResponse, String> {
+    match crate::database::operations::clear_all_download_jobs(&state.db_path) {
+        Ok(_) => Ok(CommandResponse {
+            success: true,
+            message: "All jobs dropped from SQLite registry successfully.".to_string(),
+        }),
+        Err(e) => Ok(CommandResponse {
+            success: false,
+            message: e.0,
+        }),
+    }
+}

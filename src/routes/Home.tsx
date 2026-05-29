@@ -66,32 +66,39 @@ export default function Home() {
         // Add to Zustand state
         addJob(newJob);
 
+        const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+
+        if (isTauri) {
+          // Pre-register job in the SQLite registry
+          try {
+            const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", {
+              payload: {
+                slug: newJob.slug,
+                url: newJob.url,
+                file_type: newJob.fileType,
+                format_string: "bestvideo+bestaudio/best",
+                download_path: useUIStore.getState().downloadPath,
+                created_at: newJob.createdAt,
+              }
+            });
+            if (!insertRes.success) throw new Error(insertRes.message);
+          } catch (e: any) {
+            console.error("Database pre-registration error:", e);
+            throw new Error(e.message || "Failed to construct the initial job record in SQLite.");
+          }
+        }
+
         // Attempt triggering background downloader task on Tauri side
         try {
           const res = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: uniqueSlug });
           if (!res.success) {
             throw new Error(res.message);
           }
-        } catch (e) {
-          console.warn("trigger_job_start invoke error (browser fallback simulation active):", e);
-          // Simulate progress on web fallback so the UI looks active
-          let currentProgress = 0;
-          const interval = setInterval(() => {
-            currentProgress += Math.floor(Math.random() * 15) + 5;
-            if (currentProgress >= 100) {
-              currentProgress = 100;
-              useQueueStore.getState().updateJobProgress(uniqueSlug, 100, "Completed direct download.");
-              useQueueStore.getState().updateJobStatus(uniqueSlug, "completed");
-              clearInterval(interval);
-            } else {
-              useQueueStore.getState().updateJobProgress(
-                uniqueSlug,
-                currentProgress,
-                `${(Math.random() * 5 + 2).toFixed(2)}MB/s ETA 00:0${Math.floor((100 - currentProgress) / 10)}`
-              );
-              useQueueStore.getState().updateJobStatus(uniqueSlug, "downloading");
-            }
-          }, 1500);
+        } catch (e: any) {
+          console.error("trigger_job_start invoke error:", e);
+          const errMsg = e.message || "Failed to initialize native direct downloader.";
+          useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
+          useQueueStore.getState().updateJobProgress(uniqueSlug, 0, errMsg);
         }
 
         // Redirect to Downloads page
