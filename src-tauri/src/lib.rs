@@ -4,7 +4,7 @@ use rusqlite::Connection;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
-use tauri::{Manager, Emitter}; // Cleaned: Only imported once right here
+use tauri::{Emitter, Manager}; // Cleaned: Only imported once right here
 use tokio::process::Child;
 use tokio::sync::{mpsc, Semaphore};
 
@@ -61,6 +61,12 @@ CREATE TABLE IF NOT EXISTS site_configs (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+);
+INSERT OR IGNORE INTO app_settings (key, value) VALUES ('concurrency_limit', '3');
 
 CREATE TABLE IF NOT EXISTS parsed_files (
     slug TEXT PRIMARY KEY NOT NULL,
@@ -185,6 +191,7 @@ async fn start_cancellation_worker(
 
 pub fn run() {
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(
@@ -206,14 +213,18 @@ pub fn run() {
             }
         };
 
-        // --- RECOVERY MECHANISM ---
-        // If the app was closed expectedly or unexpectedly while jobs were downloading,
-        // they are now orphaned. We must reset them to 'paused' so the user can resume them.
+        let mut concurrency_limit = 3;
         if let Ok(conn) = rusqlite::Connection::open(&db_path) {
             let _ = conn.execute(
-                "UPDATE download_jobs SET status = 'paused', tracking_message = 'Paused due to app closure.' WHERE status = 'downloading';",
+                "UPDATE download_jobs SET status = 'paused', updated_at = datetime('now') WHERE status = 'downloading' OR status = 'pending';",
                 [],
             );
+
+            if let Ok(val) = conn.query_row("SELECT value FROM app_settings WHERE key = 'concurrency_limit'", [], |row| row.get::<_, String>(0)) {
+                if let Ok(parsed) = val.parse::<usize>() {
+                    concurrency_limit = parsed;
+                }
+            }
         }
 
         let process_registry = Arc::new(ActiveProcessRegistry {
@@ -246,7 +257,6 @@ pub fn run() {
                                 rusqlite::params![snapshot.progress, snapshot.status_message, slug]
                             );
                             
-                            // Emit the 1-second batched update down to React UI
                             let _ = tic_emitter.emit(
                                 "download-progress-token",
                                 serde_json::json!({
@@ -263,7 +273,7 @@ pub fn run() {
         });
 
         app.manage(AppEngineState {
-            pool_semaphore: Arc::new(Semaphore::new(3)),
+            pool_semaphore: Arc::new(Semaphore::new(concurrency_limit)),
             db_path,
             active_processes: process_registry,
             signal_tx,
@@ -279,9 +289,11 @@ pub fn run() {
         commands::queue::request_job_pause,
         commands::queue::insert_job_record,
         commands::queue::delete_job_record,
-        commands::queue::clear_all_jobs_records,
-        commands::queue::get_all_jobs,
-        commands::queue::reveal_job_in_explorer,
+        crate::commands::queue::clear_all_jobs_records,
+        crate::commands::queue::get_all_jobs,
+        crate::commands::queue::reveal_job_in_explorer,
+        crate::commands::queue::update_concurrency_limit,
+        crate::commands::queue::get_concurrency_limit,
         commands::discovery::discover_asset_metadata,
         commands::discovery::insert_parsed_file,
         commands::config::add_cookie_profile,

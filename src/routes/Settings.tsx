@@ -3,13 +3,27 @@ import { useUIStore } from "../store/useUIStore";
 import * as Switch from "@radix-ui/react-switch";
 import { Settings as SettingsIcon, RefreshCw, CheckCircle2, FolderOpen } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 
 export default function Settings() {
   const { setActivePath, downloadPath, setDownloadPath, theme, toggleTheme } = useUIStore();
   const [tempPath, setTempPath] = useState(downloadPath);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [concurrency, setConcurrency] = useState<number>(3);
+  const [needsRelaunch, setNeedsRelaunch] = useState(false);
 
   useEffect(() => {
+    const fetchLimit = async () => {
+      try {
+        if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+          const limit = await invoke<number>("get_concurrency_limit");
+          setConcurrency(limit);
+        }
+      } catch (err) {
+        console.error("Failed to fetch concurrency limit:", err);
+      }
+    };
+    fetchLimit();
     setActivePath("/settings");
   }, [setActivePath]);
 
@@ -17,9 +31,19 @@ export default function Settings() {
     setTempPath(downloadPath);
   }, [downloadPath]);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setDownloadPath(tempPath);
+    
+    try {
+      if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+        await invoke("update_concurrency_limit", { limit: concurrency });
+        setNeedsRelaunch(true);
+      }
+    } catch(err) {
+       console.error("Failed to update concurrency limit:", err);
+    }
+    
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);
@@ -117,6 +141,34 @@ export default function Settings() {
 
             <div className="h-[1px] w-full bg-zinc-200 dark:bg-zinc-800" />
 
+            {/* Setting Item 1.5: Concurrency Limit */}
+            <div className="flex flex-col gap-3 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-0.5 sm:gap-1">
+                  <span className="text-[12px] sm:text-[13px] font-bold text-zinc-900 dark:text-zinc-100">Simultaneous Extractions</span>
+                  <span className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Maximum concurrent background downloads</span>
+                </div>
+                <div className="w-10 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+                  {concurrency}
+                </div>
+              </div>
+              <div className="w-full flex items-center gap-4 px-1">
+                <span className="text-[10px] font-bold text-zinc-400">1</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={concurrency}
+                  onChange={(e) => setConcurrency(parseInt(e.target.value))}
+                  className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <span className="text-[10px] font-bold text-zinc-400">10</span>
+              </div>
+            </div>
+
+            <div className="h-[1px] w-full bg-zinc-200 dark:bg-zinc-800" />
+
             {/* Setting Item 2: Theme */}
             <div className="flex items-center justify-between p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
               <div className="flex flex-col gap-0.5 sm:gap-1">
@@ -138,6 +190,22 @@ export default function Settings() {
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 animate-fade-in w-full sm:w-auto justify-center sm:justify-start">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Configuration Applied
               </span>
+            )}
+            {needsRelaunch && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const { relaunch } = await import("@tauri-apps/plugin-process");
+                    await relaunch();
+                  } catch (e) {
+                    console.error("Failed to relaunch app:", e);
+                  }
+                }}
+                className="flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-[13px] w-full sm:w-auto shadow-md shadow-rose-500/20"
+              >
+                Relaunch to Apply
+              </button>
             )}
             <button
               type="submit"

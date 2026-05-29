@@ -16,7 +16,7 @@ pub async fn trigger_job_start(
     job_slug: String,
 ) -> Result<CommandResponse, String> {
     // 1. Check the true in-memory registry to see if the process is currently alive
-    // This entirely bypasses SQLite disk-write lag race conditions where a killed worker 
+    // This entirely bypasses SQLite disk-write lag race conditions where a killed worker
     // hasn't finished writing its 'paused' state yet.
     let is_running = {
         let instances = state.active_processes.instances.read();
@@ -26,7 +26,8 @@ pub async fn trigger_job_start(
     if is_running {
         return Ok(CommandResponse {
             success: true,
-            message: "Job is already actively running in memory. Ignored duplicate trigger.".to_string(),
+            message: "Job is already actively running in memory. Ignored duplicate trigger."
+                .to_string(),
         });
     }
 
@@ -112,9 +113,17 @@ pub async fn insert_job_record(
         parsed_file_slug: payload.parsed_file_slug.clone(),
         file_type: payload.file_type,
         associated_media_job_slug: payload.associated_media_job_slug,
-        is_direct_url: if payload.parsed_file_slug.is_some() { 0 } else { 1 },
+        is_direct_url: if payload.parsed_file_slug.is_some() {
+            0
+        } else {
+            1
+        },
         direct_url: Some(payload.url),
-        is_from_playlist: if payload.is_from_playlist.unwrap_or(false) { 1 } else { 0 },
+        is_from_playlist: if payload.is_from_playlist.unwrap_or(false) {
+            1
+        } else {
+            0
+        },
         current_part: 1,
         total_parts: 1,
         base_download_path: payload.download_path,
@@ -280,4 +289,32 @@ pub async fn reveal_job_in_explorer(
         success: true,
         message: "Successfully opened natively.".to_string(),
     })
+}
+
+#[tauri::command]
+pub async fn update_concurrency_limit(
+    state: State<'_, AppEngineState>,
+    limit: usize,
+) -> Result<CommandResponse, String> {
+    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+        let _ = conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('concurrency_limit', ?1);",
+            rusqlite::params![limit.to_string()]
+        );
+    }
+    Ok(CommandResponse { success: true, message: "Concurrency limit updated.".to_string() })
+}
+
+#[tauri::command]
+pub async fn get_concurrency_limit(
+    state: State<'_, AppEngineState>,
+) -> Result<usize, String> {
+    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+        if let Ok(val) = conn.query_row("SELECT value FROM app_settings WHERE key = 'concurrency_limit'", [], |row| row.get::<_, String>(0)) {
+            if let Ok(parsed) = val.parse::<usize>() {
+                return Ok(parsed);
+            }
+        }
+    }
+    Ok(3)
 }

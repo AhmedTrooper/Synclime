@@ -118,7 +118,7 @@ pub fn resolve_job_parameters(
                 .unwrap_or_else(get_system_downloads_fallback);
 
             let mut final_path = std::path::PathBuf::from(root_destination);
-            
+
             if let Some(playlist_name) = sanitized_playlist.filter(|s| !s.trim().is_empty()) {
                 final_path = final_path.join(playlist_name);
             } else if let Some(video_title) = sanitized_title.filter(|s| !s.trim().is_empty()) {

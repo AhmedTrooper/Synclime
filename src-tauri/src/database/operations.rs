@@ -231,7 +231,10 @@ pub fn delete_download_job(db_path: &Path, job_slug: &str) -> Result<(), DbError
         Err(e) => return Err(DbError(e.to_string())),
     };
 
-    match conn.execute("DELETE FROM download_jobs WHERE slug = ?1;", params![job_slug]) {
+    match conn.execute(
+        "DELETE FROM download_jobs WHERE slug = ?1;",
+        params![job_slug],
+    ) {
         Ok(_) => Ok(()),
         Err(e) => Err(DbError(e.to_string())),
     }
