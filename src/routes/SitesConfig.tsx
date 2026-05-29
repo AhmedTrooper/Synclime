@@ -327,7 +327,7 @@ export default function SitesConfig() {
                     placeholder="Profile Title (e.g. YouTube Premium)"
                     value={newCookieTitle}
                     onChange={(e) => setNewCookieTitle(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm"
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
                     required
                   />
                   <input
@@ -335,7 +335,7 @@ export default function SitesConfig() {
                     placeholder="Domain (e.g. youtube.com)"
                     value={newCookieDomain}
                     onChange={(e) => setNewCookieDomain(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm"
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
                     required
                   />
                 </div>
@@ -343,7 +343,7 @@ export default function SitesConfig() {
                   placeholder="Paste raw Netscape / JSON cookie data here..."
                   value={newCookieData}
                   onChange={(e) => setNewCookieData(e.target.value)}
-                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs min-h-[100px] font-mono"
+                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs min-h-[100px] font-mono text-zinc-900 dark:text-white"
                   required
                 />
                 <button
@@ -433,7 +433,7 @@ export default function SitesConfig() {
                         <textarea
                           value={editCookieData}
                           onChange={(e) => setEditCookieData(e.target.value)}
-                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs font-mono min-h-[80px]"
+                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs font-mono min-h-[80px] text-zinc-900 dark:text-white"
                         />
                         <button
                           onClick={() => handleUpdateCookie(cookie.slug)}
@@ -471,7 +471,7 @@ export default function SitesConfig() {
                     placeholder="Rule Title (e.g. YouTube Restricted)"
                     value={newSiteTitle}
                     onChange={(e) => setNewSiteTitle(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm"
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
                     required
                   />
                   <input
@@ -479,7 +479,7 @@ export default function SitesConfig() {
                     placeholder="Domain Match (e.g. youtube.com)"
                     value={newSiteDomain}
                     onChange={(e) => setNewSiteDomain(e.target.value)}
-                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm font-mono"
+                    className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm font-mono text-zinc-900 dark:text-white"
                     required
                   />
                 </div>
@@ -489,9 +489,9 @@ export default function SitesConfig() {
                     onChange={(e) => setNewSiteCookieSlug(e.target.value)}
                     className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
                   >
-                    <option value="">No Cookie Profile Assigned</option>
+                    <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">No Cookie Profile Assigned</option>
                     {cookies.map(c => (
-                      <option key={c.slug} value={c.slug}>{c.title} ({c.domain})</option>
+                      <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={c.slug} value={c.slug}>{c.title} ({c.domain})</option>
                     ))}
                   </select>
                   <select
@@ -499,9 +499,9 @@ export default function SitesConfig() {
                     onChange={(e) => setNewSiteProxySlug(e.target.value)}
                     className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
                   >
-                    <option value="">No Proxy Profile Assigned</option>
+                    <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">No Proxy Profile Assigned</option>
                     {proxies.map(p => (
-                      <option key={p.slug} value={p.slug}>{p.title}</option>
+                      <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={p.slug} value={p.slug}>{p.title}</option>
                     ))}
                   </select>
                 </div>
@@ -544,9 +544,9 @@ export default function SitesConfig() {
                           onChange={(e) => handleUpdateSite(site.slug, e.target.value || null, site.proxy_profile_slug)}
                           className="w-full px-2 py-1.5 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs text-zinc-900 dark:text-white"
                         >
-                          <option value="">None</option>
+                          <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">None</option>
                           {cookies.map(c => (
-                            <option key={c.slug} value={c.slug}>{c.title}</option>
+                            <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={c.slug} value={c.slug}>{c.title}</option>
                           ))}
                         </select>
                       </div>
@@ -557,9 +557,9 @@ export default function SitesConfig() {
                           onChange={(e) => handleUpdateSite(site.slug, site.cookie_profile_slug, e.target.value || null)}
                           className="w-full px-2 py-1.5 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs text-zinc-900 dark:text-white"
                         >
-                          <option value="">None</option>
+                          <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" value="">None</option>
                           {proxies.map(p => (
-                            <option key={p.slug} value={p.slug}>{p.title}</option>
+                            <option className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white" key={p.slug} value={p.slug}>{p.title}</option>
                           ))}
                         </select>
                       </div>
@@ -591,7 +591,7 @@ export default function SitesConfig() {
                   placeholder="Profile Title (e.g. US Residential VPN)"
                   value={newProxyTitle}
                   onChange={(e) => setNewProxyTitle(e.target.value)}
-                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm"
+                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm text-zinc-900 dark:text-white"
                   required
                 />
                 <input
@@ -599,7 +599,7 @@ export default function SitesConfig() {
                   placeholder="Proxy String (e.g. socks5://user:pass@192.168.1.1:1080)"
                   value={newProxyData}
                   onChange={(e) => setNewProxyData(e.target.value)}
-                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm font-mono"
+                  className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-xs sm:text-sm font-mono text-zinc-900 dark:text-white"
                   required
                 />
                 <button
@@ -690,7 +690,7 @@ export default function SitesConfig() {
                           type="text"
                           value={editProxyData}
                           onChange={(e) => setEditProxyData(e.target.value)}
-                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs font-mono"
+                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs font-mono text-zinc-900 dark:text-white"
                         />
                         <button
                           onClick={() => handleUpdateProxy(proxy.slug)}
