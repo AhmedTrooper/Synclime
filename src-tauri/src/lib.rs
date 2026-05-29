@@ -206,6 +206,16 @@ pub fn run() {
             }
         };
 
+        // --- RECOVERY MECHANISM ---
+        // If the app was closed expectedly or unexpectedly while jobs were downloading,
+        // they are now orphaned. We must reset them to 'paused' so the user can resume them.
+        if let Ok(conn) = rusqlite::Connection::open(&db_path) {
+            let _ = conn.execute(
+                "UPDATE download_jobs SET status = 'paused', tracking_message = 'Paused due to app closure.' WHERE status = 'downloading';",
+                [],
+            );
+        }
+
         let process_registry = Arc::new(ActiveProcessRegistry {
             instances: Arc::new(RwLock::new(HashMap::new())),
         });
