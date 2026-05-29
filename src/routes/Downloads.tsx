@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+
 import { useUIStore } from "../store/useUIStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
-import { ArrowLeft, DownloadCloud, Trash2 } from "lucide-react";
+import { DownloadCloud, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
 export default function Downloads() {
@@ -83,33 +83,21 @@ export default function Downloads() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 w-full max-w-4xl mx-auto px-4 py-4 text-zinc-950 dark:text-white transition-colors duration-300">
-      {/* Header */}
-      <div className="text-center flex flex-col items-center gap-3">
-        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-white transition-colors duration-300">
-          Downloads <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">Queue</span>
-        </h1>
-        <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 max-w-lg leading-relaxed transition-colors duration-300">
-          Monitor real-time progress, file download speeds, active statuses, and process actions for direct and extraction jobs.
-        </p>
-      </div>
-
-      {/* Navigation Buttons Row */}
-      <div className="flex justify-between items-center w-full mt-2">
-        <Link
-          to="/"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Analyzer
-        </Link>
+    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto h-full py-2">
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-indigo-500 rounded-md text-white shadow-sm">
+            <DownloadCloud className="w-4 h-4" />
+          </div>
+          <h1 className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">Active Downloads</h1>
+        </div>
         {queue.length > 0 && (
           <button
             onClick={handleClearAll}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-semibold transition-all duration-300 text-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-semibold transition-colors text-[11px] uppercase tracking-wider"
           >
-            <Trash2 className="w-4 h-4" />
-            Clear All
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear Finished
           </button>
         )}
       </div>
@@ -131,22 +119,12 @@ export default function Downloads() {
         ))}
 
         {queue.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-12 bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl text-center gap-4">
-            <div className="p-4 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-2xl text-zinc-400 dark:text-zinc-400">
-              <DownloadCloud className="w-8 h-8" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="text-base font-bold text-zinc-900 dark:text-white">Queue is Empty</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
-                There are currently no direct or extracted download jobs queued inside the core manager.
-              </p>
-            </div>
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 rounded-xl transition-all duration-300 mt-2"
-            >
-              Analyze a Link
-            </Link>
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+            <DownloadCloud className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2" />
+            <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">No active downloads</h3>
+            <p className="text-[11px] text-zinc-400 max-w-xs">
+              Downloads and extraction tasks will appear here.
+            </p>
           </div>
         )}
       </div>

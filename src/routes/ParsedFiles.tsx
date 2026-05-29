@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUIStore } from "../store/useUIStore";
 import { useParseStore } from "../store/useParseStore";
-import { FileText, ArrowRight, ArrowLeft, Calendar, User, PlayCircle } from "lucide-react";
+import { FileText, ArrowRight, PlayCircle } from "lucide-react";
 
 export default function ParsedFiles() {
   const { setActivePath } = useUIStore();
@@ -39,26 +39,14 @@ export default function ParsedFiles() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 w-full max-w-4xl mx-auto px-4 py-4 text-zinc-950 dark:text-white transition-colors duration-300">
-      {/* Header */}
-      <div className="text-center flex flex-col items-center gap-3">
-        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-white transition-colors duration-300">
-          Parsed Files <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">Repository</span>
-        </h1>
-        <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 max-w-lg leading-relaxed transition-colors duration-300">
-          Access the list of all structured video playlists and standalone tracks extracted and cached by the Synclime core engine.
-        </p>
-      </div>
-
-      {/* Navigation Buttons Row */}
-      <div className="flex justify-between items-center w-full mt-2">
-        <Link
-          to="/"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Analyzer
-        </Link>
+    <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto h-full py-2">
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-zinc-500 rounded-md text-white shadow-sm">
+            <FileText className="w-4 h-4" />
+          </div>
+          <h1 className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">Library Cache</h1>
+        </div>
       </div>
 
       {/* Render Queue List */}
@@ -66,79 +54,54 @@ export default function ParsedFiles() {
         {parsedFiles.map((file) => (
           <div
             key={file.slug}
-            className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-sm hover:border-zinc-300 dark:hover:border-white/15 transition-all duration-300"
+            className="flex items-center justify-between gap-3 px-3 py-2 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
           >
-            <div className="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4 text-left">
-                {file.thumbnail ? (
-                  <img
-                    src={file.thumbnail}
-                    alt={file.title}
-                    className="w-20 md:w-24 aspect-video object-cover rounded-xl border border-zinc-200 dark:border-white/5"
-                  />
-                ) : (
-                  <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
-                    <FileText className="w-6 h-6" />
-                  </div>
-                )}
-                
-                <div className="flex flex-col gap-1 flex-grow">
-                  <span className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-1 leading-snug">
-                    {file.title}
-                  </span>
-                  
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
-                    <div className="flex items-center gap-1">
-                      <User className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>{file.author}</span>
-                    </div>
-                    <span>•</span>
-                    {file.isPlaylist ? (
-                      <span className="bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-md font-bold text-[8px] uppercase tracking-wider">
-                        Playlist ({file.payload.entries?.length || 0} Tracks)
-                      </span>
-                    ) : (
-                      <span className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md font-bold text-[8px] uppercase tracking-wider">
-                        Single Video ({formatDuration(file.duration)})
-                      </span>
-                    )}
-                    <span>•</span>
-                    <div className="flex items-center gap-1 font-mono">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>{formatDate(file.parsedAt)}</span>
-                    </div>
-                  </div>
+            <div className="flex items-center gap-3 overflow-hidden text-left flex-grow">
+              {file.thumbnail ? (
+                <img
+                  src={file.thumbnail}
+                  alt={file.title}
+                  className="w-10 h-7 object-cover rounded-sm border border-zinc-200 dark:border-zinc-800 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-7 bg-zinc-100 dark:bg-zinc-800 rounded-sm border border-zinc-200 dark:border-zinc-700 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                </div>
+              )}
+              
+              <div className="flex flex-col flex-grow overflow-hidden">
+                <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{file.title}</span>
+                <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400">
+                  <span className="truncate max-w-[150px]">{file.author}</span>
+                  <span>•</span>
+                  {file.isPlaylist ? (
+                    <span className="text-purple-600 dark:text-purple-400 font-semibold">{file.payload.entries?.length || 0} Tracks</span>
+                  ) : (
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">{formatDuration(file.duration)}</span>
+                  )}
+                  <span>•</span>
+                  <span>{formatDate(file.parsedAt)}</span>
                 </div>
               </div>
-
-              <Link
-                to={`/parsed_file/${file.slug}`}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
-              >
-                Inspect Details
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
+
+            <Link
+              to={`/parsed_file/${file.slug}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium transition-colors text-[11px] flex-shrink-0"
+            >
+              Details
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
         ))}
 
         {parsedFiles.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-12 bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl text-center gap-4">
-            <div className="p-4 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-2xl text-zinc-400 dark:text-zinc-400">
-              <PlayCircle className="w-8 h-8" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="text-base font-bold text-zinc-900 dark:text-white">Repository is Empty</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
-                You haven't analyzed any asset links yet. Paste a URL on the home screen to cache extraction data.
-              </p>
-            </div>
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 rounded-xl transition-all duration-300 mt-2"
-            >
-              Analyze a Link
-            </Link>
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+            <PlayCircle className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2" />
+            <h3 className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">Library is empty</h3>
+            <p className="text-[11px] text-zinc-400 max-w-xs">
+              Analyzed media and parsed structures will be stored here.
+            </p>
           </div>
         )}
       </div>

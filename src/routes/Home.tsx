@@ -245,34 +245,30 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-10 w-full max-w-2xl mx-auto px-4">
-      {/* Visual Header */}
-      <div className="text-center flex flex-col items-center gap-3">
-        <div className="p-3 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-2xl mb-1 shadow-[0_8px_30px_rgb(59,130,246,0.1)]">
-          <Link2 className="w-6 h-6" />
+    <div className="flex flex-col gap-6 w-full max-w-3xl h-full py-2">
+      {/* Top Toolbar / Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-blue-500 rounded-md text-white shadow-sm">
+            <Link2 className="w-4 h-4" />
+          </div>
+          <h1 className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">New Task</h1>
         </div>
-        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-white transition-colors duration-300">
-          Sync<span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">lime Core</span>
-        </h1>
-        <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed transition-colors duration-300">
-          Enter a streaming video link or dataset download target URL to fetch structural metadata profiles or queue direct downloads.
-        </p>
       </div>
 
-      {/* Control Card Container */}
-      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-xl p-3 md:p-6 transition-all duration-300">
-        <div className="flex flex-col gap-6 py-4">
+      <div className="w-full">
+        <div className="flex flex-col gap-4">
           <form onSubmit={handleAction} className="flex flex-col gap-5">
             {/* Input Bar */}
-            <div className="flex flex-col gap-2">
-              <label className="text-zinc-500 dark:text-zinc-400 font-medium text-xs uppercase">Extraction Target URL Address</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Target URL Address</label>
               <input
                 type="text"
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="https://..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/5 rounded-2xl focus-within:border-blue-500 transition-colors duration-300 outline-none text-sm text-zinc-900 dark:text-white"
+                className="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm text-zinc-900 dark:text-white shadow-sm"
               />
             </div>
 
@@ -291,16 +287,13 @@ export default function Home() {
                   checked={directDownload}
                   onCheckedChange={setDirectDownload}
                   disabled={loading}
-                  className="w-[42px] h-[24px] bg-zinc-200 dark:bg-zinc-800 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors disabled:opacity-50"
+                  className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors disabled:opacity-50"
                 >
-                  <Switch.Thumb className="block w-[18px] h-[18px] bg-white rounded-full shadow-sm transition-transform translate-x-[3px] data-[state=checked]:translate-x-[21px]" />
+                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
                 </Switch.Root>
                 <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
-                    Direct Download
-                  </span>
-                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                    Skip parsing, pipe directly to downloads
+                  <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                    Direct File Download (Skip Parser)
                   </span>
                 </div>
               </div>
@@ -308,10 +301,10 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-indigo-500/20 px-8 py-4 rounded-2xl transition-all duration-300 self-stretch md:self-auto disabled:opacity-50"
+                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-md transition-colors disabled:opacity-50 text-[13px] shadow-sm"
               >
                 {!loading && (directDownload ? <FileDown className="w-4 h-4" /> : <Play className="w-4 h-4" />)}
-                {directDownload ? "Direct Download Document" : "Parse URL Metadata"}
+                {directDownload ? "Download" : "Extract Metadata"}
               </button>
             </div>
           </form>
