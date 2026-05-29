@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import MainLayout from "./layouts/MainLayout";
 import SplashScreen from "./components/ui/SplashScreen";
-import { AnimatePresence } from "framer-motion";
 import { useUIStore } from "./store/useUIStore";
 
 export default function App() {
@@ -57,9 +56,7 @@ export default function App() {
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        {!isLoaded && <SplashScreen key="splash" />}
-      </AnimatePresence>
+      {!isLoaded && <SplashScreen key="splash" />}
       <MainLayout />
     </>
   );

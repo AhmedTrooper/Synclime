@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Tooltip } from "@heroui/react";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import {
   Home,
   Info,
@@ -20,7 +19,6 @@ import { useUIStore } from "@/store/useUIStore";
 export default function BottomDock() {
   const { activePath, badges, theme, toggleTheme } = useUIStore();
 
-  // Cohesive brand accent color tokens (sleek neutral grey, lighting up to unified premium brand blue)
   const dockItems = [
     {
       path: "/",
@@ -105,162 +103,161 @@ export default function BottomDock() {
 
         {/* Dock container */}
         <div className="relative flex items-center gap-3.5 bg-white/70 dark:bg-black/40 border border-zinc-200/80 dark:border-white/10 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-[0_15px_30px_-10px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-300">
-          {/* Main Navigation Icons */}
-          <div className="flex items-center gap-3.5">
-            {dockItems.map((item) => {
-              const isActive =
-                item.path === "/"
-                  ? activePath === "/"
-                  : activePath.startsWith(item.path);
+          <Tooltip.Provider delayDuration={200}>
+            {/* Main Navigation Icons */}
+            <div className="flex items-center gap-3.5">
+              {dockItems.map((item) => {
+                const isActive =
+                  item.path === "/"
+                    ? activePath === "/"
+                    : activePath.startsWith(item.path);
 
-              const badgeCount = badges[item.badgeKey];
-              const Icon = item.icon;
+                const badgeCount = badges[item.badgeKey];
+                const Icon = item.icon;
 
-              return (
-                <Tooltip
-                  key={item.path}
-                  content={item.label}
-                  closeDelay={0}
-                  delay={200}
-                  placement="top"
-                  className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
-                >
-                  <Link
-                    to={item.path}
-                    className="relative p-2.5 rounded-xl flex items-center justify-center transition-colors group select-none"
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-dock-bg"
-                        className="absolute inset-0 bg-zinc-800/10 dark:bg-white/10 border border-zinc-800/5 dark:border-white/5 rounded-xl -z-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
-                        transition={{
-                          type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-
-                    <motion.div
-                      whileHover={{ scale: 1.18, y: -6 }}
-                      whileTap={{ scale: 0.92 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 15,
-                      }}
-                      className={`relative z-10 ${item.color} ${isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : ""}`}
-                    >
-                      <Icon className="w-5.5 h-5.5 transition-transform" />
-
-                      <AnimatePresence>
-                        {badgeCount > 0 && (
-                          <motion.span
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-md shadow-red-500/20 border border-white dark:border-black"
-                          >
-                            {badgeCount}
-                          </motion.span>
+                return (
+                  <Tooltip.Root key={item.path}>
+                    <Tooltip.Trigger asChild>
+                      <Link
+                        to={item.path}
+                        className="relative p-2.5 rounded-xl flex items-center justify-center transition-colors group select-none"
+                      >
+                        {isActive && (
+                          <div
+                            className="absolute inset-0 bg-zinc-800/10 dark:bg-white/10 border border-zinc-800/5 dark:border-white/5 rounded-xl -z-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                          />
                         )}
-                      </AnimatePresence>
-                    </motion.div>
-                  </Link>
-                </Tooltip>
-              );
-            })}
-          </div>
 
-          {/* Elegant vertical divider */}
-          <div className="w-[1px] h-6 bg-zinc-800/10 dark:bg-white/10 self-center mx-1 flex-shrink-0" />
+                        <div
+                          className={`relative z-10 ${item.color} ${isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : ""}`}
+                        >
+                          <Icon className="w-5.5 h-5.5 transition-transform group-hover:scale-110 group-active:scale-95" />
+                          {badgeCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-md shadow-red-500/20 border border-white dark:border-black">
+                              {badgeCount}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        sideOffset={5}
+                        className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg z-[9999]"
+                      >
+                        {item.label}
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                );
+              })}
+            </div>
 
-          {/* Window Control Panel */}
-          <div className="flex items-center gap-2">
-            {/* Drag Handle */}
-            <Tooltip
-              content="Drag Window"
-              closeDelay={0}
-              delay={200}
-              placement="top"
-              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
-            >
-              <div
-                data-tauri-drag-region
-                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white cursor-grab active:cursor-grabbing hover:bg-zinc-800/5 dark:hover:bg-white/5 transition-all select-none"
-              >
-                <GripVertical className="w-4 h-4 pointer-events-none" />
-              </div>
-            </Tooltip>
+            {/* Elegant vertical divider */}
+            <div className="w-[1px] h-6 bg-zinc-800/10 dark:bg-white/10 self-center mx-1 flex-shrink-0" />
 
-            {/* Theme Toggle */}
-            <Tooltip
-              content={`Theme: ${theme.toUpperCase()}`}
-              closeDelay={0}
-              delay={200}
-              placement="top"
-              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
-            >
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
-              >
-                {theme === "dark" ? (
-                  <Sun className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                ) : (
-                  <Moon className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-                )}
-              </button>
-            </Tooltip>
+            {/* Window Control Panel */}
+            <div className="flex items-center gap-2">
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <div
+                    data-tauri-drag-region
+                    className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white cursor-grab active:cursor-grabbing hover:bg-zinc-800/5 dark:hover:bg-white/5 transition-all select-none"
+                  >
+                    <GripVertical className="w-4 h-4 pointer-events-none" />
+                  </div>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    sideOffset={5}
+                    className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg z-[9999]"
+                  >
+                    Drag Window
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
 
-            {/* Minimize */}
-            <Tooltip
-              content="Minimize"
-              closeDelay={0}
-              delay={200}
-              placement="top"
-              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
-            >
-              <button
-                onClick={handleMinimize}
-                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-            </Tooltip>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    ) : (
+                      <Moon className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                    )}
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    sideOffset={5}
+                    className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg z-[9999]"
+                  >
+                    Theme: {theme.toUpperCase()}
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
 
-            {/* Fullscreen Toggle */}
-            <Tooltip
-              content="Fullscreen"
-              closeDelay={0}
-              delay={200}
-              placement="top"
-              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
-            >
-              <button
-                onClick={handleFullscreen}
-                className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
-            </Tooltip>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={handleMinimize}
+                    className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    sideOffset={5}
+                    className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg z-[9999]"
+                  >
+                    Minimize
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
 
-            {/* Close */}
-            <Tooltip
-              content="Close Window"
-              closeDelay={0}
-              delay={200}
-              placement="top"
-              className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg"
-            >
-              <button
-                onClick={handleClose}
-                className="p-2 rounded-lg text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-500/10 active:scale-95 transition-all select-none"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </Tooltip>
-          </div>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={handleFullscreen}
+                    className="p-2 rounded-lg text-zinc-400 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-800/5 dark:hover:bg-white/5 active:scale-95 transition-all select-none"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    sideOffset={5}
+                    className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg z-[9999]"
+                  >
+                    Fullscreen
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    onClick={handleClose}
+                    className="p-2 rounded-lg text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-500/10 active:scale-95 transition-all select-none"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    sideOffset={5}
+                    className="bg-white dark:bg-zinc-900/90 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200 dark:border-white/10 shadow-lg px-2.5 py-1 rounded-lg z-[9999]"
+                  >
+                    Close Window
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </div>
+          </Tooltip.Provider>
         </div>
       </div>
     </div>

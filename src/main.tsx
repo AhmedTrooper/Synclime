@@ -10,14 +10,11 @@ import DownloadsDetail from "./routes/DownloadsDetail";
 import Settings from "./routes/Settings";
 import ParsedFileDetail from "./routes/ParsedFileDetail";
 import ParsedFiles from "./routes/ParsedFiles";
-import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import "@fontsource-variable/inter";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <HeroUIProvider>
-      <ToastProvider />
-      <BrowserRouter>
+    <BrowserRouter>
         <Routes>
           <Route
             path="/"
@@ -54,7 +51,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           </Route>
         </Routes>
       </BrowserRouter>
-    </HeroUIProvider>
   </React.StrictMode>
 );
 

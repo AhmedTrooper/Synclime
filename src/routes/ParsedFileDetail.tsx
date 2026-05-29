@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { useUIStore } from "../store/useUIStore";
-import { Button, Card, CardBody, Select, SelectItem } from "@heroui/react";
+
 import { ArrowLeft, Download, Film, Music, Globe, List, Clock, PlayCircle, Settings, CheckCircle2, Sliders, ToggleLeft } from "lucide-react";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -38,14 +38,12 @@ export default function ParsedFileDetail() {
             The requested parsed asset cache profile is either invalid or was recently cleared.
           </p>
         </div>
-        <Button
-          as={Link}
+        <Link
           to="/parsed_files"
-          size="sm"
-          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 px-5 rounded-xl transition-all duration-300"
+          className="inline-flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 px-5 py-2 rounded-xl transition-all duration-300 text-sm"
         >
           Return to Repository
-        </Button>
+        </Link>
       </div>
     );
   }
@@ -274,20 +272,18 @@ export default function ParsedFileDetail() {
     <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto px-4 py-2 text-zinc-950 dark:text-white transition-colors duration-300">
       {/* Back Header Nav */}
       <div className="flex justify-between items-center w-full">
-        <Button
-          as={Link}
+        <Link
           to="/parsed_files"
-          size="sm"
-          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-          startContent={<ArrowLeft className="w-4 h-4" />}
+          className="flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 px-3 py-1.5 rounded-lg transition-all duration-300 text-sm"
         >
+          <ArrowLeft className="w-4 h-4" />
           Back to Repository
-        </Button>
+        </Link>
       </div>
 
       {/* Asset Hero Section Card */}
-      <Card className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-lg p-5">
-        <CardBody className="p-0 flex flex-col md:flex-row gap-6 items-start text-left">
+      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-lg p-5">
+        <div className="flex flex-col md:flex-row gap-6 items-start text-left">
           {file.thumbnail && (
             <img
               src={file.thumbnail}
@@ -330,8 +326,8 @@ export default function ParsedFileDetail() {
               </p>
             )}
           </div>
-        </CardBody>
-      </Card>
+        </div>
+      </div>
 
       {/* Conditional Detailed Lists */}
       {file.isPlaylist ? (
@@ -340,8 +336,8 @@ export default function ParsedFileDetail() {
         // ==========================================
         <div className="flex flex-col gap-6 text-left">
           {/* Playlist Controls & Fallback Selector */}
-          <Card className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl p-5">
-            <CardBody className="p-0 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl p-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
               <div className="flex flex-col gap-2 max-w-md">
                 <div className="flex items-center gap-2 text-purple-500">
                   <Sliders className="w-5 h-5" />
@@ -355,32 +351,28 @@ export default function ParsedFileDetail() {
               </div>
 
               <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3.5 min-w-[280px]">
-                <Select
-                  placeholder="Choose fallback preset"
-                  selectedKeys={[selectedPreset]}
+                <select
+                  value={selectedPreset}
                   onChange={(e) => setSelectedPreset(e.target.value)}
-                  size="sm"
-                  classNames={{
-                    trigger: "bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl min-h-[40px]",
-                  }}
+                  className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl min-h-[40px] px-3 outline-none text-sm font-semibold"
                 >
                   {presetList.map((preset) => (
-                    <SelectItem key={preset.value} key-id={preset.value} textValue={preset.label}>
+                    <option key={preset.value} value={preset.value}>
                       {preset.label}
-                    </SelectItem>
+                    </option>
                   ))}
-                </Select>
+                </select>
 
-                <Button
+                <button
                   onClick={downloadAllPlaylist}
-                  className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-5.5 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300"
-                  startContent={<Download className="w-4 h-4" />}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-purple-500/10 transition-all duration-300"
                 >
+                  <Download className="w-4 h-4" />
                   Download All Tracks
-                </Button>
+                </button>
               </div>
-            </CardBody>
-          </Card>
+            </div>
+          </div>
 
           {/* Playlist Tracks Listing */}
           <div className="flex flex-col gap-3">
@@ -393,11 +385,11 @@ export default function ParsedFileDetail() {
 
             <div className="grid grid-cols-1 gap-3 w-full">
               {payload.entries?.map((track: any, index: number) => (
-                <Card
+                <div
                   key={track.id}
                   className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl"
                 >
-                  <CardBody className="p-3 md:p-4 flex flex-row items-center justify-between gap-4">
+                  <div className="p-3 md:p-4 flex flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-grow text-left">
                       <span className="text-xs font-bold text-zinc-400 font-mono w-5">
                         {(index + 1).toString().padStart(2, "0")}
@@ -419,16 +411,14 @@ export default function ParsedFileDetail() {
                       </div>
                     </div>
 
-                    <Button
+                    <button
                       onClick={() => startDownload(selectedPreset, false, track.title)}
-                      size="sm"
-                      isIconOnly
-                      className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-xl"
+                      className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-xl"
                     >
-                      <Download className="w-3.5 h-3.5" />
-                    </Button>
-                  </CardBody>
-                </Card>
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -613,8 +603,8 @@ export default function ParsedFileDetail() {
                 </h3>
               </div>
 
-              <Card className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-4">
-                <CardBody className="p-0 flex flex-col gap-5">
+              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-4">
+                <div className="flex flex-col gap-5">
                   {/* Generated Monospace Format String Preview */}
                   <div className="flex flex-col gap-2 text-left">
                     <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -626,15 +616,15 @@ export default function ParsedFileDetail() {
                   </div>
 
                   {/* Primary Download trigger */}
-                  <Button
+                  <button
                     onClick={() => startDownload(getGeneratedFormatString(), getGeneratedFormatString().includes("bestaudio") && !getGeneratedFormatString().includes("bestvideo"))}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold w-full py-5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300"
-                    startContent={<Download className="w-4 h-4" />}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold w-full py-4 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300"
                   >
+                    <Download className="w-4 h-4" />
                     Initialize Extraction Download
-                  </Button>
-                </CardBody>
-              </Card>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Subtitles Panel */}
@@ -646,40 +636,36 @@ export default function ParsedFileDetail() {
                 </h3>
               </div>
 
-              <Card className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-3">
-                <CardBody className="flex flex-col gap-4">
+              <div className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-3xl p-3">
+                <div className="flex flex-col gap-4">
                   {subOptions.length > 0 ? (
                     <>
                       <div className="flex flex-col gap-2 text-left">
                         <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                           Select Language
                         </label>
-                        <Select
-                          placeholder="Choose language option"
-                          selectedKeys={selectedSub ? [selectedSub] : []}
+                        <select
+                          value={selectedSub}
                           onChange={(e) => setSelectedSub(e.target.value)}
-                          size="sm"
-                          classNames={{
-                            trigger: "bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl",
-                          }}
+                          className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl px-3 py-2 outline-none text-sm font-semibold"
                         >
+                          <option value="">Choose language option</option>
                           {subOptions.map((opt) => (
-                            <SelectItem key={opt.lang} key-id={opt.lang} textValue={opt.name}>
+                            <option key={opt.lang} value={opt.lang}>
                               {opt.name} ({opt.lang.toUpperCase()})
-                            </SelectItem>
+                            </option>
                           ))}
-                        </Select>
+                        </select>
                       </div>
 
-                      <Button
+                      <button
                         onClick={() => startDownload(`bestvideo+bestaudio/best`, false, `${file.title} (Subtitles - ${selectedSub.toUpperCase()})`)}
                         disabled={!selectedSub}
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold w-full rounded-xl transition-all duration-300"
-                        startContent={<Download className="w-3.5 h-3.5" />}
+                        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold w-full py-2 rounded-xl transition-all duration-300 disabled:opacity-50"
                       >
+                        <Download className="w-3.5 h-3.5" />
                         Download Subtitle
-                      </Button>
+                      </button>
                     </>
                   ) : (
                     <div className="text-center py-6 flex flex-col items-center gap-2">
@@ -689,8 +675,8 @@ export default function ParsedFileDetail() {
                       </span>
                     </div>
                   )}
-                </CardBody>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUIStore } from "../store/useUIStore";
 import { useParseStore } from "../store/useParseStore";
-import { Button, Card, CardBody } from "@heroui/react";
 import { FileText, ArrowRight, ArrowLeft, Calendar, User, PlayCircle } from "lucide-react";
 
 export default function ParsedFiles() {
@@ -53,25 +52,23 @@ export default function ParsedFiles() {
 
       {/* Navigation Buttons Row */}
       <div className="flex justify-between items-center w-full mt-2">
-        <Button
-          as={Link}
+        <Link
           to="/"
-          size="sm"
-          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-          startContent={<ArrowLeft className="w-4 h-4" />}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
         >
+          <ArrowLeft className="w-4 h-4" />
           Back to Analyzer
-        </Button>
+        </Link>
       </div>
 
       {/* Render Queue List */}
       <div className="grid grid-cols-1 gap-4 w-full">
         {parsedFiles.map((file) => (
-          <Card
+          <div
             key={file.slug}
             className="border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-sm hover:border-zinc-300 dark:hover:border-white/15 transition-all duration-300"
           >
-            <CardBody className="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4 text-left">
                 {file.thumbnail ? (
                   <img
@@ -114,17 +111,15 @@ export default function ParsedFiles() {
                 </div>
               </div>
 
-              <Button
-                as={Link}
+              <Link
                 to={`/parsed_file/${file.slug}`}
-                size="sm"
-                className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-                endContent={<ArrowRight className="w-3.5 h-3.5" />}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
               >
                 Inspect Details
-              </Button>
-            </CardBody>
-          </Card>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
         ))}
 
         {parsedFiles.length === 0 && (
@@ -138,14 +133,12 @@ export default function ParsedFiles() {
                 You haven't analyzed any asset links yet. Paste a URL on the home screen to cache extraction data.
               </p>
             </div>
-            <Button
-              as={Link}
+            <Link
               to="/"
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 px-5 rounded-xl transition-all duration-300 mt-2"
+              className="inline-flex items-center justify-center px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 rounded-xl transition-all duration-300 mt-2"
             >
               Analyze a Link
-            </Button>
+            </Link>
           </div>
         )}
       </div>

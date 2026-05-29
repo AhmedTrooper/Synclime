@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUIStore } from "../store/useUIStore";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
-import { Button, Input, Switch, Card, CardBody } from "@heroui/react";
+import * as Switch from "@radix-ui/react-switch";
 import { Play, FileDown, Link2, AlertCircle } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -260,23 +260,21 @@ export default function Home() {
       </div>
 
       {/* Control Card Container */}
-      <Card className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-xl p-3 md:p-6 transition-all duration-300">
-        <CardBody className="flex flex-col gap-6 py-4">
+      <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-xl p-3 md:p-6 transition-all duration-300">
+        <div className="flex flex-col gap-6 py-4">
           <form onSubmit={handleAction} className="flex flex-col gap-5">
             {/* Input Bar */}
-            <Input
-              type="text"
-              label="Extraction Target URL Address"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={loading}
-              size="md"
-              classNames={{
-                inputWrapper: "bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/5 rounded-2xl focus-within:border-blue-500 transition-colors duration-300",
-                label: "text-zinc-500 dark:text-zinc-400 font-medium text-xs uppercase",
-              }}
-            />
+            <div className="flex flex-col gap-2">
+              <label className="text-zinc-500 dark:text-zinc-400 font-medium text-xs uppercase">Extraction Target URL Address</label>
+              <input
+                type="text"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={loading}
+                className="w-full px-4 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/5 rounded-2xl focus-within:border-blue-500 transition-colors duration-300 outline-none text-sm text-zinc-900 dark:text-white"
+              />
+            </div>
 
             {/* Error Message Panel */}
             {errorMsg && (
@@ -289,15 +287,14 @@ export default function Home() {
             {/* Switch & Action Controls */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
               <div className="flex items-center gap-3">
-                <Switch
-                  isSelected={directDownload}
-                  onValueChange={setDirectDownload}
+                <Switch.Root
+                  checked={directDownload}
+                  onCheckedChange={setDirectDownload}
                   disabled={loading}
-                  color="primary"
-                  classNames={{
-                    wrapper: "bg-zinc-200 dark:bg-zinc-800 group-data-[selected=true]:bg-blue-500",
-                  }}
-                />
+                  className="w-[42px] h-[24px] bg-zinc-200 dark:bg-zinc-800 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors disabled:opacity-50"
+                >
+                  <Switch.Thumb className="block w-[18px] h-[18px] bg-white rounded-full shadow-sm transition-transform translate-x-[3px] data-[state=checked]:translate-x-[21px]" />
+                </Switch.Root>
                 <div className="flex flex-col text-left">
                   <span className="text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
                     Direct Download
@@ -308,25 +305,18 @@ export default function Home() {
                 </div>
               </div>
 
-              <Button
+              <button
                 type="submit"
-                isLoading={loading}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-indigo-500/20 px-8 py-5.5 rounded-2xl transition-all duration-300 self-stretch md:self-auto"
-                startContent={
-                  !loading &&
-                  (directDownload ? (
-                    <FileDown className="w-4 h-4" />
-                  ) : (
-                    <Play className="w-4 h-4" />
-                  ))
-                }
+                disabled={loading}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-indigo-500/20 px-8 py-4 rounded-2xl transition-all duration-300 self-stretch md:self-auto disabled:opacity-50"
               >
+                {!loading && (directDownload ? <FileDown className="w-4 h-4" /> : <Play className="w-4 h-4" />)}
                 {directDownload ? "Direct Download Document" : "Parse URL Metadata"}
-              </Button>
+              </button>
             </div>
           </form>
-        </CardBody>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

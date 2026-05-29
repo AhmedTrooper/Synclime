@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useUIStore } from "../store/useUIStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
-import { Button } from "@heroui/react";
 import { ArrowLeft, DownloadCloud, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -97,26 +96,21 @@ export default function Downloads() {
 
       {/* Navigation Buttons Row */}
       <div className="flex justify-between items-center w-full mt-2">
-        <Button
-          as={Link}
+        <Link
           to="/"
-          size="sm"
-          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-          startContent={<ArrowLeft className="w-4 h-4" />}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
         >
+          <ArrowLeft className="w-4 h-4" />
           Back to Analyzer
-        </Button>
+        </Link>
         {queue.length > 0 && (
-          <Button
-            size="sm"
-            color="danger"
-            variant="flat"
-            className="font-semibold transition-all duration-300"
-            startContent={<Trash2 className="w-4 h-4" />}
-            onPress={handleClearAll}
+          <button
+            onClick={handleClearAll}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-semibold transition-all duration-300 text-sm"
           >
+            <Trash2 className="w-4 h-4" />
             Clear All
-          </Button>
+          </button>
         )}
       </div>
 
@@ -147,14 +141,12 @@ export default function Downloads() {
                 There are currently no direct or extracted download jobs queued inside the core manager.
               </p>
             </div>
-            <Button
-              as={Link}
+            <Link
               to="/"
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 px-5 rounded-xl transition-all duration-300 mt-2"
+              className="inline-flex items-center justify-center px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 rounded-xl transition-all duration-300 mt-2"
             >
               Analyze a Link
-            </Button>
+            </Link>
           </div>
         )}
       </div>

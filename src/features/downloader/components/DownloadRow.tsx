@@ -1,4 +1,3 @@
-import { Button } from "@heroui/react";
 import { Play, Pause, FolderOpen, Trash } from "lucide-react";
 
 interface DownloadRowProps {
@@ -48,31 +47,28 @@ export function DownloadRow({ id, name, progress, status, message, onPauseToggle
 
       <div className="flex items-center gap-2">
         {status !== "completed" && status !== "error" && (
-          <Button
-            size="sm"
+          <button
             onClick={onPauseToggle}
-            className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
+            className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-lg transition-all duration-300"
           >
             {status === "paused" ? <Play className="w-3.5 h-3.5 text-green-500" /> : <Pause className="w-3.5 h-3.5 text-yellow-500" />}
-          </Button>
+          </button>
         )}
         {status === "completed" && (
-          <Button
-            size="sm"
+          <button
             onClick={onReveal}
-            className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-            startContent={<FolderOpen className="w-3.5 h-3.5 text-blue-500" />}
+            className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 rounded-lg transition-all duration-300 text-sm"
           >
+            <FolderOpen className="w-3.5 h-3.5 text-blue-500" />
             Reveal
-          </Button>
+          </button>
         )}
-        <Button
-          size="sm"
+        <button
           onClick={onDelete}
-          className="bg-zinc-100 hover:bg-zinc-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-semibold border border-zinc-200 dark:border-red-500/20 transition-all duration-300"
+          className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-semibold border border-zinc-200 dark:border-red-500/20 rounded-lg transition-all duration-300"
         >
           <Trash className="w-3.5 h-3.5" />
-        </Button>
+        </button>
       </div>
     </div>
   );

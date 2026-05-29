@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUIStore } from "../store/useUIStore";
-import { Card, CardBody, Input, Button, Switch } from "@heroui/react";
+import * as Switch from "@radix-ui/react-switch";
 import { Settings as SettingsIcon, Folder, Save, RefreshCw, CheckCircle2, Moon, Sun } from "lucide-react";
 
 export default function Settings() {
@@ -62,8 +62,8 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 gap-6 w-full">
         {/* Settings Card */}
-        <Card className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-xl p-3 md:p-6 transition-all duration-300 text-left">
-          <CardBody className="flex flex-col gap-6 py-4">
+        <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-3xl shadow-xl p-3 md:p-6 transition-all duration-300 text-left">
+          <div className="flex flex-col gap-6 py-4">
             <form onSubmit={handleSave} className="flex flex-col gap-6">
               {/* Directory Section */}
               <div className="flex flex-col gap-3">
@@ -76,28 +76,26 @@ export default function Settings() {
                 
                 <div className="flex flex-col md:flex-row gap-3 items-end">
                   <div className="flex-grow w-full">
-                    <Input
-                      type="text"
-                      label="Download Folder Destination"
-                      placeholder="e.g. /home/user/Downloads"
-                      value={tempPath}
-                      onChange={(e) => setTempPath(e.target.value)}
-                      size="md"
-                      classNames={{
-                        inputWrapper: "bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/5 rounded-2xl focus-within:border-blue-500 transition-colors duration-300",
-                        label: "text-zinc-500 dark:text-zinc-400 font-medium text-xs uppercase",
-                      }}
-                    />
+                    <div className="flex flex-col gap-2">
+                      <label className="text-zinc-500 dark:text-zinc-400 font-medium text-xs uppercase">Download Folder Destination</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. /home/user/Downloads"
+                        value={tempPath}
+                        onChange={(e) => setTempPath(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/5 rounded-2xl focus-within:border-blue-500 transition-colors duration-300 outline-none text-sm text-zinc-900 dark:text-white"
+                      />
+                    </div>
                   </div>
                   
-                  <Button
+                  <button
                     type="button"
                     onClick={handleResetToDefault}
-                    className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 px-5 py-6 rounded-2xl transition-all duration-300 flex-shrink-0"
-                    startContent={<RefreshCw className="w-4 h-4" />}
+                    className="flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 px-5 py-4 rounded-2xl transition-all duration-300 flex-shrink-0"
                   >
+                    <RefreshCw className="w-4 h-4" />
                     Reset
-                  </Button>
+                  </button>
                 </div>
                 
                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed pl-1">
@@ -124,14 +122,13 @@ export default function Settings() {
                     </span>
                   </div>
                   
-                  <Switch
-                    isSelected={theme === "dark"}
-                    onValueChange={toggleTheme}
-                    color="primary"
-                    classNames={{
-                      wrapper: "bg-zinc-200 dark:bg-zinc-800 group-data-[selected=true]:bg-blue-500",
-                    }}
-                  />
+                  <Switch.Root
+                    checked={theme === "dark"}
+                    onCheckedChange={toggleTheme}
+                    className="w-[42px] h-[24px] bg-zinc-200 dark:bg-zinc-800 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors"
+                  >
+                    <Switch.Thumb className="block w-[18px] h-[18px] bg-white rounded-full shadow-sm transition-transform translate-x-[3px] data-[state=checked]:translate-x-[21px]" />
+                  </Switch.Root>
                 </div>
               </div>
 
@@ -145,17 +142,17 @@ export default function Settings() {
 
               {/* Save Button Row */}
               <div className="flex justify-end pt-2 border-t border-zinc-200 dark:border-white/5">
-                <Button
+                <button
                   type="submit"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-indigo-500/20 px-8 py-5.5 rounded-2xl transition-all duration-300"
-                  startContent={<Save className="w-4 h-4" />}
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-indigo-500/20 px-8 py-4 rounded-2xl transition-all duration-300"
                 >
+                  <Save className="w-4 h-4" />
                   Save Preferences
-                </Button>
+                </button>
               </div>
             </form>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

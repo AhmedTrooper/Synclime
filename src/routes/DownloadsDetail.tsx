@@ -1,5 +1,4 @@
 import { useParams, Link } from "react-router-dom";
-import { Button } from "@heroui/react";
 import { ArrowLeft } from "lucide-react";
 
 export default function DownloadsDetail() {
@@ -15,15 +14,13 @@ export default function DownloadsDetail() {
           Viewing Details for dynamic slug: <strong className="text-blue-600 dark:text-blue-400">{slug}</strong>
         </p>
       </div>
-      <Button
-        as={Link}
+      <Link
         to="/downloads"
-        size="sm"
-        className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300"
-        startContent={<ArrowLeft className="w-4 h-4" />}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 transition-all duration-300 text-sm"
       >
+        <ArrowLeft className="w-4 h-4" />
         Back to Downloads
-      </Button>
+      </Link>
     </div>
   );
 }

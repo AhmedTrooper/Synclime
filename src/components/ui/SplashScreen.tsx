@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { useUIStore } from "../../store/useUIStore";
 import { getVersion, getTauriVersion } from "@tauri-apps/api/app";
 
@@ -46,9 +45,7 @@ export default function SplashScreen() {
   const isDark = theme === "dark";
 
   return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.5, ease: "easeInOut" } }}
+    <div
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none overflow-hidden transition-colors duration-500 ${
         isDark ? "bg-[#09090b] text-white" : "bg-zinc-50 text-zinc-900"
       }`}
@@ -56,10 +53,7 @@ export default function SplashScreen() {
       {/* Centered Minimal Brand Emblem & Title */}
       <div className="flex flex-col items-center gap-6">
         {/* Sleek Minimalist SVG Logo representing Sync + Media Downloader */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+        <div
           className={`p-4.5 rounded-2xl border transition-all duration-500 ${
             isDark
               ? "bg-white/[0.02] border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
@@ -90,7 +84,7 @@ export default function SplashScreen() {
               strokeLinejoin="round"
             />
           </svg>
-        </motion.div>
+        </div>
 
         {/* Brand Typography */}
         <div className="text-center flex flex-col gap-1.5 mt-1">
@@ -126,6 +120,6 @@ export default function SplashScreen() {
         <span>TAURI V{tauriVersion}</span>
         <span>SYNCLIME V{appVersion}</span>
       </div>
-    </motion.div>
+    </div>
   );
 }
