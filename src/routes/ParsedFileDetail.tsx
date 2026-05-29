@@ -422,27 +422,25 @@ export default function ParsedFileDetail() {
                     {videoStreams.map((v: any) => {
                       const isSelected = selectedVideo === v.format_id;
                       return (
-                        <Card
+                        <div
                           key={v.format_id}
-                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl ${
+                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-4 flex flex-row items-center justify-between gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm ${
                             isSelected
                               ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
                               : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                           }`}
                           onClick={() => setSelectedVideo(isSelected ? "" : v.format_id)}
                         >
-                          <CardBody className="p-3.5 flex flex-row items-center justify-between gap-3 text-left">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-xs font-bold text-zinc-900 dark:text-white">
-                                {v.format_note || `${v.height}p`} ({v.ext})
-                              </span>
-                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
-                                RESOLUTION: {v.resolution || `${v.width}x${v.height}`} • SIZE: {formatSize(v.filesize || v.filesize_approx)}
-                              </span>
-                            </div>
-                            {isSelected && <CheckCircle2 className="w-4.5 h-4.5 text-blue-500 flex-shrink-0" />}
-                          </CardBody>
-                        </Card>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                              {v.format_note || `${v.height}p`} ({v.ext})
+                            </span>
+                            <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
+                              RESOLUTION: {v.resolution || `${v.width}x${v.height}`} • SIZE: {formatSize(v.filesize || v.filesize_approx)}
+                            </span>
+                          </div>
+                          {isSelected && <CheckCircle2 className="w-4.5 h-4.5 text-blue-500 flex-shrink-0" />}
+                        </div>
                       );
                     })}
 
@@ -467,27 +465,25 @@ export default function ParsedFileDetail() {
                     {audioStreams.map((a: any) => {
                       const isSelected = selectedAudio === a.format_id;
                       return (
-                        <Card
+                        <div
                           key={a.format_id}
-                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl ${
+                          className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-4 flex flex-row items-center justify-between gap-3 text-left hover:scale-[1.01] active:scale-[0.99] shadow-sm ${
                             isSelected
                               ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                               : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                           }`}
                           onClick={() => setSelectedAudio(isSelected ? "" : a.format_id)}
                         >
-                          <CardBody className="p-3.5 flex flex-row items-center justify-between gap-3 text-left">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-xs font-bold text-zinc-900 dark:text-white font-semibold">
-                                {a.format_note || "Audio Only"} ({a.ext})
-                              </span>
-                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
-                                BITRATE: {a.abr ? `${a.abr.toFixed(0)}kbps` : "HQ"} • SIZE: {formatSize(a.filesize || a.filesize_approx)}
-                              </span>
-                            </div>
-                            {isSelected && <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 flex-shrink-0" />}
-                          </CardBody>
-                        </Card>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs font-bold text-zinc-900 dark:text-white font-semibold">
+                              {a.format_note || "Audio Only"} ({a.ext})
+                            </span>
+                            <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono">
+                              BITRATE: {a.abr ? `${a.abr.toFixed(0)}kbps` : "HQ"} • SIZE: {formatSize(a.filesize || a.filesize_approx)}
+                            </span>
+                          </div>
+                          {isSelected && <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 flex-shrink-0" />}
+                        </div>
                       );
                     })}
 
@@ -515,31 +511,30 @@ export default function ParsedFileDetail() {
                   {presetList.map((preset) => {
                     const isSelected = selectedPreset === preset.value;
                     return (
-                      <Card
+                      <div
                         key={preset.value}
-                        className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl ${
+                        className={`border cursor-pointer select-none transition-all duration-300 rounded-2xl p-4 flex flex-row items-center justify-between gap-4 text-left hover:scale-[1.005] active:scale-[0.995] shadow-sm ${
                           isSelected
                             ? "border-blue-500 dark:border-blue-400 bg-blue-500/5 dark:bg-blue-500/10 shadow-md"
                             : "border-zinc-200 dark:border-white/5 bg-white/70 dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
                         }`}
                         onClick={() => setSelectedPreset(preset.value)}
                       >
-                        <CardBody className="p-4 flex flex-row items-center justify-between gap-4 text-left">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-sm font-bold text-zinc-900 dark:text-white">
-                              {preset.label}
-                            </span>
-                            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
-                              RULE FORMAT: {preset.value}
-                            </span>
-                          </div>
-                          {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />}
-                        </CardBody>
-                      </Card>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-bold text-zinc-900 dark:text-white">
+                            {preset.label}
+                          </span>
+                          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
+                            RULE FORMAT: {preset.value}
+                          </span>
+                        </div>
+                        {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />}
+                      </div>
                     );
                   })}
                 </div>
               </div>
+
             )}
           </div>
 
