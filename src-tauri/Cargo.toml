@@ -35,5 +35,6 @@ tokio = { version = "1.52.3", features = ["full"] }
 rusqlite = { version = "0.40.0", features = ["bundled"] }
 url = "2.5.8"
 directories = "6.0.0"
+opener = "0.8.4"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"

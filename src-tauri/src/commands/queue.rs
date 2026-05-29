@@ -245,12 +245,21 @@ pub async fn get_all_jobs(
 }
 
 #[tauri::command]
-pub async fn get_job_download_path(
+pub async fn reveal_job_in_explorer(
     state: State<'_, AppEngineState>,
     job_slug: String,
-) -> Result<String, String> {
-    match crate::engine::process::resolve_job_parameters(&state.db_path, &job_slug) {
-        Ok(cfg) => Ok(cfg.resolved_path),
-        Err(e) => Err(e),
+) -> Result<CommandResponse, String> {
+    let config = match crate::engine::process::resolve_job_parameters(&state.db_path, &job_slug) {
+        Ok(cfg) => cfg,
+        Err(e) => return Err(e),
+    };
+
+    if let Err(e) = opener::open(&config.resolved_path) {
+        return Err(format!("Native OS failed to open path: {}", e));
     }
+
+    Ok(CommandResponse {
+        success: true,
+        message: "Successfully opened natively.".to_string(),
+    })
 }

@@ -5,7 +5,6 @@ import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
 import { DownloadCloud, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
 export default function Downloads() {
   const { setActivePath } = useUIStore();
@@ -54,11 +53,9 @@ export default function Downloads() {
 
   const handleReveal = async (job: DownloadJob) => {
     try {
-      // 1. Fetch exactly where the Rust backend saved this file dynamically
-      const resolvedPath = await invoke<string>("get_job_download_path", { jobSlug: job.slug });
-      
-      // 2. Safely instruct the OS to open the file explorer window to that exact folder
-      await revealItemInDir(resolvedPath);
+      // Offload entirely to the Rust unsandboxed backend!
+      const res = await invoke<{ success: boolean; message: string }>("reveal_job_in_explorer", { jobSlug: job.slug });
+      if (!res.success) throw new Error(res.message);
     } catch (e: any) {
       console.error(e);
       alert(`Asset location could not be revealed: ${e.message || e}`);
