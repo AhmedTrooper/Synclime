@@ -15,6 +15,7 @@ struct ResolvedJobConfig {
     format_string: String,
     cookie_data: Option<String>,
     proxy_string: Option<String>,
+    resolved_path: String,
 }
 
 /// Helper function to parse raw text lines into metrics strings cleanly
@@ -38,6 +39,16 @@ fn parse_progress_line(line: &str) -> Option<(f64, String)> {
     Some((percentage, status_msg))
 }
 
+/// Dynamic Cross-Platform Fallback: Fetches the pure Rust path targeting user standard downloads
+fn get_system_downloads_fallback() -> String {
+    directories::UserDirs::new()
+        .and_then(|dirs| {
+            dirs.download_dir()
+                .map(|p| p.to_string_lossy().into_owned())
+        })
+        .unwrap_or_else(|| ".".to_string())
+}
+
 /// Query SQLite to extract all configuration parameters attached to this explicit job row
 fn resolve_job_parameters(
     db_path: &std::path::Path,
@@ -53,7 +64,9 @@ fn resolve_job_parameters(
             COALESCE(j.direct_url, p.url) as target_url,
             j.format_string,
             c.cookie_data,
-            pr.proxy_string
+            pr.proxy_string,
+            j.base_download_path,
+            j.custom_download_path
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         LEFT JOIN cookie_profiles c ON j.cookie_profile_slug = c.slug
@@ -84,11 +97,22 @@ fn resolve_job_parameters(
             let cookie: Option<String> = row.get(2).ok();
             let proxy: Option<String> = row.get(3).ok();
 
+            // Extract the user configuration directory paths
+            let base_path: Option<String> = row.get(4).ok();
+            let custom_path: Option<String> = row.get(5).ok();
+
+            // Prioritize custom user selection, then explicit base paths, and finally fall back to the system Downloads directory
+            let target_destination = custom_path
+                .filter(|s| !s.trim().is_empty())
+                .or(base_path.filter(|s| !s.trim().is_empty()))
+                .unwrap_or_else(get_system_downloads_fallback);
+
             Ok(ResolvedJobConfig {
                 target_url: url,
                 format_string: format,
                 cookie_data: cookie,
                 proxy_string: proxy,
+                resolved_path: target_destination,
             })
         }
         Ok(None) => Err(
@@ -118,6 +142,9 @@ pub async fn execute_download_worker(
     let mut cmd = Command::new("yt-dlp");
     cmd.arg("-f").arg(&config.format_string);
     cmd.arg("--newline");
+
+    // Explicit Destination Path Argument for yt-dlp execution mapping
+    cmd.arg("-P").arg(&config.resolved_path);
 
     if let Some(ref proxy_url) = config.proxy_string {
         cmd.arg("--proxy").arg(proxy_url);
