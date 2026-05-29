@@ -16,10 +16,6 @@
     "fs:allow-document-read-recursive",
     "notification:default",
     "opener:default",
-    "sql:allow-select",
-    "sql:allow-execute",
-    "sql:allow-close",
-    "sql:allow-load",
     "store:default",
     "shell:allow-kill",
     "clipboard-manager:allow-read-text",
@@ -36,7 +32,8 @@
           "name": "ytDlp",
           "cmd": "yt-dlp",
           "args": true
-        },{
+        },
+        {
           "name": "aria2c",
           "cmd": "aria2c",
           "args": true
@@ -50,7 +47,8 @@
           "name": "ytDlp",
           "cmd": "yt-dlp",
           "args": true
-        },{
+        },
+        {
           "name": "aria2c",
           "cmd": "aria2c",
           "args": true
