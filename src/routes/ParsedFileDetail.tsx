@@ -260,7 +260,7 @@ export default function ParsedFileDetail() {
 
   const downloadSubtitle = async (targetUrl: string, trackTitle: string) => {
     if (!selectedSub) {
-      alert("Please select a subtitle language in the sidebar first!");
+      alert("Please select a subtitle language from the dropdown menu first!");
       return;
     }
 
@@ -537,13 +537,15 @@ export default function ParsedFileDetail() {
                     </div>
 
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                      <button
-                        onClick={() => downloadSubtitle(track.url, track.title)}
-                        title="Download Subtitles"
-                        className="p-1.5 sm:p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold border border-purple-500/20 rounded-lg sm:rounded-xl transition-colors"
-                      >
-                        <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </button>
+                      {subOptions.length > 0 && (
+                        <button
+                          onClick={() => downloadSubtitle(track.url, track.title)}
+                          title="Download Subtitles"
+                          className="p-1.5 sm:p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold border border-purple-500/20 rounded-lg sm:rounded-xl transition-colors"
+                        >
+                          <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => startDownload(selectedPreset, false, track.title)}
                         title="Download Video"
