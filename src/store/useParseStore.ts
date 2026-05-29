@@ -20,6 +20,7 @@ interface ParseState {
   parsedFiles: ParsedFile[];
   isParsing: boolean;
   addParsedFile: (file: ParsedFile) => void;
+  removeParsedFile: (slug: string) => void;
   clearParsedFiles: () => void;
   setParsing: (parsing: boolean) => void;
 }
@@ -32,6 +33,10 @@ export const useParseStore = create<ParseState>()(
       addParsedFile: (file) =>
         set((state) => ({
           parsedFiles: [file, ...state.parsedFiles.filter((f) => f.slug !== file.slug)],
+        })),
+      removeParsedFile: (slug) =>
+        set((state) => ({
+          parsedFiles: state.parsedFiles.filter((f) => f.slug !== slug),
         })),
       clearParsedFiles: () => set({ parsedFiles: [] }),
       setParsing: (parsing) => set({ isParsing: parsing }),
