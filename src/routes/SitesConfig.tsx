@@ -390,12 +390,24 @@ export default function SitesConfig() {
                   />
                 </div>
                 <textarea
-                  placeholder="Paste raw Netscape / JSON cookie data here..."
+                  placeholder="Paste raw Netscape cookie data here (only Netscape format is supported)..."
                   value={newCookieData}
                   onChange={(e) => setNewCookieData(e.target.value)}
                   className="w-full px-3 py-2.5 sm:py-2 bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none focus:border-blue-500 text-[10px] sm:text-xs min-h-[100px] font-mono text-zinc-900 dark:text-white"
                   required
                 />
+                
+                {/* Format Alert Notice */}
+                <div className="flex items-start gap-2.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/15 p-3 rounded-lg select-none">
+                  <ShieldCheck className="w-4.5 h-4.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-left">
+                    <h4 className="font-bold">Cookie Format Notice</h4>
+                    <p className="text-[11px] text-zinc-650 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                      Only the standard <strong>Netscape cookie format</strong> is supported by the download sub-engine. JSON or other cookie formats are <strong>not supported</strong> and will result in network authentication errors.
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   className="w-full sm:w-auto self-end flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 sm:p-2 rounded-xl sm:rounded-lg transition-colors shadow-md shadow-emerald-500/20"
