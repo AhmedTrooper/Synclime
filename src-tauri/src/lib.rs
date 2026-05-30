@@ -309,7 +309,9 @@ pub fn run() {
         commands::config::add_site_config,
         commands::config::get_site_configs,
         commands::config::update_site_config,
-        commands::config::delete_site_config
+        commands::config::delete_site_config,
+        commands::config::update_download_path,
+        commands::config::get_download_path
     ]);
 
     match builder.run(tauri::generate_context!()) {

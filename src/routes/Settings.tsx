@@ -37,10 +37,11 @@ export default function Settings() {
     try {
       if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
         await invoke("update_concurrency_limit", { limit: concurrency });
+        await invoke("update_download_path", { path: tempPath });
         setNeedsRelaunch(true);
       }
     } catch(err) {
-       console.error("Failed to update concurrency limit:", err);
+       console.error("Failed to update preferences:", err);
     }
     
     setSavedSuccess(true);
@@ -75,6 +76,7 @@ export default function Settings() {
         const dir = await downloadDir();
         setDownloadPath(dir);
         setTempPath(dir);
+        await invoke("update_download_path", { path: dir });
       } else {
         setDownloadPath("/home/user/Downloads");
         setTempPath("/home/user/Downloads");

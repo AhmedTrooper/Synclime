@@ -348,3 +348,43 @@ pub async fn delete_site_config(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn update_download_path(
+    state: State<'_, AppEngineState>,
+    path: String,
+) -> Result<(), String> {
+    let conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    conn.execute(
+        "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('download_path', ?1)",
+        params![path],
+    )
+    .map_err(|e| format!("Failed to update download path: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_download_path(
+    state: State<'_, AppEngineState>,
+) -> Result<String, String> {
+    let conn = rusqlite::Connection::open(&state.db_path)
+        .map_err(|e| format!("Failed to open DB: {}", e))?;
+
+    let mut stmt = conn
+        .prepare("SELECT value FROM app_settings WHERE key = 'download_path'")
+        .map_err(|e| format!("Failed to prepare statement: {}", e))?;
+
+    let mut rows = stmt
+        .query([])
+        .map_err(|e| format!("Query failed: {}", e))?;
+
+    if let Some(row) = rows.next().map_err(|e| e.to_string())? {
+        let path: String = row.get(0).map_err(|e| e.to_string())?;
+        Ok(path)
+    } else {
+        Ok("".to_string())
+    }
+}

@@ -23,19 +23,36 @@ export default function App() {
 
     // Resolve default downloads folder on app startup if not set in local storage
     const resolveDefaultDirectory = async () => {
-      if (_hasHydrated && !downloadPath) {
-        try {
-          if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+      if (!_hasHydrated) return;
+      try {
+        const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+        let dbPath = "";
+        
+        if (isTauri) {
+          const { invoke } = await import("@tauri-apps/api/core");
+          dbPath = await invoke<string>("get_download_path");
+        }
+
+        if (dbPath && dbPath.trim().length > 0) {
+          setDownloadPath(dbPath);
+          console.log("SyncLime: loaded persisted download path from SQLite settings:", dbPath);
+        } else {
+          // Initialize default download path
+          let defaultDir = "";
+          if (isTauri) {
             const { downloadDir } = await import("@tauri-apps/api/path");
-            const dir = await downloadDir();
-            setDownloadPath(dir);
-            console.log("Tauri Path resolved downloads directory:", dir);
+            defaultDir = await downloadDir();
+            const { invoke } = await import("@tauri-apps/api/core");
+            await invoke("update_download_path", { path: defaultDir });
           } else {
-            // Browser preview fallback
-            setDownloadPath("/home/user/Downloads");
+            defaultDir = "/home/user/Downloads";
           }
-        } catch (err) {
-          console.error("Failed to resolve downloads path directory:", err);
+          setDownloadPath(defaultDir);
+          console.log("SyncLime: initialized first-run default download path:", defaultDir);
+        }
+      } catch (err) {
+        console.error("Failed to resolve downloads path directory settings:", err);
+        if (!downloadPath) {
           setDownloadPath("/home/user/Downloads");
         }
       }

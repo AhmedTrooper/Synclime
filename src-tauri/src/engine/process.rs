@@ -52,6 +52,17 @@ fn get_system_downloads_fallback() -> String {
         .unwrap_or_else(|| ".".to_string())
 }
 
+fn sanitize_title(title: &str) -> String {
+    title.to_lowercase()
+        .chars()
+        .map(|c| if c.is_alphanumeric() { c } else { '_' })
+        .collect::<String>()
+        .split('_')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<&str>>()
+        .join("_")
+}
+
 /// Query SQLite to extract all configuration parameters attached to this explicit job row
 pub fn resolve_job_parameters(
     db_path: &std::path::Path,
@@ -73,7 +84,10 @@ pub fn resolve_job_parameters(
             p.sanitized_title,
             p.sanitized_playlist_name,
             j.file_type,
-            j.selected_subtitles
+            j.selected_subtitles,
+            j.is_from_playlist,
+            COALESCE(p.is_playlist, 0) as is_playlist_parent,
+            p.parent_playlist_slug
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         LEFT JOIN cookie_profiles c ON j.cookie_profile_slug = c.slug
@@ -111,17 +125,60 @@ pub fn resolve_job_parameters(
             let sanitized_playlist: Option<String> = row.get(7).ok();
             let file_type: String = row.get(8).unwrap_or_default();
             let selected_subtitles: Option<String> = row.get(9).ok();
+            let is_from_playlist: i32 = row.get(10).unwrap_or(0);
+            let is_playlist_parent: i32 = row.get(11).unwrap_or(0);
+            let parent_playlist_slug: Option<String> = row.get(12).ok();
 
-            // Prioritize explicit base paths, and finally fall back to the system Downloads directory
-            let root_destination = base_path.filter(|s| !s.trim().is_empty())
+            // 1. Fetch the user's selected download folder from the SQL `app_settings` table.
+            let global_download_path = match conn.query_row(
+                "SELECT value FROM app_settings WHERE key = 'download_path'",
+                [],
+                |r| r.get::<_, String>(0)
+            ) {
+                Ok(val) => Some(val),
+                Err(_) => None,
+            };
+
+            // 2. Prioritize global setting, then the job's recorded path, then the OS downloads folder fallback.
+            let root_destination = global_download_path
+                .filter(|s| !s.trim().is_empty())
+                .or(base_path.filter(|s| !s.trim().is_empty()))
                 .unwrap_or_else(get_system_downloads_fallback);
 
+            // 3. Always append "Synclime" to the selected path.
             let mut final_path = std::path::PathBuf::from(root_destination);
+            if final_path.file_name().map(|n| n.to_string_lossy().to_string().to_lowercase()) != Some("synclime".to_string()) {
+                final_path = final_path.join("Synclime");
+            }
 
-            if let Some(playlist_name) = sanitized_playlist.filter(|s| !s.trim().is_empty()) {
-                final_path = final_path.join(playlist_name);
-            } else if let Some(video_title) = sanitized_title.filter(|s| !s.trim().is_empty()) {
-                final_path = final_path.join(video_title);
+            let is_playlist_item = is_from_playlist == 1 || !parent_playlist_slug.clone().unwrap_or_default().trim().is_empty();
+
+            if is_playlist_item {
+                // Get playlist folder name (sanitized)
+                let raw_playlist_name = if is_playlist_parent == 1 {
+                    sanitized_title.clone().unwrap_or_else(|| "playlist".to_string())
+                } else {
+                    sanitized_playlist.clone().unwrap_or_else(|| "playlist".to_string())
+                };
+                let clean_playlist_name = sanitize_title(&raw_playlist_name);
+
+                // Get video folder name (sanitized)
+                let raw_video_name = if is_playlist_parent == 1 {
+                    custom_title.clone().unwrap_or_else(|| "video".to_string())
+                } else {
+                    sanitized_title.clone().unwrap_or_else(|| "video".to_string())
+                };
+                let clean_video_name = sanitize_title(&raw_video_name);
+
+                final_path = final_path.join(clean_playlist_name).join(clean_video_name);
+            } else {
+                // Standalone video
+                let raw_video_name = sanitized_title
+                    .clone()
+                    .or(custom_title.clone())
+                    .unwrap_or_else(|| "video".to_string());
+                let clean_video_name = sanitize_title(&raw_video_name);
+                final_path = final_path.join(clean_video_name);
             }
 
             if !final_path.exists() {
@@ -172,12 +229,17 @@ pub async fn execute_download_worker(
     // Explicit Destination Path Argument for yt-dlp execution mapping
     cmd.arg("-P").arg(&config.resolved_path);
 
-    // Override filename mapping directly if custom_title explicitly passed
-    if let Some(ct) = config.custom_title {
+    // Specify the absolute output path directly in the output template to guarantee directory structure
+    let output_template = if let Some(ref ct) = config.custom_title {
         if !ct.trim().is_empty() {
-            cmd.arg("-o").arg(format!("{}.%(ext)s", ct.trim()));
+            format!("{}/{}.%(ext)s", &config.resolved_path, ct.trim())
+        } else {
+            format!("{}/%(title)s.%(ext)s", &config.resolved_path)
         }
-    }
+    } else {
+        format!("{}/%(title)s.%(ext)s", &config.resolved_path)
+    };
+    cmd.arg("-o").arg(output_template);
 
     if config.file_type == "subtitle" {
         cmd.arg("--write-subs");
