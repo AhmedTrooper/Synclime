@@ -4,6 +4,7 @@ import { useUIStore } from "../store/useUIStore";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import * as Switch from "@radix-ui/react-switch";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { Play, FileDown, Link2, AlertCircle, X } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -268,113 +269,153 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto py-1 sm:py-2 select-none animate-fade-in text-xs sm:text-sm font-sans">
-      
-      {/* Top Native Header / Navigation-like Bar */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-zinc-200 dark:border-white/10">
-        <div className="flex items-center gap-3">
-          {/* Tactile Native Icon Bubble */}
-          <div className="w-9 h-9 flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 rounded-lg">
-            <FileDown className="w-5 h-5" />
-          </div>
-          <div className="text-left">
-            <h1 className="text-sm font-bold text-zinc-900 dark:text-white tracking-tight leading-tight">New Download Task</h1>
-            <p className="text-[10px] text-zinc-400">Initialize multithreaded network queues</p>
+    <Tooltip.Provider delayDuration={200}>
+      <div className="space-y-3.5 max-w-2xl mx-auto py-1 sm:py-2 select-none animate-fade-in text-xs sm:text-sm font-sans">
+        
+        {/* Top Native Header / Navigation-like Bar */}
+        <div className="flex items-center justify-between pb-2.5 border-b border-zinc-200 dark:border-white/10">
+          <div className="flex items-center gap-3">
+            {/* Tactile Native Icon Bubble */}
+            <div className="w-9 h-9 flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 rounded-lg">
+              <FileDown className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <h1 className="text-sm font-bold text-zinc-900 dark:text-white tracking-tight leading-tight">New Download Task</h1>
+              <p className="text-[10px] text-zinc-400">Initialize multithreaded network queues</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Input Panel Card (Compact, Touch friendly) */}
-      <div className="border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 rounded-xl shadow-sm space-y-4">
-        <form onSubmit={handleAction} className="space-y-4">
-          
-          {/* Input Bar with inline Link Icon */}
-          <div className="space-y-1.5 text-left">
-            <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-              Asset Link Address
-            </label>
+        {/* Input Panel Card (Compact, Touch friendly) */}
+        <div className="border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 rounded-xl shadow-sm space-y-4">
+          <form onSubmit={handleAction} className="space-y-4">
             
-            <div className="relative flex items-center">
-              <div className="absolute left-3.5 text-zinc-400 dark:text-zinc-500">
-                <Link2 className="w-4.5 h-4.5" />
-              </div>
+            {/* Input Bar with inline Link Icon */}
+            <div className="space-y-1.5 text-left">
+              <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                Asset Link Address
+              </label>
               
-              <input
-                type="url"
-                placeholder="Paste URL, video, playlist, or document link..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={loading}
-                className="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/10 transition-all outline-none text-xs sm:text-sm text-zinc-900 dark:text-white shadow-inner font-sans"
-              />
+              <div className="relative flex items-center">
+                <div className="absolute left-3.5 text-zinc-400 dark:text-zinc-500">
+                  <Link2 className="w-4.5 h-4.5" />
+                </div>
+                
+                <input
+                  type="url"
+                  placeholder="Paste URL, video, playlist, or document link..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={loading}
+                  className="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/10 transition-all outline-none text-xs sm:text-sm text-zinc-900 dark:text-white shadow-inner font-sans"
+                />
 
-              {url && (
-                <button
-                  type="button"
-                  onClick={() => setUrl("")}
-                  className="absolute right-3.5 p-1 rounded-full text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Error Message Panel */}
-          {errorMsg && (
-            <div className="flex items-center gap-2 text-xs font-bold text-red-500 dark:text-red-400 bg-red-500/10 border border-red-500/15 p-3 rounded-lg animate-shake select-text">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Switch & Action Controls Row (Optimized for touch target sizing) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-            
-            {/* Radix Switch Row */}
-            <div className="flex items-center gap-3 text-left">
-              <Switch.Root
-                checked={directDownload}
-                onCheckedChange={setDirectDownload}
-                disabled={loading}
-                className="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 data-[state=checked]:bg-blue-500 dark:data-[state=checked]:bg-blue-600 rounded-full relative outline-none cursor-pointer transition-colors disabled:opacity-50 flex-shrink-0"
-              >
-                <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
-              </Switch.Root>
-              
-              <div>
-                <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 leading-tight">
-                  Direct Download
-                </h4>
-                <p className="text-[10px] text-zinc-400">Skip media analysis and fetch asset directly</p>
-              </div>
-            </div>
-
-            {/* Submit Button (Touch friendly height, tight layout widths) */}
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading || !url.trim()}
-                className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 text-white text-xs font-bold px-4 py-2.5 sm:py-3 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none min-h-[38px]"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    {directDownload ? <FileDown className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                    <span>{directDownload ? "Direct Download" : "Analyze Asset"}</span>
-                  </>
+                {url && (
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => setUrl("")}
+                        className="absolute right-3.5 p-1 rounded-full text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        sideOffset={5}
+                        className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200/80 dark:border-zinc-800 shadow-md px-2.5 py-1 rounded-lg z-[9999] select-none font-sans"
+                      >
+                        Clear URL address
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
                 )}
-              </button>
+              </div>
             </div>
 
-          </div>
-        </form>
-      </div>
+            {/* Error Message Panel */}
+            {errorMsg && (
+              <div className="flex items-center gap-2 text-xs font-bold text-red-500 dark:text-red-400 bg-red-500/10 border border-red-500/15 p-3 rounded-lg animate-shake select-text">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
 
-    </div>
+            {/* Switch & Action Controls Row (Optimized for touch target sizing) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              
+              {/* Radix Switch Row */}
+              <div className="flex items-center gap-3 text-left">
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <div>
+                      <Switch.Root
+                        checked={directDownload}
+                        onCheckedChange={setDirectDownload}
+                        disabled={loading}
+                        className="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 data-[state=checked]:bg-blue-500 dark:data-[state=checked]:bg-blue-600 rounded-full relative outline-none cursor-pointer transition-colors disabled:opacity-50 flex-shrink-0"
+                      >
+                        <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
+                      </Switch.Root>
+                    </div>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      sideOffset={5}
+                      className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200/80 dark:border-zinc-800 shadow-md px-2.5 py-1 rounded-lg z-[9999] select-none font-sans"
+                    >
+                      Skip metadata analysis and download raw asset
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+                
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 leading-tight">
+                    Direct Download
+                  </h4>
+                  <p className="text-[10px] text-zinc-400">Skip media analysis and fetch asset directly</p>
+                </div>
+              </div>
+
+              {/* Submit Button (Touch friendly height, tight layout widths) */}
+              <div className="flex justify-end">
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button
+                      type="submit"
+                      disabled={loading || !url.trim()}
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 text-white text-xs font-bold px-4 py-2.5 sm:py-3 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none min-h-[38px]"
+                    >
+                      {loading ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Analyzing...</span>
+                        </>
+                      ) : (
+                        <>
+                          {directDownload ? <FileDown className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                          <span>{directDownload ? "Direct Download" : "Analyze Asset"}</span>
+                        </>
+                      )}
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      sideOffset={5}
+                      className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-white text-[11px] font-semibold border border-zinc-200/80 dark:border-zinc-800 shadow-md px-2.5 py-1 rounded-lg z-[9999] select-none font-sans"
+                    >
+                      {directDownload ? "Queue direct download stream" : "Analyze resolution formats and subtitles"}
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </div>
+
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </Tooltip.Provider>
   );
 }
