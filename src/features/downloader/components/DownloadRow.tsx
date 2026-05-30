@@ -34,10 +34,17 @@ export function DownloadRow({ id, name, progress, status, message, onPauseToggle
           <span className={`text-[8px] sm:text-[10px] uppercase tracking-wide truncate flex-shrink-0 ${isError ? "text-red-500" : "text-zinc-500"}`}>
             {status}
           </span>
-          {isError && message && (
-             <span className="hidden sm:inline text-[10px] text-red-500 truncate max-w-[150px] ml-2 flex-shrink-0" title={message}>- {message}</span>
-          )}
         </div>
+        {message && message.trim().length > 0 && (
+          <span
+            className={`text-[9px] sm:text-[10px] font-mono truncate max-w-xs sm:max-w-md md:max-w-lg mt-0.5 ${
+              isError ? "text-red-500 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"
+            }`}
+            title={message}
+          >
+            {message}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-1 flex-shrink-0">
