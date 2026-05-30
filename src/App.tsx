@@ -1,51 +1,80 @@
-import { createSignal } from "solid-js";
-import logo from "./assets/logo.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { createSignal, createEffect, onCleanup, onMount } from "solid-js";
+import { useUIStore } from "./store/useUIStore";
 
-function App() {
-  const [greetMsg, setGreetMsg] = createSignal("");
-  const [name, setName] = createSignal("");
+export default function App(props: any) {
+  const [isLoaded, setIsLoaded] = createSignal(false);
+  const ui = useUIStore.state;
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name: name() }));
-  }
+  onMount(() => {
+    // Disable standard browser reloading & inspector key combinations
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "F5" ||
+        ((e.metaKey || e.ctrlKey) && e.key === "r") ||
+        ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "C" || e.key === "c" || e.key === "J" || e.key === "j"))
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => document.removeEventListener("keydown", handleKeyDown));
+  });
+
+  createEffect(() => {
+    // Wait until hydration finishes before determining path
+    if (!ui._hasHydrated) return;
+    
+    const resolveDefaultDirectory = async () => {
+      try {
+        const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+        let dbPath = "";
+        
+        if (isTauri) {
+          const { invoke } = await import("@tauri-apps/api/core");
+          dbPath = await invoke<string>("get_download_path");
+        }
+
+        if (dbPath && dbPath.trim().length > 0) {
+          useUIStore.setDownloadPath(dbPath);
+          console.log("SyncLime: loaded persisted download path from SQLite settings:", dbPath);
+        } else {
+          // Initialize default download path
+          let defaultDir = "";
+          if (isTauri) {
+            const { downloadDir } = await import("@tauri-apps/api/path");
+            defaultDir = await downloadDir();
+            const { invoke } = await import("@tauri-apps/api/core");
+            await invoke("update_download_path", { path: defaultDir });
+          } else {
+            defaultDir = "/home/user/Downloads";
+          }
+          useUIStore.setDownloadPath(defaultDir);
+          console.log("SyncLime: initialized first-run default download path:", defaultDir);
+        }
+      } catch (err) {
+        console.error("Failed to resolve downloads path directory settings:", err);
+        if (!ui.downloadPath) {
+          useUIStore.setDownloadPath("/home/user/Downloads");
+        }
+      }
+    };
+
+    resolveDefaultDirectory();
+
+    // Simulate system startup and asset loading delay to present premium entrance
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 2000);
+
+    onCleanup(() => clearTimeout(timer));
+  });
 
   return (
-    <main class="container bg-red-500">
-      <h1>Welcome to Tauri + Solid</h1>
-
-      <div class="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={logo} class="logo solid" alt="Solid logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and Solid logos to learn more.</p>
-
-      <form
-        class="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg()}</p>
-    </main>
+    <>
+      {/* TODO: Add SplashScreen implementation here if needed */}
+      {/* {!isLoaded() && <SplashScreen key="splash" />} */}
+      {props.children}
+    </>
   );
 }
-
-export default App;
