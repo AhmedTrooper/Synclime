@@ -6,16 +6,15 @@ import "./index.css";
 import App from "./App";
 import MainLayout from "./layouts/MainLayout";
 
-// Stubs for now, will create real routes later
-const Home = () => <div>Home</div>;
-const About = () => <div>About</div>;
-const Downloads = () => <div>Downloads</div>;
-const DownloadsDetail = () => <div>DownloadsDetail</div>;
-const Settings = () => <div>Settings</div>;
-const ParsedFileDetail = () => <div>ParsedFileDetail</div>;
-const ParsedFiles = () => <div>ParsedFiles</div>;
-const SitesConfig = () => <div>SitesConfig</div>;
-const Logs = () => <div>Logs</div>;
+import Home from "./routes/Home";
+import About from "./routes/About";
+import Downloads from "./routes/Downloads";
+import DownloadsDetail from "./routes/DownloadsDetail";
+import Settings from "./routes/Settings";
+import ParsedFileDetail from "./routes/ParsedFileDetail";
+import ParsedFiles from "./routes/ParsedFiles";
+import SitesConfig from "./routes/SitesConfig";
+import Logs from "./routes/Logs";
 
 const root = document.getElementById("root");
 
