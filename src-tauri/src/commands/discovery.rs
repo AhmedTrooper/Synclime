@@ -121,9 +121,28 @@ pub async fn discover_asset_metadata(
     if let Some(ref proxy) = site_config.proxy_string {
         cmd.arg("--proxy").arg(proxy);
     }
+
+    let mut temp_cookie_path = None;
     if let Some(ref cookies) = site_config.cookie_data {
-        cmd.arg("--cookies-from-viewer").arg(cookies);
+        let temp_dir = std::env::temp_dir();
+        let unique_id = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+        let unique_name = format!("synclime_cookie_{}.txt", unique_id);
+        let file_path = temp_dir.join(unique_name);
+        if std::fs::write(&file_path, cookies).is_ok() {
+            cmd.arg("--cookies").arg(&file_path);
+            temp_cookie_path = Some(file_path);
+        }
     }
+
+    struct CookieFileCleanup(Option<std::path::PathBuf>);
+    impl Drop for CookieFileCleanup {
+        fn drop(&mut self) {
+            if let Some(ref path) = self.0 {
+                let _ = std::fs::remove_file(path);
+            }
+        }
+    }
+    let _cleanup_guard = CookieFileCleanup(temp_cookie_path);
 
     cmd.arg(&target_url);
     cmd.stdout(Stdio::piped());
