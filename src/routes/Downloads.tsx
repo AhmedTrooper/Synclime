@@ -62,6 +62,7 @@ export default function Downloads() {
   };
 
   const treeNodes = useMemo(() => {
+    // 1. Create a node for every job
     const jobNodes: Record<string, TreeNode> = {};
     queue.forEach(job => {
       jobNodes[job.slug] = {
@@ -75,39 +76,92 @@ export default function Downloads() {
 
     const rootNodes: TreeNode[] = [];
     const playlistGroups: Record<string, TreeNode> = {};
+    
+    // We will keep track of which subtitle jobs have been successfully parented under actual video/audio jobs in the queue
+    const parentedJobs = new Set<string>();
 
+    // First pass: parent subtitles under actual video/audio jobs in the queue
     queue.forEach(job => {
-      const node = jobNodes[job.slug];
-      
-      let parentSlug = job.associatedMediaJobSlug;
-      if (!parentSlug && job.fileType === "subtitle") {
-        // Fallback scan: Pair dynamically if a video/audio job with the same URL is in the queue
-        const matchedParent = queue.find(j => j.url === job.url && j.fileType !== "subtitle");
-        if (matchedParent) {
-          parentSlug = matchedParent.slug;
+      if (job.fileType === "subtitle") {
+        let parentSlug = job.associatedMediaJobSlug;
+        if (!parentSlug) {
+          const matchedParent = queue.find(j => j.url === job.url && j.fileType !== "subtitle");
+          if (matchedParent) {
+            parentSlug = matchedParent.slug;
+          }
+        }
+
+        if (parentSlug && jobNodes[parentSlug]) {
+          jobNodes[parentSlug].children.push(jobNodes[job.slug]);
+          parentedJobs.add(job.slug);
         }
       }
+    });
 
-      if (parentSlug && jobNodes[parentSlug]) {
-        jobNodes[parentSlug].children.push(node);
-      } 
-      else {
-        const groupSlug = job.parentPlaylistSlug || (job.isPlaylist ? job.parsedFileSlug : undefined);
-        if (groupSlug) {
-          if (!playlistGroups[groupSlug]) {
-            playlistGroups[groupSlug] = {
-              id: `playlist-${groupSlug}`,
-              type: "playlist",
-              name: job.playlistName || "Playlist Batch",
-              isPlaylistGroup: true,
-              children: []
-            };
-            rootNodes.push(playlistGroups[groupSlug]);
+    // We will group the remaining orphaned subtitles by their URL to construct virtual video parents
+    const virtualVideoNodes: Record<string, TreeNode> = {};
+
+    queue.forEach(job => {
+      // If it's a subtitle and was not parented under an actual video job
+      if (job.fileType === "subtitle" && !parentedJobs.has(job.slug)) {
+        const urlKey = job.url;
+        if (!virtualVideoNodes[urlKey]) {
+          // Clean the subtitle name prefix to get the clean video title
+          // e.g., "[sub_en]_Video Title" becomes "Video Title"
+          let cleanVideoTitle = job.name;
+          if (job.name.startsWith("[sub_") && job.name.includes("]_")) {
+            cleanVideoTitle = job.name.substring(job.name.indexOf("]_") + 2);
           }
-          playlistGroups[groupSlug].children.push(node);
-        } else {
-          rootNodes.push(node);
+
+          virtualVideoNodes[urlKey] = {
+            id: `virtual-video-${urlKey}`,
+            type: "video",
+            name: cleanVideoTitle,
+            children: []
+          };
         }
+        virtualVideoNodes[urlKey].children.push(jobNodes[job.slug]);
+      }
+    });
+
+    // Now construct the final root tree
+    queue.forEach(job => {
+      // Skip subtitles since they are parented under actual videos or grouped under virtual videos
+      if (job.fileType === "subtitle") {
+        return;
+      }
+
+      const node = jobNodes[job.slug];
+      const groupSlug = job.parentPlaylistSlug || (job.isPlaylist ? job.parsedFileSlug : undefined);
+
+      if (groupSlug) {
+        if (!playlistGroups[groupSlug]) {
+          playlistGroups[groupSlug] = {
+            id: `playlist-${groupSlug}`,
+            type: "playlist",
+            name: job.playlistName || "Playlist Batch",
+            isPlaylistGroup: true,
+            children: []
+          };
+          rootNodes.push(playlistGroups[groupSlug]);
+        }
+        playlistGroups[groupSlug].children.push(node);
+      } else {
+        rootNodes.push(node);
+      }
+    });
+
+    // Add virtual video nodes to the root (or under their playlist groups if they belong to one!)
+    Object.keys(virtualVideoNodes).forEach(urlKey => {
+      const virtualNode = virtualVideoNodes[urlKey];
+      // Check if any of the subtitle children have a playlist parent slug
+      const firstChild = virtualNode.children[0]?.job;
+      const groupSlug = firstChild?.parentPlaylistSlug;
+
+      if (groupSlug && playlistGroups[groupSlug]) {
+        playlistGroups[groupSlug].children.push(virtualNode);
+      } else {
+        rootNodes.push(virtualNode);
       }
     });
 
@@ -136,6 +190,17 @@ export default function Downloads() {
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white leading-tight line-clamp-1">{node.name}</span>
               <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider">Playlist Group ({node.children.length} items)</span>
+            </div>
+          </div>
+        ) : !node.job ? (
+          // Virtual Video Parent for orphaned subtitles!
+          <div className="flex items-center gap-3 bg-blue-500/5 dark:bg-blue-500/5 p-3 rounded-xl border border-blue-500/10 w-full min-w-0 shadow-sm mb-2 mt-1">
+            <div className="p-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-lg flex-shrink-0">
+               <Folder className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-tight line-clamp-1">{node.name}</span>
+              <span className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Video Subtitles ({node.children.length} active)</span>
             </div>
           </div>
         ) : (
