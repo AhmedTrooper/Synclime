@@ -147,17 +147,77 @@ erDiagram
 
 ---
 
-## 🧠 Core Engineering 
+## 🧠 Core Engineering (Who Handles What)
 
-### 1. Stopping Screen Freezes (1-Second Buffer)
+### 1. Stopping Screen Freezes (The Rust Backend)
 *   **Problem:** Downloads send progress text thousands of times per second. Saving this to the database instantly freezes the app.
-*   **Solution:** We catch the text in memory (`progress_cache`). A background worker wakes up every 1 second, saves everything to SQLite at once, and sends one small message to the React UI.
+*   **Solution:** We catch the text in memory. A background worker wakes up every 1 second, saves everything to SQLite at once, and sends one small message to the React UI.
+*   **Code in `src-tauri/src/lib.rs` (Rust):**
+```rust
+// We run this loop in the background forever
+tauri::async_runtime::spawn(async move {
+    loop {
+        // Sleep for exactly 1 second
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        
+        // Grab the bucket of recent progress updates
+        let mut cache = flush_cache.lock();
+        if !cache.is_empty() {
+            if let Ok(conn) = rusqlite::Connection::open(&flush_db_path) {
+                for (slug, snapshot) in cache.iter() {
+                    // Update SQLite once per second per file
+                    let _ = conn.execute(
+                        "UPDATE download_jobs SET progress = ?1 WHERE slug = ?2;",
+                        rusqlite::params![snapshot.progress, slug]
+                    );
+                    
+                    // Tell the React frontend to redraw the progress bar
+                    let _ = tic_emitter.emit("download-progress-token", serde_json::json!({
+                        "slug": slug,
+                        "progress": snapshot.progress
+                    }));
+                }
+                cache.clear(); // Empty the bucket for the next second
+            }
+        }
+    }
+});
+```
 
-### 2. Safe Process Management
+### 2. Safe Process Management (The IPC Bridge)
 *   **Problem:** If a user clicks "Pause" very fast, it can create ghost processes that never stop.
-*   **Solution:** Rust tracks all active downloads in an isolated map (`HashMap<String, tokio::process::Child>`). Pausing sends a direct kill signal to ensure the process stops completely.
+*   **Solution:** The frontend sends a clean pause signal to Rust, which kills the active download safely.
+*   **Code in `src/routes/Downloads.tsx` (React/Frontend):**
+```typescript
+// When the user clicks pause in the UI...
+const handlePauseToggle = async (job: DownloadJob) => {
+    // We instantly update the UI state so it feels snappy
+    updateJobStatus(job.slug, "paused");
 
-### 3. Database Safety
+    // Then we tell the Rust backend to stop the actual OS process
+    await invoke("request_job_pause", { jobSlug: job.slug });
+};
+```
+*   **Code in `src-tauri/src/commands/queue.rs` (Rust/Backend):**
+```rust
+#[tauri::command]
+pub async fn request_job_pause(
+    job_slug: String,
+    state: tauri::State<'_, AppEngineState>,
+) -> Result<Response, String> {
+    // We safely lock the active processes list
+    let mut registry = state.active_processes.write().await;
+    
+    // If the process is running, we rip it out and kill it instantly
+    if let Some(mut child) = registry.remove(&job_slug) {
+        let _ = child.kill().await;
+    }
+    
+    Ok(Response { success: true })
+}
+```
+
+### 3. Database Safety (SQLite)
 *   **Problem:** JSON files can corrupt if the app crashes.
 *   **Solution:** We use SQLite with foreign keys. If a download uses a custom proxy, it is strongly linked in the database so it never breaks.
 
@@ -185,8 +245,7 @@ deno --version
 For developers who want to run the code:
 
 ### Requirements
-*   **Deno:** For backend scripts.
-*   **NodeJS:** `v18.x` or later (Bun is recommended).
+*   **Bun:** `v1.x` or later. This is **strictly mandatory** for local development to ensure the `bun.lock` file is maintained perfectly. Do NOT use NodeJS, NPM, or Deno.
 *   **Rust:** Stable `cargo` and `rustc`.
 *   **C++ Build Tools:** Required for your specific OS (Visual Studio, Xcode, or Ubuntu `build-essential`).
 
@@ -204,7 +263,7 @@ For developers who want to run the code:
 
 3.  **Run the app:**
     ```bash
-    bun run dev
+    bun run tauri dev
     ```
 
 ---
@@ -214,7 +273,7 @@ For developers who want to run the code:
 To create the final installer file:
 
 ```bash
-bun run build
+bun run tauri build
 ```
 The final files will be saved in: `src-tauri/target/release/bundle/`
 
@@ -233,4 +292,4 @@ We welcome help from developers!
 ---
 
 ## 📄 License
-This project is licensed under the **MIT License**.
+This project is dual-licensed under the **[MIT License](LICENCE)** and the **[Apache 2.0 License](LICENCE_APACHE%202.0)**.
