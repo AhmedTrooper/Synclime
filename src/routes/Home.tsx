@@ -5,8 +5,9 @@ import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import * as Switch from "@radix-ui/react-switch";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { Play, FileDown, Link2, AlertCircle, X, ChevronDown, GlobeLock } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { logErrorToDb, logParseToDb } from "../core/logger";
+import { Play, FileDown, Link2, AlertCircle, X, ChevronDown, GlobeLock } from "lucide-react";
 
 interface SiteConfig {
   slug: string;
@@ -127,7 +128,7 @@ export default function Home() {
             setSelectedSiteSlug(defaultCfg.slug);
           }
         } catch (e) {
-          console.error("Failed to load site configs:", e);
+          await logErrorToDb(String(e), "fetchConfigs");
         }
       }
     };
@@ -159,7 +160,7 @@ export default function Home() {
             cleanUrl = cleanRes.sanitized_url;
           }
         } catch (e) {
-          console.warn("Direct clipboard paste cleaning failed (browser fallback):", e);
+          await logErrorToDb(String(e), "process_clipboard_paste_direct");
         }
 
         const domain = new URL(cleanUrl).hostname.replace("www.", "");
@@ -195,7 +196,7 @@ export default function Home() {
             });
             if (!insertRes.success) throw new Error(insertRes.message);
           } catch (e: any) {
-            console.error("Database pre-registration error:", e);
+            await logErrorToDb(e.message || String(e), "insert_job_record_direct", newJob.slug);
             throw new Error(e.message || "Failed to construct the initial job record in SQLite.");
           }
         }
@@ -207,7 +208,7 @@ export default function Home() {
             throw new Error(res.message);
           }
         } catch (e: any) {
-          console.error("trigger_job_start invoke error:", e);
+          await logErrorToDb(e.message || String(e), "trigger_job_start_direct", uniqueSlug);
           const errMsg = e.message || "Failed to initialize native direct downloader.";
           useQueueStore.getState().updateJobStatus(uniqueSlug, "error");
           useQueueStore.getState().updateJobProgress(uniqueSlug, 0, errMsg);
@@ -216,6 +217,7 @@ export default function Home() {
         // Redirect to Downloads page
         navigate("/downloads");
       } catch (err: any) {
+        await logErrorToDb(err.message || String(err), "direct_download_flow", "direct_fallback");
         setErrorMsg(err.message || "Failed to initialize direct document queue action.");
       } finally {
         setLoading(false);
@@ -235,10 +237,12 @@ export default function Home() {
             cleanUrl = cleanRes.sanitized_url;
           }
         } catch (e) {
-          console.warn("Metadata clipboard paste cleaning failed (browser fallback):", e);
+          await logErrorToDb(String(e), "process_clipboard_paste_metadata");
         }
 
         let payload: any = null;
+        const startedAt = new Date().toISOString();
+        const startTime = Date.now();
         try {
           const discoverRes = await invoke<{
             success: boolean;
@@ -251,11 +255,31 @@ export default function Home() {
 
           if (discoverRes.success && discoverRes.payload) {
             payload = discoverRes.payload;
+            await logParseToDb(
+              payload.id || `file-${Date.now()}`,
+              "success",
+              startedAt,
+              new Date().toISOString(),
+              Date.now() - startTime,
+              `yt-dlp --dump-single-json ${cleanUrl}`,
+              0,
+              JSON.stringify(payload).length
+            );
           } else {
             throw new Error(discoverRes.error_message || "Metadata extraction probe rejected URL.");
           }
         } catch (e: any) {
-          console.warn("discover_asset_metadata invoke error (browser fallback simulation active):", e);
+          await logParseToDb(
+            "unknown_target",
+            "failed",
+            startedAt,
+            new Date().toISOString(),
+            Date.now() - startTime,
+            `yt-dlp --dump-single-json ${cleanUrl}`,
+            1,
+            0
+          );
+          await logErrorToDb(e.message || String(e), "discover_asset_metadata");
           
           // High-fidelity Mock payload for web preview/fallback
           const isPlaylistUrl = cleanUrl.includes("list=") || cleanUrl.includes("playlist");
@@ -369,13 +393,14 @@ export default function Home() {
               }
             });
           } catch (e) {
-            console.error("Failed to insert parsed file into SQLite:", e);
+            await logErrorToDb(String(e), "insert_parsed_file", parsedFile.slug);
           }
         }
 
         // Redirect to detail page
         navigate(`/parsed_file/${parsedFile.slug}`);
       } catch (err: any) {
+        await logErrorToDb(err.message || String(err), "detailed_metadata_discovery_failed");
         setErrorMsg(err.message || "Failed to analyze target web address parameters.");
       } finally {
         setParsing(false);

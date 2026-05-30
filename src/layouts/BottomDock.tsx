@@ -13,6 +13,7 @@ import {
   Maximize2,
   X,
   Monitor,
+  Database,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useUIStore } from "@/store/useUIStore";
@@ -35,7 +36,7 @@ export default function BottomDock() {
       icon: Download,
       badgeKey: "downloads" as const,
       color:
-        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400",
+        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-550 dark:text-zinc-400",
     },
     {
       path: "/parsed_files",
@@ -43,7 +44,15 @@ export default function BottomDock() {
       icon: FileText,
       badgeKey: "parsedFiles" as const,
       color:
-        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400",
+        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-550 dark:text-zinc-400",
+    },
+    {
+      path: "/logs",
+      label: "System Logs",
+      icon: Database,
+      badgeKey: "logs" as const,
+      color:
+        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-550 dark:text-zinc-400",
     },
     {
       path: "/settings",
@@ -51,7 +60,7 @@ export default function BottomDock() {
       icon: Settings,
       badgeKey: "settings" as const,
       color:
-        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400",
+        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-550 dark:text-zinc-400",
     },
     {
       path: "/about",
@@ -59,7 +68,7 @@ export default function BottomDock() {
       icon: Info,
       badgeKey: "about" as const,
       color:
-        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-500 dark:text-zinc-400",
+        "hover:text-blue-500 dark:hover:text-blue-400 text-zinc-550 dark:text-zinc-400",
     },
   ];
 

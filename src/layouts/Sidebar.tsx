@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen, GlobeLock, Moon, Sun, Monitor } from "lucide-react";
+import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen, GlobeLock, Moon, Sun, Monitor, Database } from "lucide-react";
 import { useUIStore } from "@/store/useUIStore";
 
 export default function Sidebar() {
@@ -13,6 +13,7 @@ export default function Sidebar() {
 
   const bottomNavItems = [
     { path: "/sites_config", label: "Sites & Rules", icon: GlobeLock, badgeKey: "sites" as const },
+    { path: "/logs", label: "Logs", icon: Database, badgeKey: "logs" as const },
     { path: "/settings", label: "Preferences", icon: Settings, badgeKey: "settings" as const },
     { path: "/about", label: "About", icon: Info, badgeKey: "about" as const },
   ];

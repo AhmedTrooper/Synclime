@@ -11,6 +11,7 @@ import Settings from "./routes/Settings";
 import ParsedFileDetail from "./routes/ParsedFileDetail";
 import ParsedFiles from "./routes/ParsedFiles";
 import SitesConfig from "./routes/SitesConfig";
+import Logs from "./routes/Logs";
 import "@fontsource-variable/inter";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
@@ -53,9 +54,12 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
               path="sites_config"
               element={<SitesConfig />}
             />
+            <Route
+              path="logs"
+              element={<Logs />}
+            />
           </Route>
         </Routes>
       </BrowserRouter>
   </React.StrictMode>
 );
-

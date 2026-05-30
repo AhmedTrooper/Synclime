@@ -317,7 +317,12 @@ pub fn run() {
         commands::config::update_site_config,
         commands::config::delete_site_config,
         commands::config::update_download_path,
-        commands::config::get_download_path
+        commands::config::get_download_path,
+        commands::logs::get_error_logs,
+        commands::logs::get_parse_logs,
+        commands::logs::insert_error_log,
+        commands::logs::insert_parse_log,
+        commands::logs::clear_all_logs
     ]);
 
     match builder.run(tauri::generate_context!()) {

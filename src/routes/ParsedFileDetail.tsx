@@ -3,6 +3,7 @@ import { useParseStore } from "../store/useParseStore";
 import { useQueueStore } from "../store/useQueueStore";
 import { useUIStore } from "../store/useUIStore";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { logErrorToDb } from "../core/logger";
 
 import {
   ArrowLeft,
@@ -118,7 +119,7 @@ export default function ParsedFileDetail() {
         const startRes = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: jobPayload.slug });
         if (!startRes.success) throw new Error(startRes.message);
       } catch (e: any) {
-        console.error(`Dispatch failed for ${jobPayload.slug}:`, e);
+        await logErrorToDb(e.message || String(e), "dispatch_download_job", jobPayload.slug);
       }
     } else {
       // Browser fallback - simulate backend
@@ -284,8 +285,8 @@ export default function ParsedFileDetail() {
               site_config_slug: file.siteConfigSlug,
             }
           });
-        } catch (e) {
-          console.error("Failed to insert parsed track file into SQLite:", e);
+        } catch (e: any) {
+          await logErrorToDb(e.message || String(e), "insert_parsed_track", parsedTrackFile.slug);
         }
       }
 
