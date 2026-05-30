@@ -312,6 +312,7 @@ pub async fn execute_download_worker(
                 ProgressSnapshot {
                     progress: current_progress,
                     status_message: clean_line.to_string(),
+                    status: "downloading".to_string(),
                 },
             );
         }
@@ -322,20 +323,84 @@ pub async fn execute_download_worker(
         active_instances.remove(&job_slug)
     };
 
-    let clean_exit = match remaining_process {
-        Some(mut remaining_child) => match remaining_child.wait().await {
+    let mut stderr_msg = String::new();
+    let mut clean_exit = false;
+
+    if let Some(mut remaining_child) = remaining_process {
+        // Read stderr if process fails to capture the exact error message
+        if let Some(stderr) = remaining_child.stderr.take() {
+            let mut err_reader = BufReader::new(stderr).lines();
+            let mut err_lines = Vec::new();
+            while let Ok(Some(line)) = err_reader.next_line().await {
+                let clean = line.trim();
+                if !clean.is_empty() {
+                    err_lines.push(clean.to_string());
+                }
+            }
+            if !err_lines.is_empty() {
+                stderr_msg = err_lines.last().cloned().unwrap_or_default();
+                if stderr_msg.is_empty() {
+                    stderr_msg = err_lines.join(" ");
+                }
+            }
+        }
+
+        clean_exit = match remaining_child.wait().await {
             Ok(status) => status.success(),
             Err(_) => false,
-        },
-        None => false,
-    };
+        };
+    }
 
     if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
-        let final_status = if clean_exit { "completed" } else { "paused" };
-        let _ = conn.execute(
-            "UPDATE download_jobs SET status = ?1, updated_at = datetime('now') WHERE slug = ?2;",
-            rusqlite::params![final_status, job_slug],
-        );
+        if clean_exit {
+            // Update database to completed
+            let _ = conn.execute(
+                "UPDATE download_jobs SET status = 'completed', progress = 100.0, updated_at = datetime('now') WHERE slug = ?1;",
+                rusqlite::params![job_slug],
+            );
+            
+            // Push final completed snapshot into cache
+            let mut cache = state.progress_cache.lock();
+            cache.insert(
+                job_slug.clone(),
+                ProgressSnapshot {
+                    progress: 100.0,
+                    status_message: "Download completed successfully.".to_string(),
+                    status: "completed".to_string(),
+                },
+            );
+        } else {
+            let error_desc = if stderr_msg.is_empty() {
+                "Download process terminated with error status.".to_string()
+            } else {
+                stderr_msg
+            };
+
+            // Update database to error and set tracking_message
+            let _ = conn.execute(
+                "UPDATE download_jobs SET status = 'error', tracking_message = ?1, updated_at = datetime('now') WHERE slug = ?2;",
+                rusqlite::params![error_desc, job_slug],
+            );
+
+            // Log detailed error record in SQLite error_logs
+            let error_slug = format!("err_{}", chrono::Utc::now().timestamp_millis());
+            let now_str = chrono::Utc::now().to_rfc3339();
+            let _ = conn.execute(
+                "INSERT INTO error_logs (slug, download_job_slug, command_executed, error_message, is_resolved, timestamp) VALUES (?1, ?2, ?3, ?4, 0, ?5);",
+                rusqlite::params![error_slug, job_slug, "yt-dlp execution", error_desc, now_str],
+            );
+
+            // Push final error snapshot into cache
+            let mut cache = state.progress_cache.lock();
+            cache.insert(
+                job_slug.clone(),
+                ProgressSnapshot {
+                    progress: current_progress,
+                    status_message: error_desc,
+                    status: "error".to_string(),
+                },
+            );
+        }
     }
 
     Ok(())

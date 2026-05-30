@@ -23,6 +23,7 @@ pub struct ActiveProcessRegistry {
 pub struct ProgressSnapshot {
     pub progress: f64,
     pub status_message: String,
+    pub status: String,
 }
 
 pub struct AppEngineState {
@@ -253,8 +254,8 @@ pub fn run() {
                     if let Ok(conn) = rusqlite::Connection::open(&flush_db_path) {
                         for (slug, snapshot) in cache.iter() {
                             let _ = conn.execute(
-                                "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, updated_at = datetime('now') WHERE slug = ?3;",
-                                rusqlite::params![snapshot.progress, snapshot.status_message, slug]
+                                "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, status = ?3, updated_at = datetime('now') WHERE slug = ?4;",
+                                rusqlite::params![snapshot.progress, snapshot.status_message, snapshot.status, slug]
                             );
                             
                             let _ = tic_emitter.emit(
@@ -262,7 +263,8 @@ pub fn run() {
                                 serde_json::json!({
                                     "slug": slug,
                                     "progress": snapshot.progress,
-                                    "message": snapshot.status_message
+                                    "message": snapshot.status_message,
+                                    "status": snapshot.status
                                 })
                             );
                         }

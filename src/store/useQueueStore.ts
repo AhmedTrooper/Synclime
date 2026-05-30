@@ -78,13 +78,18 @@ export const useQueueStore = create<QueueState>()((set) => ({
 if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
   import("@tauri-apps/api/event").then(({ listen }) => {
     listen("download-progress-token", (event: any) => {
-      const { slug, progress, message } = event.payload as {
+      const { slug, progress, message, status } = event.payload as {
         slug: string;
         progress: number;
         message: string;
+        status?: string;
       };
       useQueueStore.getState().updateJobProgress(slug, progress, message);
-      useQueueStore.getState().updateJobStatus(slug, progress >= 100 ? "completed" : "downloading");
+      if (status) {
+        useQueueStore.getState().updateJobStatus(slug, status as any);
+      } else {
+        useQueueStore.getState().updateJobStatus(slug, progress >= 100 ? "completed" : "downloading");
+      }
     });
   }).catch((err) => {
     console.error("Failed to load Tauri event listener in queue store:", err);
