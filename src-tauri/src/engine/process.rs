@@ -243,6 +243,7 @@ pub async fn execute_download_worker(
 
     if config.file_type == "subtitle" {
         cmd.arg("--write-subs");
+        cmd.arg("--write-auto-subs");
         cmd.arg("--skip-download");
         if let Some(ref subs) = config.selected_subtitles {
             cmd.arg("--sub-langs").arg(subs);
