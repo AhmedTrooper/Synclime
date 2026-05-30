@@ -293,6 +293,7 @@ pub async fn execute_download_worker(
     }
 
     let mut reader = BufReader::new(stdout_stream).lines();
+    let mut current_progress = 0.0;
 
     while let Ok(Some(line)) = reader.next_line().await {
         let clean_line = line.trim();
@@ -300,17 +301,19 @@ pub async fn execute_download_worker(
             continue;
         }
 
-        if let Some((percentage, status_text)) = parse_progress_line(clean_line) {
-            {
-                let mut cache = state.progress_cache.lock();
-                cache.insert(
-                    job_slug.clone(),
-                    ProgressSnapshot {
-                        progress: percentage,
-                        status_message: status_text.clone(),
-                    },
-                );
-            }
+        if let Some((percentage, _)) = parse_progress_line(clean_line) {
+            current_progress = percentage;
+        }
+
+        {
+            let mut cache = state.progress_cache.lock();
+            cache.insert(
+                job_slug.clone(),
+                ProgressSnapshot {
+                    progress: current_progress,
+                    status_message: clean_line.to_string(),
+                },
+            );
         }
     }
 
