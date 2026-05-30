@@ -1,21 +1,65 @@
-# 🚀 SyncLime: The Best Desktop Downloader
+# 🚀 SyncLime (OSGUI)
 
-(A simple, fast, and strong app built with Tauri, Rust, and React)
+[![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC107?logo=tauri&logoColor=white)](https://tauri.app/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Rust](https://img.shields.io/badge/Rust-2021-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://sqlite.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📖 What is this? (For Non-Technical HR & Users)
-SyncLime is a computer program. It helps you download videos, music, and playlists from the internet. 
-Usually, other downloader apps freeze, slow down, or crash when you download too many files at the same time. SyncLime never crashes. It uses a very strong background worker (Rust) to do the heavy lifting. The user screen (React) always stays smooth, fast, and easy to use. 
-
-## 🏆 Why is it so good? (For FAANG Recruiters & Engineers)
-- **Very Safe:** It tracks every single task in a strong database (SQLite). If your computer turns off suddenly, you do not lose any data.
-- **Super Fast:** It can read big playlists (100+ videos) in just one second.
-- **No Freezes:** It updates the download progress bar in smart batches (every 1 second). This means your screen never gets overloaded.
-- **Smart Connections:** You can use custom cookies (web keys) and proxies (hidden internet routes) to download safe files block-free.
+A desktop media downloader built with Tauri v2, React 18, Rust, and SQLite. SyncLime is designed to manage many downloads at the same time without crashing.
 
 ---
 
-## 🗄️ Database Map
-We use SQLite to keep everything safe and linked together. Here is exactly how the tables connect. Every box is a table, and the lists are the fields.
+## 📌 What is this?
+SyncLime is a desktop application for downloading videos and music. 
+Many downloader apps freeze when you download too many files. SyncLime solves this by separating the background work from the user screen. 
+
+### Core Features
+*   **Fast Parsing:** Reads big playlists (100+ videos) quickly.
+*   **Custom Profiles:** You can use specific cookies and proxies for different websites.
+*   **Safe Memory:** Limits how many downloads run at once to protect your computer.
+*   **Native Window:** Custom dark mode UI that handles thousands of items smoothly.
+
+---
+
+## 🏛️ System Architecture
+
+The application uses an event-driven design to connect the React UI with the Rust backend.
+
+```mermaid
+graph TD
+    subgraph Frontend_Layer [React Frontend Layer]
+        UI[React Components] <--> Zustand[Zustand State Store]
+        Zustand <--> TA_IPC[Tauri IPC Bridge]
+    end
+
+    subgraph Tauri_IPC_Boundary [Tauri IPC Boundary]
+        TA_IPC <--> |invoke / emit| Rust_IPC[Tauri Command Handlers]
+    end
+
+    subgraph Rust_Backend_Layer [Native Rust Backend Layer]
+        Rust_IPC <--> Engine[AppEngineState]
+        Engine <--> Db[SQLite Database]
+        Engine <--> Registry[ActiveProcessRegistry]
+        Registry <--> |Tokio Spawn| Worker[execute_download_worker]
+        Worker <--> |fork/exec| Subprocess[yt-dlp Subprocess]
+    end
+
+    subgraph System_Background_Tasks [System Async Workers]
+        FlushWorker[1-Second Flush Worker]
+        CancelWorker[Cancellation Worker]
+        
+        FlushWorker <--> Db
+        FlushWorker --> |Emit Progress| TA_IPC
+        CancelWorker <--> Registry
+    end
+```
+
+---
+
+## 🗄️ Database Map (SQLite)
+
+We use a relational database to save all downloads safely. Here is how the tables connect:
 
 ```mermaid
 erDiagram
@@ -24,15 +68,11 @@ erDiagram
         string title
         string domain
         string cookie_data
-        string created_at
-        string updated_at
     }
     proxy_profiles {
         string slug PK
         string title
         string proxy_string
-        string created_at
-        string updated_at
     }
     site_configs {
         string slug PK
@@ -41,8 +81,6 @@ erDiagram
         string cookie_profile_slug FK
         string proxy_profile_slug FK
         int is_default
-        string created_at
-        string updated_at
     }
     parsed_files {
         string slug PK
@@ -52,9 +90,7 @@ erDiagram
         int is_playlist
         string parent_playlist_slug FK
         string playlist_name
-        string sanitized_playlist_name
         string json_metadata
-        string created_at
         string site_config_slug FK
     }
     download_jobs {
@@ -79,11 +115,6 @@ erDiagram
         string video_format
         string selected_subtitles
         int last_pid
-        int priority_index
-        string created_at
-        string resumed_at
-        string restarted_at
-        string updated_at
     }
     parse_logs {
         string slug PK
@@ -91,10 +122,8 @@ erDiagram
         string status
         string started_at
         string finished_at
-        int duration_ms
         string command_executed
         int exit_code
-        int bytes_returned
     }
     error_logs {
         string slug PK
@@ -102,103 +131,106 @@ erDiagram
         string command_executed
         string error_message
         int is_resolved
-        string timestamp
-    }
-    app_settings {
-        string key PK
-        string value
     }
 
     site_configs }|--o| cookie_profiles : "uses"
     site_configs }|--o| proxy_profiles : "uses"
     parsed_files }|--o| site_configs : "uses profile"
-    parsed_files }|--o| parsed_files : "belongs to playlist"
-    download_jobs }|--o| parsed_files : "belongs to file"
-    download_jobs }|--o| download_jobs : "links to parent media"
-    download_jobs }|--o| cookie_profiles : "uses specific cookie"
-    download_jobs }|--o| proxy_profiles : "uses specific proxy"
-    parse_logs }|--|| parsed_files : "logs history for"
-    error_logs }|--|| download_jobs : "errors history for"
+    parsed_files }|--o| parsed_files : "parent playlist"
+    download_jobs }|--o| parsed_files : "belongs to"
+    download_jobs }|--o| download_jobs : "links to parent"
+    download_jobs }|--o| cookie_profiles : "uses cookie"
+    download_jobs }|--o| proxy_profiles : "uses proxy"
+    parse_logs }|--|| parsed_files : "logs"
+    error_logs }|--|| download_jobs : "errors"
 ```
 
 ---
 
-## ⚙️ How It Works (Who handles what?)
+## 🧠 Core Engineering 
 
-### 1. The Frontend (React + TypeScript + Zustand)
-The frontend draws the buttons, colors, and lists. It **does not** do the actual downloading. It only asks the backend to do things.
-*   **Structs / Interfaces:** 
-    *   `UIStore`: Keeps track of the dark mode, badges, and which page you are on. (Arguments: `activePath`, `theme`, `downloadPath`).
-    *   `ParseState`: Saves video info so the app does not reload the same data twice. (Arguments: `parsedFiles`, `isParsing`).
-    *   `QueueState`: Shows the active downloads. Listens to the backend signals to update the UI lines. (Arguments: `queue`, `progressUpdates`).
-*   **Functions:**
-    *   `handleAction(url)`: Takes your web link, cleans it to make it safe, and asks the backend to check what video it is.
-    *   `startDownload(format)`: Takes your quality choice (like 1080p or Audio only) and tells the backend to start a real job.
+### 1. Stopping Screen Freezes (1-Second Buffer)
+*   **Problem:** Downloads send progress text thousands of times per second. Saving this to the database instantly freezes the app.
+*   **Solution:** We catch the text in memory (`progress_cache`). A background worker wakes up every 1 second, saves everything to SQLite at once, and sends one small message to the React UI.
 
-### 2. The Backend (Rust + Tauri IPC)
-The backend does the hard and messy work. It manages folders, big processes, and saves data to SQLite safely.
-*   **Structs:**
-    *   `AppEngineState`: Holds database connections, safe locks for memory, and the active download processes.
-    *   `ResolvedJobConfig`: Computes exactly where a file should go on your PC before saving it.
-    *   `DownloadJobRow`: The exact shape of the row going into the database table.
-*   **Functions:**
-    *   `trigger_job_start(job_slug)`: Looks at the database and starts a new worker thread. It stops you from starting the same job twice.
-    *   `request_job_pause(job_slug)`: Kills the active downloader thread instantly and marks it as "paused" in the database safely.
-    *   `discover_asset_metadata(target_url)`: Runs a very fast scan to see all video qualities, subtitles, and playlists inside a link.
+### 2. Safe Process Management
+*   **Problem:** If a user clicks "Pause" very fast, it can create ghost processes that never stop.
+*   **Solution:** Rust tracks all active downloads in an isolated map (`HashMap<String, tokio::process::Child>`). Pausing sends a direct kill signal to ensure the process stops completely.
+
+### 3. Database Safety
+*   **Problem:** JSON files can corrupt if the app crashes.
+*   **Solution:** We use SQLite with foreign keys. If a download uses a custom proxy, it is strongly linked in the database so it never breaks.
 
 ---
 
-## 🌟 The Best Code Showcase (No Bluff)
-When an app downloads 10 files, it prints out a new progress percentage 100 times per second. If we write to a database 100 times per second, the hard drive locks up. If we tell React to redraw the screen 100 times per second, the UI freezes.
+## ⚡ Installation
 
-Here is the smart code from `src-tauri/src/lib.rs`. It catches all those fast updates into an empty bucket. Then, every `1 second`, it empties the bucket into the database and the UI all at once. **This is why the app never freezes.**
+You need `yt-dlp`, `ffmpeg`, and `Deno` installed on your computer.
 
-```rust
-// A background worker that runs constantly 
-tauri::async_runtime::spawn(async move {
-    loop {
-        // Step 1: Wait exactly 1 second
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        
-        // Step 2: Lock the bucket of new progress updates
-        let mut cache = flush_cache.lock();
-        if !cache.is_empty() {
-            // Step 3: Open the SQLite database
-            if let Ok(conn) = rusqlite::Connection::open(&flush_db_path) {
-                
-                // Step 4: Batch write all updates to the database
-                for (slug, snapshot) in cache.iter() {
-                    let _ = conn.execute(
-                        "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, status = ?3, updated_at = datetime('now') WHERE slug = ?4;",
-                        rusqlite::params![snapshot.progress, snapshot.status_message, snapshot.status, slug]
-                    );
-                    
-                    // Step 5: Tell the React Frontend to redraw the bars safely
-                    let _ = tic_emitter.emit(
-                        "download-progress-token",
-                        serde_json::json!({
-                            "slug": slug,
-                            "progress": snapshot.progress,
-                            "message": snapshot.status_message,
-                            "status": snapshot.status
-                        })
-                    );
-                }
-                // Step 6: Empty the bucket for the next second!
-                cache.clear();
-            }
-        }
-    }
-});
+### 1. Check Dependencies
+```bash
+yt-dlp --version
+ffmpeg -version
+deno --version
 ```
-*   **Why is this here?** To stop the database and screen from breaking when downloading fast.
-*   **What does it do?** It groups updates into 1-second chunks (we call this "debouncing backpressure").
-*   **Who handles it?** The Rust backend handles it perfectly to protect the React frontend.
+
+### 2. Download
+*   Go to [GitHub Releases](https://github.com/AhmedTrooper/OSGUI/releases).
+*   Download the installer for your OS (Windows `.exe`, macOS `.dmg`, or Linux `.deb`).
 
 ---
 
-## 🖱️ How to use
-1. Paste a video or playlist link into the app.
-2. The app analyzes it and asks you what video quality you want.
-3. Click "Download".
-4. The background Rust engine handles the hard work perfectly while you enjoy your smooth UI!
+## 🛠️ Local Development
+
+For developers who want to run the code:
+
+### Requirements
+*   **Deno:** For backend scripts.
+*   **NodeJS:** `v18.x` or later (Bun is recommended).
+*   **Rust:** Stable `cargo` and `rustc`.
+*   **C++ Build Tools:** Required for your specific OS (Visual Studio, Xcode, or Ubuntu `build-essential`).
+
+### Setup
+1.  **Clone and switch to dev branch:**
+    ```bash
+    git clone -b dev https://github.com/AhmedTrooper/OSGUI.git
+    cd OSGUI
+    ```
+
+2.  **Install node modules:**
+    ```bash
+    bun install
+    ```
+
+3.  **Run the app:**
+    ```bash
+    bun run dev
+    ```
+
+---
+
+## 🚀 Build for Production
+
+To create the final installer file:
+
+```bash
+bun run build
+```
+The final files will be saved in: `src-tauri/target/release/bundle/`
+
+---
+
+## 🤝 Contributing
+
+We welcome help from developers! 
+1.  Fork the project and branch from `dev`.
+    ```bash
+    git checkout -b feature/your-feature dev
+    ```
+2.  Make sure your code is clean (`tsc` and `cargo fmt`).
+3.  Open a Pull Request pointing to the `dev` branch.
+
+---
+
+## 📄 License
+This project is licensed under the **MIT License**.
