@@ -13,7 +13,7 @@ function App() {
   }
 
   return (
-    <main class="container">
+    <main class="container bg-red-500">
       <h1>Welcome to Tauri + Solid</h1>
 
       <div class="row">

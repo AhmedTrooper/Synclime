@@ -1,7 +1,7 @@
 [package]
 name = "synclime"
 version = "0.1.0"
-description = "A Tauri App"
+description = "High-performance media extraction pipeline powered by yt-dlp, FFmpeg, and dynamic JS runtimes."
 authors = ["you"]
 edition = "2021"
 
@@ -30,3 +30,8 @@ rusqlite = { version = "0.40.0", features = ["bundled"] }
 url = "2.5.8"
 directories = "6.0.0"
 opener = "0.8.4"
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-os = "2"
+tauri-plugin-process = "2"
+tauri-plugin-store = "2"
