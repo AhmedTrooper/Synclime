@@ -20,9 +20,9 @@ jobs:
           - platform: "macos-latest" # Apple Silicon
             target: "aarch64-apple-darwin"
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-13" # Intel Mac
-            target: "x86_64-apple-darwin"
-            args: "--target x86_64-apple-darwin"
+          # - platform: "macos-13" # Intel Mac
+          # target: "x86_64-apple-darwin"
+          # args: "--target x86_64-apple-darwin"
 
           # --- LINUX ---
           - platform: "ubuntu-22.04" # Linux x64
