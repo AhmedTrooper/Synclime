@@ -223,7 +223,7 @@ pub async fn get_all_jobs(
     let query = "
         SELECT
             j.slug,
-            COALESCE(p.title, j.direct_url, 'Unknown File') as name,
+            COALESCE(j.custom_download_path, p.title, j.direct_url, 'Unknown File') as name,
             COALESCE(j.direct_url, p.url) as url,
             j.progress,
             j.status,
