@@ -79,8 +79,17 @@ export default function Downloads() {
     queue.forEach(job => {
       const node = jobNodes[job.slug];
       
-      if (job.associatedMediaJobSlug && jobNodes[job.associatedMediaJobSlug]) {
-        jobNodes[job.associatedMediaJobSlug].children.push(node);
+      let parentSlug = job.associatedMediaJobSlug;
+      if (!parentSlug && job.fileType === "subtitle") {
+        // Fallback scan: Pair dynamically if a video/audio job with the same URL is in the queue
+        const matchedParent = queue.find(j => j.url === job.url && j.fileType !== "subtitle");
+        if (matchedParent) {
+          parentSlug = matchedParent.slug;
+        }
+      }
+
+      if (parentSlug && jobNodes[parentSlug]) {
+        jobNodes[parentSlug].children.push(node);
       } 
       else {
         const groupSlug = job.parentPlaylistSlug || (job.isPlaylist ? job.parsedFileSlug : undefined);

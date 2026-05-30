@@ -401,7 +401,7 @@ export default function ParsedFileDetail() {
 
     // 1. Auto-Pairing Scanner: Find if the video is already in the queue
     const queue = useQueueStore.getState().queue;
-    const parentJob = queue.find(j => j.parsedFileSlug === file.slug && j.url === targetUrl && j.fileType !== "subtitle");
+    const parentJob = queue.find(j => j.url === targetUrl && j.fileType !== "subtitle");
     
     const uniqueSlug = `dl-sub-${Date.now()}`;
     const joinedSubs = selectedSubs.includes("all") ? "all" : selectedSubs.join(",");
