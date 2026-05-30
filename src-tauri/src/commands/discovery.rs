@@ -176,6 +176,8 @@ pub async fn discover_asset_metadata(
         }
     };
 
+    let stderr_pipe = child.stderr.take();
+
     // 4. In-Memory Aggregator: Read the json text stream lines chunk-by-chunk
     let mut reader = BufReader::new(stdout_pipe).lines();
     let mut raw_json_accumulator = String::new();
@@ -188,13 +190,34 @@ pub async fn discover_asset_metadata(
     let _ = child.wait().await;
 
     if raw_json_accumulator.is_empty() {
+        let mut stderr_msg = String::new();
+        if let Some(stderr) = stderr_pipe {
+            let mut err_reader = BufReader::new(stderr).lines();
+            let mut err_lines = Vec::new();
+            while let Ok(Some(line)) = err_reader.next_line().await {
+                let clean = line.trim();
+                if !clean.is_empty() {
+                    err_lines.push(clean.to_string());
+                }
+            }
+            if !err_lines.is_empty() {
+                stderr_msg = err_lines.last().cloned().unwrap_or_default();
+                if stderr_msg.is_empty() {
+                    stderr_msg = err_lines.join(" ");
+                }
+            }
+        }
+
+        let final_err = if stderr_msg.is_empty() {
+            "Extraction sub-engine returned a completely empty stream buffer data block.".to_string()
+        } else {
+            format!("yt-dlp error: {}", stderr_msg)
+        };
+
         return Ok(DiscoveryResponse {
             success: false,
             payload: None,
-            error_message: Some(
-                "Extraction sub-engine returned a completely empty stream buffer data block."
-                    .to_string(),
-            ),
+            error_message: Some(final_err),
         });
     }
 
