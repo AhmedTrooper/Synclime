@@ -18,6 +18,7 @@ pub struct ResolvedJobConfig {
     pub cookie_data: Option<String>,
     pub proxy_string: Option<String>,
     pub resolved_path: String,
+    pub custom_title: Option<String>,
 }
 
 /// Helper function to parse raw text lines into metrics strings cleanly
@@ -105,16 +106,14 @@ pub fn resolve_job_parameters(
 
             // Extract the user configuration directory paths
             let base_path: Option<String> = row.get(4).ok();
-            let custom_path: Option<String> = row.get(5).ok();
+            let custom_title: Option<String> = row.get(5).ok();
             let sanitized_title: Option<String> = row.get(6).ok();
             let sanitized_playlist: Option<String> = row.get(7).ok();
             let file_type: String = row.get(8).unwrap_or_default();
             let selected_subtitles: Option<String> = row.get(9).ok();
 
-            // Prioritize custom user selection, then explicit base paths, and finally fall back to the system Downloads directory
-            let root_destination = custom_path
-                .filter(|s| !s.trim().is_empty())
-                .or(base_path.filter(|s| !s.trim().is_empty()))
+            // Prioritize explicit base paths, and finally fall back to the system Downloads directory
+            let root_destination = base_path.filter(|s| !s.trim().is_empty())
                 .unwrap_or_else(get_system_downloads_fallback);
 
             let mut final_path = std::path::PathBuf::from(root_destination);
@@ -137,6 +136,7 @@ pub fn resolve_job_parameters(
                 cookie_data: cookie,
                 proxy_string: proxy,
                 resolved_path: final_path.to_string_lossy().into_owned(),
+                custom_title,
             })
         }
         Ok(None) => Err(
@@ -164,11 +164,20 @@ pub async fn execute_download_worker(
     };
 
     let mut cmd = Command::new("yt-dlp");
+    cmd.arg("--no-playlist"); // FORCE SINGLE MEDIA EXCLUSIVITY
+    
     cmd.arg("-f").arg(&config.format_string);
     cmd.arg("--newline");
 
     // Explicit Destination Path Argument for yt-dlp execution mapping
     cmd.arg("-P").arg(&config.resolved_path);
+
+    // Override filename mapping directly if custom_title explicitly passed
+    if let Some(ct) = config.custom_title {
+        if !ct.trim().is_empty() {
+            cmd.arg("-o").arg(format!("{}.%(ext)s", ct.trim()));
+        }
+    }
 
     if config.file_type == "subtitle" {
         cmd.arg("--write-subs");

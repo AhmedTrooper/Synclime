@@ -126,6 +126,7 @@ export default function ParsedFileDetail() {
       format_string: formatString || "bestvideo+bestaudio/best",
       download_path: useUIStore.getState().downloadPath,
       created_at: new Date().toISOString(),
+      custom_title: _customName || file.title,
     });
 
     navigate("/downloads");
@@ -154,6 +155,7 @@ export default function ParsedFileDetail() {
         format_string: playlistFormatString || "bestvideo+bestaudio/best",
         download_path: useUIStore.getState().downloadPath,
         created_at: new Date().toISOString(),
+        custom_title: track.title,
       });
     }
 

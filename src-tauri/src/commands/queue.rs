@@ -100,6 +100,7 @@ pub struct InsertJobPayload {
     pub created_at: String,
     pub is_from_playlist: Option<bool>,
     pub selected_subtitles: Option<String>,
+    pub custom_title: Option<String>,
 }
 
 /// Tauri IPC Command: Injects a brand new download job directly into the SQLite database securely
@@ -127,7 +128,7 @@ pub async fn insert_job_record(
         current_part: 1,
         total_parts: 1,
         base_download_path: payload.download_path,
-        custom_download_path: None,
+        custom_download_path: payload.custom_title,
         cookie_profile_slug: None,
         proxy_profile_slug: None,
         status: "pending".to_string(),
