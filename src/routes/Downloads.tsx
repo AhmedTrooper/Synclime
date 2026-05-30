@@ -118,7 +118,7 @@ export default function Downloads() {
 
   const renderTree = (nodes: TreeNode[], depth: number = 0) => {
     return nodes.map(node => (
-      <div key={node.id} className={`flex flex-col ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1" : "py-1"} w-full`}>
+      <div key={node.id} className={`flex flex-col ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1 w-auto" : "py-1 w-full"}`}>
         {node.isPlaylistGroup ? (
           <div className="flex items-center gap-3 bg-purple-500/10 dark:bg-purple-500/10 p-3 sm:p-4 rounded-xl border border-purple-500/20 w-full shadow-sm mb-2 mt-2">
             <div className="p-2 bg-purple-500 text-white rounded-lg shadow-sm">
@@ -145,7 +145,7 @@ export default function Downloads() {
         )}
         
         {node.children.length > 0 && (
-          <div className="flex flex-col gap-1 mt-1 w-full">
+          <div className="flex flex-col gap-1 mt-1 w-auto">
             {renderTree(node.children, depth + 1)}
           </div>
         )}
