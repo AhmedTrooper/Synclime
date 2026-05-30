@@ -4,7 +4,7 @@ import { useUIStore } from "../store/useUIStore";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import * as Switch from "@radix-ui/react-switch";
-import { Play, FileDown, Link2, AlertCircle } from "lucide-react";
+import { Play, FileDown, Link2, AlertCircle, X } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
 export default function Home() {
@@ -268,75 +268,109 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-3xl h-full py-1 sm:py-2">
-      {/* Top Toolbar / Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-blue-500 rounded-md text-white shadow-sm">
-            <Link2 className="w-4 h-4" />
+    <div className="space-y-3.5 max-w-2xl mx-auto py-1 sm:py-2 select-none animate-fade-in text-xs sm:text-sm">
+      
+      {/* Top Native Header / Navigation-like Bar */}
+      <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-blue-500 text-white rounded-lg shadow-sm">
+            <FileDown className="w-3.5 h-3.5" />
           </div>
-          <h1 className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">New Task</h1>
+          <h1 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white tracking-tight">New Download Task</h1>
         </div>
       </div>
 
-      <div className="w-full">
-        <div className="flex flex-col gap-4">
-          <form onSubmit={handleAction} className="flex flex-col gap-5">
-            {/* Input Bar */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Target URL Address</label>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <input
-                  type="url"
-                  placeholder="Paste video, document, or media URL..."
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-3 py-3 sm:py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm text-zinc-900 dark:text-white shadow-sm"
-                />
+      {/* Input Panel Card (Compact, Touch friendly) */}
+      <div className="border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 rounded-xl shadow-sm space-y-4">
+        <form onSubmit={handleAction} className="space-y-4">
+          
+          {/* Input Bar with inline Link Icon */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+              Asset Link Address
+            </label>
+            
+            <div className="relative flex items-center">
+              <div className="absolute left-3 text-zinc-400 dark:text-zinc-500">
+                <Link2 className="w-4 h-4" />
               </div>
-            </div>
+              
+              <input
+                type="url"
+                placeholder="Paste URL, video, playlist, or document link..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={loading}
+                className="w-full pl-9 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/10 transition-all outline-none text-xs sm:text-sm text-zinc-900 dark:text-white shadow-inner font-sans"
+              />
 
-            {/* Error Message Panel */}
-            {errorMsg && (
-              <div className="flex items-center gap-2 text-xs font-semibold text-red-500 dark:text-red-400 bg-red-500/10 border border-red-500/20 p-3.5 rounded-2xl animate-shake select-text">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
-
-            {/* Switch & Action Controls */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
-              <div className="flex items-center gap-3">
-                <Switch.Root
-                  checked={directDownload}
-                  onCheckedChange={setDirectDownload}
-                  disabled={loading}
-                  className="w-9 h-5 bg-zinc-300 dark:bg-zinc-700 data-[state=checked]:bg-blue-500 rounded-full relative outline-none cursor-default shadow-inner transition-colors disabled:opacity-50"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
-                </Switch.Root>
-                <div className="flex flex-col text-left">
-                  <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
-                    Direct File Download (Skip Parser)
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 justify-end pt-2">
+              {url && (
                 <button
-                  type="submit"
-                  disabled={loading || !url.trim()}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-3 sm:py-2 rounded-md transition-colors disabled:opacity-50 text-[13px] shadow-sm"
+                  type="button"
+                  onClick={() => setUrl("")}
+                  className="absolute right-3 p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
                 >
-                  {!loading && (directDownload ? <FileDown className="w-4 h-4" /> : <Play className="w-4 h-4" />)}
-                  {loading ? "Discovering..." : (directDownload ? "Direct Download" : "Parse Extractor")}
+                  <X className="w-3 h-3" />
                 </button>
+              )}
+            </div>
+          </div>
+
+          {/* Error Message Panel */}
+          {errorMsg && (
+            <div className="flex items-center gap-2 text-xs font-bold text-red-500 dark:text-red-400 bg-red-500/10 border border-red-500/15 p-3 rounded-lg animate-shake select-text">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Switch & Action Controls Row (Optimized for touch target sizing) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            
+            {/* Radix Switch Row */}
+            <div className="flex items-center gap-2.5 text-left">
+              <Switch.Root
+                checked={directDownload}
+                onCheckedChange={setDirectDownload}
+                disabled={loading}
+                className="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 data-[state=checked]:bg-blue-500 dark:data-[state=checked]:bg-blue-600 rounded-full relative outline-none cursor-pointer transition-colors disabled:opacity-50 flex-shrink-0"
+              >
+                <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-sm transition-transform translate-x-[2px] data-[state=checked]:translate-x-[18px]" />
+              </Switch.Root>
+              
+              <div>
+                <h4 className="text-xs font-bold text-zinc-850 dark:text-zinc-250 leading-tight">
+                  Direct Download
+                </h4>
+                <p className="text-[10px] text-zinc-400">Skip media analysis and fetch asset directly</p>
               </div>
             </div>
-          </form>
-        </div>
+
+            {/* Submit Button (Touch friendly height, tight layout widths) */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading || !url.trim()}
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none min-h-[38px]"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    {directDownload ? <FileDown className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                    <span>{directDownload ? "Direct Download" : "Analyze Asset"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </form>
       </div>
+
     </div>
   );
 }
-
