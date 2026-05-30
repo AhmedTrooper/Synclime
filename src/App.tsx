@@ -1,5 +1,6 @@
-import { createSignal, createEffect, onCleanup, onMount } from "solid-js";
+import { createSignal, createEffect, onCleanup, onMount, Show } from "solid-js";
 import { useUIStore } from "./store/useUIStore";
+import SplashScreen from "./components/SplashScreen";
 
 export default function App(props: any) {
   const [isLoaded, setIsLoaded] = createSignal(false);
@@ -72,8 +73,9 @@ export default function App(props: any) {
 
   return (
     <>
-      {/* TODO: Add SplashScreen implementation here if needed */}
-      {/* {!isLoaded() && <SplashScreen key="splash" />} */}
+      <Show when={!isLoaded()}>
+        <SplashScreen />
+      </Show>
       {props.children}
     </>
   );

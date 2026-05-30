@@ -1,4 +1,4 @@
-import { createEffect, onMount } from "solid-js";
+import { createEffect, onMount, onCleanup } from "solid-js";
 import { useLocation, useNavigate } from "@solidjs/router";
 import Sidebar from "./Sidebar";
 import TitleBar from "./TitleBar";
@@ -25,6 +25,7 @@ export default function MainLayout(props: any) {
       
       const listener = (e: MediaQueryListEvent) => applyTheme(e.matches);
       mediaQuery.addEventListener("change", listener);
+      onCleanup(() => mediaQuery.removeEventListener("change", listener));
     } else {
       applyTheme(ui.theme === "dark");
     }
@@ -42,20 +43,7 @@ export default function MainLayout(props: any) {
     }
   });
 
-  // Invisible, seamless startup restoration of the active route
-  onMount(() => {
-    if (!hasRestored) {
-      hasRestored = true;
-      const initialPath = ui.activePath;
-      if (
-        initialPath &&
-        window.location.pathname === "/" &&
-        initialPath !== "/"
-      ) {
-        navigate(initialPath, { replace: true });
-      }
-    }
-  });
+  // Removed invisible startup restoration of the active route as requested
 
   return (
     <div class="relative h-screen w-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden flex flex-col font-sans select-none">
