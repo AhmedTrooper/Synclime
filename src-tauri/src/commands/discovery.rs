@@ -26,6 +26,7 @@ pub struct InsertParsedFilePayload {
     pub sanitized_playlist_name: Option<String>,
     pub json_metadata: Option<String>,
     pub created_at: String,
+    pub site_config_slug: Option<String>,
 }
 
 /// Tauri IPC Command: Saves a parsed video/playlist directly to the parsed_files SQLite table
@@ -45,6 +46,7 @@ pub async fn insert_parsed_file(
         sanitized_playlist_name: payload.sanitized_playlist_name,
         json_metadata: payload.json_metadata,
         created_at: payload.created_at,
+        site_config_slug: payload.site_config_slug,
     };
 
     match crate::database::operations::save_parsed_file(&state.db_path, &row) {
@@ -64,21 +66,11 @@ struct OptionalSiteConfig {
     proxy_string: Option<String>,
 }
 
-/// Dynamic Configuration Resolver: Scans SQLite for default site configs or specific profile hooks
-fn resolve_discovery_configs(db_path: &std::path::Path, target_url: &str) -> OptionalSiteConfig {
+/// Dynamic Configuration Resolver: Queries SQLite site config directly using selected site config slug
+fn resolve_selected_site_configs(db_path: &std::path::Path, slug: &str) -> OptionalSiteConfig {
     let mut config = OptionalSiteConfig {
         cookie_data: None,
         proxy_string: None,
-    };
-
-    let parsed_url = match url::Url::parse(target_url) {
-        Ok(u) => u,
-        Err(_) => return config,
-    };
-
-    let host_domain = match parsed_url.host_str() {
-        Some(h) => h.replace("www.", ""),
-        None => return config,
     };
 
     if let Ok(conn) = Connection::open(db_path) {
@@ -87,14 +79,11 @@ fn resolve_discovery_configs(db_path: &std::path::Path, target_url: &str) -> Opt
             FROM site_configs s
             LEFT JOIN cookie_profiles c ON s.cookie_profile_slug = c.slug
             LEFT JOIN proxy_profiles pr ON s.proxy_profile_slug = pr.slug
-            WHERE s.domain LIKE ?1 OR s.is_default = 1
-            ORDER BY s.is_default ASC
-            LIMIT 1;
+            WHERE s.slug = ?1;
         ";
 
         if let Ok(mut stmt) = conn.prepare(query) {
-            let search_pattern = format!("%{}%", host_domain);
-            if let Ok(mut rows) = stmt.query(params![search_pattern]) {
+            if let Ok(mut rows) = stmt.query(params![slug]) {
                 if let Ok(Some(row)) = rows.next() {
                     config.cookie_data = row.get(0).ok();
                     config.proxy_string = row.get(1).ok();
@@ -110,11 +99,19 @@ fn resolve_discovery_configs(db_path: &std::path::Path, target_url: &str) -> Opt
 pub async fn discover_asset_metadata(
     app_handle: AppHandle,
     target_url: String,
+    site_config_slug: Option<String>,
 ) -> Result<DiscoveryResponse, String> {
     let state = app_handle.state::<AppEngineState>();
 
-    // 1. Automatically fetch proxy and cookie parameters matching the domain
-    let site_config = resolve_discovery_configs(&state.db_path, &target_url);
+    // 1. Automatically fetch proxy and cookie parameters from the selected site configuration
+    let site_config = if let Some(ref slug) = site_config_slug {
+        resolve_selected_site_configs(&state.db_path, slug)
+    } else {
+        OptionalSiteConfig {
+            cookie_data: None,
+            proxy_string: None,
+        }
+    };
 
     // 2. Assemble optimized yt-dlp arguments for safe structural metadata extraction
     let mut cmd = Command::new("yt-dlp");

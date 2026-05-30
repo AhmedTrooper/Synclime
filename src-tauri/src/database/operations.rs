@@ -22,6 +22,7 @@ pub struct ParsedFileRow {
     pub sanitized_playlist_name: Option<String>,
     pub json_metadata: Option<String>,
     pub created_at: String,
+    pub site_config_slug: Option<String>,
 }
 
 /// Structural representation of a queue item row
@@ -59,8 +60,8 @@ pub fn save_parsed_file(db_path: &Path, row: &ParsedFileRow) -> Result<(), DbErr
         INSERT OR REPLACE INTO parsed_files (
             slug, url, title, sanitized_title, is_playlist,
             parent_playlist_slug, playlist_name, sanitized_playlist_name,
-            json_metadata, created_at
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10);
+            json_metadata, created_at, site_config_slug
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11);
     ";
 
     match conn.execute(
@@ -75,7 +76,8 @@ pub fn save_parsed_file(db_path: &Path, row: &ParsedFileRow) -> Result<(), DbErr
             row.playlist_name,
             row.sanitized_playlist_name,
             row.json_metadata,
-            row.created_at
+            row.created_at,
+            row.site_config_slug
         ],
     ) {
         Ok(_) => Ok(()),

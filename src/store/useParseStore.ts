@@ -15,6 +15,7 @@ export interface ParsedFile {
   payload: any; // VideoMetadata or GenericPlaylistMetadata
   parsedAt: string; // ISO string
   parentPlaylistSlug?: string;
+  siteConfigSlug?: string;
 }
 
 interface ParseState {

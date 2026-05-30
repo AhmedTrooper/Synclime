@@ -79,7 +79,8 @@ CREATE TABLE IF NOT EXISTS parsed_files (
     playlist_name TEXT,
     sanitized_playlist_name TEXT,
     json_metadata TEXT,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    site_config_slug TEXT REFERENCES site_configs(slug) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS download_jobs (
@@ -163,6 +164,9 @@ fn initialize_database(app: &tauri::App) -> Result<std::path::PathBuf, Box<dyn s
     if let Err(e) = conn.execute_batch(DATABASE_MIGRATION_SCHEMA) {
         return Err(Box::new(e));
     }
+
+    // Safely execute alter column mapping if it doesn't already exist on active DB schema
+    let _ = conn.execute("ALTER TABLE parsed_files ADD COLUMN site_config_slug TEXT REFERENCES site_configs(slug) ON DELETE SET NULL;", []);
 
     Ok(db_path)
 }

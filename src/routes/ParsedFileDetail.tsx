@@ -259,6 +259,7 @@ export default function ParsedFileDetail() {
         payload: trackPayload,
         parsedAt: new Date().toISOString(),
         parentPlaylistSlug: file.slug,
+        siteConfigSlug: file.siteConfigSlug,
       };
 
       // Add to local Zustand store
@@ -280,6 +281,7 @@ export default function ParsedFileDetail() {
               sanitized_playlist_name: file.sanitizedTitle,
               json_metadata: JSON.stringify(trackPayload),
               created_at: parsedTrackFile.parsedAt,
+              site_config_slug: file.siteConfigSlug,
             }
           });
         } catch (e) {

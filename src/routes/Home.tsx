@@ -5,8 +5,98 @@ import { useParseStore } from "../store/useParseStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import * as Switch from "@radix-ui/react-switch";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { Play, FileDown, Link2, AlertCircle, X } from "lucide-react";
+import { Play, FileDown, Link2, AlertCircle, X, ChevronDown, GlobeLock } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+
+interface SiteConfig {
+  slug: string;
+  title: string;
+  domain: string;
+  cookie_profile_slug: string | null;
+  proxy_profile_slug: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+const CustomSelect = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div className={`relative w-full ${isOpen ? "z-50" : "z-10"}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-900 text-xs sm:text-sm text-zinc-900 dark:text-white transition-all shadow-inner outline-none"
+      >
+        <div className="flex items-center gap-2 truncate">
+          <GlobeLock className="w-4 h-4 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+          <span className="truncate">{selected ? selected.label : placeholder}</span>
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 text-zinc-400 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-50 w-full mt-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-lg shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar overscroll-contain animate-fade-in origin-top pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setIsOpen(false);
+              }}
+              className={`w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-xs sm:text-sm transition-all ${
+                !value
+                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold"
+                  : "text-zinc-650 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
+              }`}
+            >
+              <GlobeLock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+              <span className="truncate">{placeholder}</span>
+            </button>
+            {options.length > 0 && (
+              <div className="h-[1px] bg-zinc-200 dark:bg-zinc-800 w-full my-1" />
+            )}
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-xs sm:text-sm transition-all truncate ${
+                  value === opt.value
+                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold"
+                    : "text-zinc-650 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
+                }`}
+              >
+                <GlobeLock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+                <span className="truncate">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function Home() {
   const { setActivePath } = useUIStore();
@@ -18,10 +108,31 @@ export default function Home() {
   const [directDownload, setDirectDownload] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [siteConfigs, setSiteConfigs] = useState<SiteConfig[]>([]);
+  const [selectedSiteSlug, setSelectedSiteSlug] = useState<string>("");
 
   useEffect(() => {
     setActivePath("/");
   }, [setActivePath]);
+
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+      if (isTauri) {
+        try {
+          const configs = await invoke<SiteConfig[]>("get_site_configs");
+          setSiteConfigs(configs);
+          const defaultCfg = configs.find(c => c.is_default);
+          if (defaultCfg) {
+            setSelectedSiteSlug(defaultCfg.slug);
+          }
+        } catch (e) {
+          console.error("Failed to load site configs:", e);
+        }
+      }
+    };
+    fetchConfigs();
+  }, []);
 
   const handleAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +244,10 @@ export default function Home() {
             success: boolean;
             payload: any;
             error_message: string | null;
-          }>("discover_asset_metadata", { targetUrl: cleanUrl });
+          }>("discover_asset_metadata", {
+            targetUrl: cleanUrl,
+            siteConfigSlug: selectedSiteSlug || null
+          });
 
           if (discoverRes.success && discoverRes.payload) {
             payload = discoverRes.payload;
@@ -230,6 +344,7 @@ export default function Home() {
           views: payload.view_count || 0,
           payload,
           parsedAt: new Date().toISOString(),
+          siteConfigSlug: selectedSiteSlug || undefined,
         };
 
         addParsedFile(parsedFile);
@@ -250,6 +365,7 @@ export default function Home() {
                 sanitized_playlist_name: parsedFile.isPlaylist ? parsedFile.sanitizedTitle : null,
                 json_metadata: JSON.stringify(payload),
                 created_at: parsedFile.parsedAt,
+                site_config_slug: selectedSiteSlug || null,
               }
             });
           } catch (e) {
@@ -332,6 +448,19 @@ export default function Home() {
                   </Tooltip.Root>
                 )}
               </div>
+            </div>
+
+            {/* Site Configuration Selection Dropdown */}
+            <div className="space-y-1.5 text-left animate-fade-in">
+              <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                Site Configuration Profile (Cookies & Proxy)
+              </label>
+              <CustomSelect
+                value={selectedSiteSlug}
+                onChange={setSelectedSiteSlug}
+                options={siteConfigs.map(c => ({ value: c.slug, label: `${c.title} (${c.domain})` }))}
+                placeholder="No Site Profile (Direct network fallback)"
+              />
             </div>
 
             {/* Error Message Panel */}

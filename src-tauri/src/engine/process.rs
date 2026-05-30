@@ -77,8 +77,8 @@ pub fn resolve_job_parameters(
         SELECT
             COALESCE(j.direct_url, p.url) as target_url,
             j.format_string,
-            c.cookie_data,
-            pr.proxy_string,
+            COALESCE(sc_cookie.cookie_data, c.cookie_data) as cookie_data,
+            COALESCE(sc_proxy.proxy_string, pr.proxy_string) as proxy_string,
             j.base_download_path,
             j.custom_download_path,
             p.sanitized_title,
@@ -90,6 +90,12 @@ pub fn resolve_job_parameters(
             p.parent_playlist_slug
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
+        LEFT JOIN parsed_files parent_p ON p.parent_playlist_slug = parent_p.slug
+        -- Resolve selected site config for the parsed file or its parent playlist
+        LEFT JOIN site_configs sc ON COALESCE(p.site_config_slug, parent_p.site_config_slug) = sc.slug
+        LEFT JOIN cookie_profiles sc_cookie ON sc.cookie_profile_slug = sc_cookie.slug
+        LEFT JOIN proxy_profiles sc_proxy ON sc.proxy_profile_slug = sc_proxy.slug
+        -- direct profile links fallbacks
         LEFT JOIN cookie_profiles c ON j.cookie_profile_slug = c.slug
         LEFT JOIN proxy_profiles pr ON j.proxy_profile_slug = pr.slug
         WHERE j.slug = ?1;
