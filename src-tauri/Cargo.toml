@@ -1,11 +1,16 @@
 [package]
-name = "Synclime"
-version = "1.0.0"
-description = "High-performance media extraction pipeline powered by yt-dlp, FFmpeg, and dynamic JS runtimes."
-authors = ["AhmedTrooper"]
+name = "synclime"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
 edition = "2021"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "synclime_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
@@ -17,25 +22,11 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-os = "2"
-tauri-plugin-shell = "2"
-tauri-plugin-fs = "2"
-tauri-plugin-notification = "2"
-tauri-plugin-store = "2"
-tauri-plugin-clipboard-manager = "2"
-tauri-plugin-dialog = "2"
 crossbeam-channel = "0.5.15"
 parking_lot = "0.12.5"
 chrono = "0.4.44"
-
-# 1. Fully-loaded Tokio runtime for multi-threaded async tasks and processes
 tokio = { version = "1.52.3", features = ["full"] }
-
-# 2. Native SQLite driver wrapper with bundled engine binaries (Eliminates OS environment errors)
 rusqlite = { version = "0.40.0", features = ["bundled"] }
 url = "2.5.8"
 directories = "6.0.0"
 opener = "0.8.4"
-tauri-plugin-process = "2"
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = "2"

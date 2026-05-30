@@ -1,25 +1,20 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Synclime",
+  "productName": "synclime",
   "version": "1.0.0",
-  "identifier": "com.synclime.sutsoa.app",
+  "identifier": "com.ahmedtrooper.synclime",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "Synclime",
+        "title": "synclime",
         "width": 800,
-        "height": 600,
-        "resizable": true,
-        "decorations": false,
-        "transparent": true,
-        "minWidth": 700,
-        "minHeight": 500
+        "height": 600
       }
     ],
     "security": {
