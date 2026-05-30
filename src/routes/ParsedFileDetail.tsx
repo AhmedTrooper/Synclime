@@ -157,6 +157,7 @@ export default function ParsedFileDetail() {
         download_path: useUIStore.getState().downloadPath,
         created_at: new Date().toISOString(),
         selected_subtitles: joinedSubs,
+        custom_title: `[sub_${joinedSubs}]_${_customName || file.title}`,
       });
     }
 
@@ -354,6 +355,7 @@ export default function ParsedFileDetail() {
         download_path: useUIStore.getState().downloadPath,
         created_at: new Date().toISOString(),
         selected_subtitles: joinedSubs,
+        custom_title: `[sub_${joinedSubs}]_${activeTrackFile.title}`,
       });
     }
 
@@ -415,6 +417,7 @@ export default function ParsedFileDetail() {
       download_path: useUIStore.getState().downloadPath,
       created_at: new Date().toISOString(),
       selected_subtitles: joinedSubs,
+      custom_title: `[sub_${joinedSubs}]_${_trackTitle}`,
     });
     
     navigate("/downloads");
