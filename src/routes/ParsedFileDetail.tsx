@@ -32,6 +32,13 @@ export default function ParsedFileDetail() {
   const file = parsedFiles.find((f) => f.slug === slug);
   const [selectedSubs, setSelectedSubs] = useState<string[]>([]);
 
+  // Layer Switch State: "custom" (Layer 1) vs "fallback" (Layer 2)
+  const [selectionMode, setSelectionMode] = useState<"custom" | "fallback">("custom");
+
+  // Custom Selection State (Layer 1)
+  const [selectedVideo, setSelectedVideo] = useState<string>("");
+  const [selectedAudio, setSelectedAudio] = useState<string>("");
+
   // Preset Selection State (Layer 2)
   const [selectedPreset, setSelectedPreset] = useState<string>("bestvideo+bestaudio/best");
 
@@ -45,7 +52,6 @@ export default function ParsedFileDetail() {
   const [activeTrackPayload, setActiveTrackPayload] = useState<any>(null);
   const [activeTrackFile, setActiveTrackFile] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
-  const [parsingMain, setParsingMain] = useState(false);
 
   const [modalSelectedVideo, setModalSelectedVideo] = useState("");
   const [modalSelectedAudio, setModalSelectedAudio] = useState("");
@@ -137,6 +143,23 @@ export default function ParsedFileDetail() {
       custom_title: _customName || file.title,
     });
 
+    if (selectedSubs.length > 0) {
+      const subSlug = `dl-sub-${Date.now()}`;
+      const joinedSubs = selectedSubs.includes("all") ? "all" : selectedSubs.join(",");
+      await dispatchDownloadJob({
+        slug: subSlug,
+        url: file.url,
+        parsed_file_slug: file.slug,
+        file_type: "subtitle",
+        associated_media_job_slug: uniqueSlug, // PARENT IS THE VIDEO!
+        is_from_playlist: file.isPlaylist,
+        format_string: "bestvideo+bestaudio/best",
+        download_path: useUIStore.getState().downloadPath,
+        created_at: new Date().toISOString(),
+        selected_subtitles: joinedSubs,
+      });
+    }
+
     navigate("/downloads");
   };
 
@@ -144,6 +167,24 @@ export default function ParsedFileDetail() {
   // HANDLERS FOR INDIVIDUAL PLAYLIST TRACK PARSING
   // ==========================================
   const handleParseTrack = async (track: any) => {
+    // 1. Pre-parsing Cache Scanner: Check if this track is already parsed in Zustand
+    const existingFile = parsedFiles.find(
+      (f) => f.parentPlaylistSlug === file.slug && f.title === track.title
+    );
+
+    if (existingFile) {
+      // Instantly show the modal!
+      setActiveTrackPayload(existingFile.payload);
+      setActiveTrackFile(existingFile);
+      setModalSelectedVideo("");
+      setModalSelectedAudio("");
+      setModalSelectedSubs([]);
+      setModalSelectedPreset("bestvideo+bestaudio/best");
+      setModalSelectionMode("custom");
+      setShowModal(true);
+      return;
+    }
+
     setParsingTracks((prev) => ({ ...prev, [track.id]: true }));
 
     try {
@@ -216,6 +257,7 @@ export default function ParsedFileDetail() {
         views: trackPayload.view_count || 0,
         payload: trackPayload,
         parsedAt: new Date().toISOString(),
+        parentPlaylistSlug: file.slug,
       };
 
       // Add to local Zustand store
@@ -262,74 +304,6 @@ export default function ParsedFileDetail() {
     }
   };
 
-  const handleParseSingleVideo = async () => {
-    setParsingMain(true);
-    try {
-      let cleanUrl = file.url;
-      try {
-        const cleanRes = await invoke<{ success: boolean; sanitized_url: string }>(
-          "process_clipboard_paste",
-          { rawInput: file.url }
-        );
-        if (cleanRes.success) {
-          cleanUrl = cleanRes.sanitized_url;
-        }
-      } catch (e) {
-        console.warn("Single video clipboard paste cleaning failed (browser fallback):", e);
-      }
-
-      let trackPayload: any = null;
-      try {
-        const discoverRes = await invoke<{
-          success: boolean;
-          payload: any;
-          error_message: string | null;
-        }>("discover_asset_metadata", { targetUrl: cleanUrl });
-
-        if (discoverRes.success && discoverRes.payload) {
-          trackPayload = discoverRes.payload;
-        } else {
-          throw new Error(discoverRes.error_message || "Metadata extraction probe rejected video URL.");
-        }
-      } catch (e: any) {
-        console.warn("discover_asset_metadata single video failed (browser fallback simulation):", e);
-        trackPayload = file.payload || {
-          id: file.slug || `vid-${Date.now()}`,
-          title: file.title,
-          uploader: file.author || "Synclime Platform",
-          duration: file.duration || 180,
-          view_count: file.views || 10000,
-          thumbnail: file.thumbnail || "",
-          formats: [
-            { format_id: "bestvideo", ext: "mp4", format_note: "1080p 60fps", width: 1920, height: 1080, fps: 60, filesize: 95000000 },
-            { format_id: "720p", ext: "mp4", format_note: "720p 30fps", width: 1280, height: 720, fps: 30, filesize: 45000000 },
-            { format_id: "bestaudio", ext: "m4a", format_note: "HQ Audio", acodec: "aac", abr: 256, filesize: 6000000 },
-          ],
-          subtitles: {
-            en: [{ ext: "vtt", url: "", name: "English" }],
-            es: [{ ext: "vtt", url: "", name: "Spanish" }]
-          },
-          _type: "video"
-        };
-      }
-
-      setActiveTrackPayload(trackPayload);
-      setActiveTrackFile(file);
-      setModalSelectedVideo("");
-      setModalSelectedAudio("");
-      setModalSelectedSubs([]);
-      setModalSelectedPreset("bestvideo+bestaudio/best");
-      setModalSelectionMode("custom");
-      setShowModal(true);
-
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || "Failed to parse video metadata.");
-    } finally {
-      setParsingMain(false);
-    }
-  };
-
   // Submits custom queued download from inside the Modal
   const startModalDownload = async () => {
     if (!activeTrackFile) return;
@@ -366,6 +340,22 @@ export default function ParsedFileDetail() {
       custom_title: activeTrackFile.title,
       selected_subtitles: joinedSubs || null,
     });
+
+    if (modalSelectedSubs.length > 0) {
+      const subSlug = `dl-sub-${Date.now()}`;
+      await dispatchDownloadJob({
+        slug: subSlug,
+        url: activeTrackFile.url,
+        parsed_file_slug: activeTrackFile.slug,
+        file_type: "subtitle",
+        associated_media_job_slug: uniqueSlug, // PARENT IS THE VIDEO!
+        is_from_playlist: activeTrackFile.isPlaylist || false,
+        format_string: "bestvideo+bestaudio/best",
+        download_path: useUIStore.getState().downloadPath,
+        created_at: new Date().toISOString(),
+        selected_subtitles: joinedSubs,
+      });
+    }
 
     setShowModal(false);
     navigate("/downloads");
@@ -473,6 +463,30 @@ export default function ParsedFileDetail() {
     { label: "Extract Audio Only (Highest)", value: "bestaudio/best" },
     { label: "Extract Audio Only (M4A Native)", value: "bestaudio[ext=m4a]/bestaudio/best" },
   ];
+
+  // Filtering clean streams for Layer 1 Selection Grid
+  const formats = payload.formats || [];
+  const videoStreams = formats.filter(
+    (f: any) => f.vcodec !== "none" && (f.format_note || f.resolution)
+  );
+  const audioStreams = formats.filter(
+    (f: any) => f.acodec !== "none" && f.vcodec === "none"
+  );
+
+  const getGeneratedFormatString = () => {
+    if (selectionMode === "fallback") {
+      return selectedPreset;
+    }
+    if (selectedVideo && selectedAudio) {
+      return `${selectedVideo}+${selectedAudio}`;
+    } else if (selectedVideo) {
+      return selectedVideo;
+    } else if (selectedAudio) {
+      return selectedAudio;
+    }
+    return "bestvideo+bestaudio/best";
+  };
+
   return (
     <Tooltip.Provider delayDuration={200}>
       <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-4xl mx-auto px-1 sm:px-4 py-1 sm:py-2 text-zinc-955 dark:text-white transition-colors duration-300 font-sans select-none">
@@ -748,38 +762,304 @@ export default function ParsedFileDetail() {
           </div>
         ) : (
           // ==========================================
-          // 2. COMPACT NATIVE VIDEO DETAIL SETUP WITH PARSE ACTION
+          // 2. VIDEO DETAIL LAYOUT WITH LAYER 1 & 2 SELECTORS
           // ==========================================
-          <div className="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-lg p-4 sm:p-6 text-left">
-            <div className="flex flex-col gap-4 max-w-xl mx-auto">
-              <div className="flex items-center gap-2.5 text-blue-600 dark:text-blue-400">
-                <Sliders className="w-5 h-5" />
-                <h3 className="text-base font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
-                  Configure Stream Quality
-                </h3>
-              </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Click below to parse the video's direct streams, high-definition resolutions, audio tracks, and subtitles list. You can then customize your download formats and start downloading instantly.
-              </p>
-              
-              <div className="pt-2">
+          <div className="flex flex-col-reverse md:grid md:grid-cols-3 gap-4 sm:gap-6 text-left min-w-0">
+            {/* Main Selectors (Layers 1 & 2) */}
+            <div className="md:col-span-2 flex flex-col gap-4 sm:gap-6 min-w-0">
+              {/* Explicit Switcher Interface Tab bar */}
+              <div className="flex flex-col sm:flex-row bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/5 p-1 rounded-2xl w-full sm:self-start shadow-inner gap-1 sm:gap-0">
                 <button
-                  onClick={handleParseSingleVideo}
-                  disabled={parsingMain}
-                  className="flex items-center justify-center gap-2.5 bg-blue-600 hover:bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 text-white font-bold px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 min-h-[46px] w-full sm:w-auto text-sm"
+                  type="button"
+                  onClick={() => setSelectionMode("custom")}
+                  className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-3 sm:py-2 rounded-md text-[10px] sm:text-xs font-bold tracking-wider transition-all select-none ${
+                    selectionMode === "custom"
+                      ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
+                      : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                  }`}
                 >
-                  {parsingMain ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Parsing Direct Streams...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sliders className="w-4 h-4" />
-                      <span>Parse Video & Download</span>
-                    </>
-                  )}
+                  <Sliders className="w-3.5 h-3.5" />
+                  Custom Formats (Layer 1)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectionMode("fallback")}
+                  className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-3 sm:py-2 rounded-md text-[10px] sm:text-xs font-bold tracking-wider transition-all select-none ${
+                    selectionMode === "fallback"
+                      ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm border border-zinc-200 dark:border-white/5"
+                      : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  <ToggleLeft className="w-3.5 h-3.5" />
+                  Adaptive Presets (Layer 2)
+                </button>
+              </div>
+
+              {selectionMode === "custom" ? (
+                // ------------------------------------------
+                // LAYER 1: USER SELECTED SPECIFIC STREAM FORMATS
+                // ------------------------------------------
+                <div className="flex flex-col gap-6 min-w-0">
+                  {/* Video Streams selection */}
+                  <div className="flex flex-col gap-3 min-w-0">
+                    <div className="flex items-center gap-2 text-zinc-500">
+                      <Film className="w-4 h-4 text-blue-500" />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        Select Video Stream
+                      </span>
+                    </div>
+
+                    <div className="hidden sm:grid sm:grid-cols-2 gap-3 min-w-0">
+                      {videoStreams.map((v: any) => {
+                        const isSelected = selectedVideo === v.format_id;
+                        return (
+                          <div
+                            key={v.format_id}
+                            className={`border cursor-pointer select-none transition-colors rounded-lg p-3 flex flex-row items-center justify-between gap-2 text-left min-w-0 ${
+                              isSelected
+                                ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-500/10"
+                                : "border-zinc-200 dark:border-white/5 bg-white dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                            }`}
+                            onClick={() => setSelectedVideo(isSelected ? "" : v.format_id)}
+                          >
+                            <div className="flex flex-col gap-0.5 min-w-0 text-left">
+                              <span className="text-[11px] font-bold text-zinc-900 dark:text-white leading-tight block truncate">
+                                {v.format_note || `${v.height}p`} ({v.ext})
+                              </span>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block truncate">
+                                {v.resolution || `${v.width}x${v.height}`} • {formatSize(v.filesize || v.filesize_approx)}
+                              </span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+                          </div>
+                        );
+                      })}
+
+                      {videoStreams.length === 0 && (
+                        <span className="text-xs italic text-zinc-500 dark:text-zinc-400">
+                          No separate video-only streams discovered.
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Native Mobile Dropdown for mobile screens */}
+                    <div className="block sm:hidden w-full">
+                      <select
+                        value={selectedVideo}
+                        onChange={(e) => setSelectedVideo(e.target.value)}
+                        className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-lg px-2 py-2 outline-none text-[10px] font-semibold max-w-full text-ellipsis overflow-hidden"
+                      >
+                        <option value="">(None) Deselect Video Stream</option>
+                        {videoStreams.map((v: any) => (
+                          <option key={v.format_id} value={v.format_id}>
+                            {v.format_note || `${v.height}p`} ({v.ext}) - {formatSize(v.filesize || v.filesize_approx)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Audio Streams selection */}
+                  <div className="flex flex-col gap-3 min-w-0">
+                    <div className="flex items-center gap-2 text-zinc-500">
+                      <Music className="w-4 h-4 text-emerald-500" />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        Select Audio Stream
+                      </span>
+                    </div>
+
+                    <div className="hidden sm:grid sm:grid-cols-2 gap-3 min-w-0">
+                      {audioStreams.map((a: any) => {
+                        const isSelected = selectedAudio === a.format_id;
+                        return (
+                          <div
+                            key={a.format_id}
+                            className={`border cursor-pointer select-none transition-colors rounded-lg p-3 flex flex-row items-center justify-between gap-2 text-left min-w-0 ${
+                              isSelected
+                                ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                                : "border-zinc-200 dark:border-white/5 bg-white dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                            }`}
+                            onClick={() => setSelectedAudio(isSelected ? "" : a.format_id)}
+                          >
+                            <div className="flex flex-col gap-0.5 min-w-0 text-left">
+                              <span className="text-[11px] font-bold text-zinc-900 dark:text-white leading-tight block truncate">
+                                {a.format_note || "Audio Only"} ({a.ext})
+                              </span>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block truncate">
+                                {a.abr ? `${a.abr.toFixed(0)}kbps` : "HQ"} • {formatSize(a.filesize || a.filesize_approx)}
+                              </span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+                          </div>
+                        );
+                      })}
+
+                      {audioStreams.length === 0 && (
+                        <span className="text-xs italic text-zinc-500 dark:text-zinc-400">
+                          No separate audio-only streams discovered.
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Native Mobile Dropdown for Audio */}
+                    <div className="block sm:hidden w-full">
+                      <select
+                        value={selectedAudio}
+                        onChange={(e) => setSelectedAudio(e.target.value)}
+                        className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-lg px-2 py-2 outline-none text-[10px] font-semibold max-w-full text-ellipsis overflow-hidden"
+                      >
+                        <option value="">(None) Deselect Audio Stream</option>
+                        {audioStreams.map((a: any) => (
+                          <option key={a.format_id} value={a.format_id}>
+                            {a.format_note || "Audio Only"} ({a.ext}) - {formatSize(a.filesize || a.filesize_approx)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // ------------------------------------------
+                // LAYER 2: FALLBACK PREFERENCE TOGGLE SELECTOR
+                // ------------------------------------------
+                <div className="flex flex-col gap-4 min-w-0">
+                  <div className="flex items-center gap-2 text-zinc-500">
+                    <Sliders className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Select Fallback Preference Preset
+                    </span>
+                  </div>
+
+                  <div className="hidden sm:grid sm:grid-cols-1 gap-3 min-w-0">
+                    {presetList.map((preset) => {
+                      const isSelected = selectedPreset === preset.value;
+                      return (
+                        <div
+                          key={preset.value}
+                          className={`border cursor-pointer select-none transition-colors rounded-lg p-3 flex flex-row items-center justify-between gap-2 text-left min-w-0 ${
+                            isSelected
+                              ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-500/10"
+                              : "border-zinc-200 dark:border-white/5 bg-white dark:bg-black/20 hover:border-zinc-300 dark:hover:border-white/10"
+                          }`}
+                          onClick={() => setSelectedPreset(preset.value)}
+                        >
+                          <div className="flex flex-col gap-1 min-w-0 text-left">
+                            <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white leading-tight block">
+                              {preset.label}
+                            </span>
+                            <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block truncate">
+                              {preset.value}
+                            </span>
+                          </div>
+                          {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="block sm:hidden w-full">
+                    <select
+                      value={selectedPreset}
+                      onChange={(e) => setSelectedPreset(e.target.value)}
+                      className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-lg px-2 py-2 outline-none text-[10px] font-semibold max-w-full text-ellipsis overflow-hidden"
+                    >
+                      {presetList.map((preset) => (
+                        <option key={preset.value} value={preset.value}>
+                          {preset.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action & Sidebar Details Panel */}
+            <div className="flex flex-col gap-6 min-w-0">
+              {/* Generate & Download Panel */}
+              <div className="flex flex-col gap-4 min-w-0">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-zinc-500" />
+                  <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
+                    Download Manager
+                  </h3>
+                </div>
+
+                <div className="border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-lg p-3 sm:p-4 min-w-0">
+                  <div className="flex flex-col gap-3 sm:gap-5 min-w-0">
+                    {/* Generated Monospace Format String Preview */}
+                    <div className="flex flex-col gap-2 text-left min-w-0">
+                      <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        Generated Format String
+                      </label>
+                      <div className="bg-zinc-900 text-zinc-200 dark:bg-black border border-zinc-800 p-3 rounded-2xl font-mono text-[10px] break-all select-text shadow-inner">
+                        {getGeneratedFormatString()}
+                      </div>
+                    </div>
+
+                    {/* Primary Download trigger */}
+                    <button
+                      onClick={() => startDownload(getGeneratedFormatString(), getGeneratedFormatString().includes("bestaudio") && !getGeneratedFormatString().includes("bestvideo"))}
+                      className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium w-full py-2.5 rounded-lg shadow-sm transition-all duration-300 overflow-hidden px-2 min-h-[38px]"
+                    >
+                      <Download className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate text-xs sm:text-sm font-bold">Download Media</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subtitles Panel */}
+              <div className="flex flex-col gap-4 min-w-0">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-emerald-500" />
+                  <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200">
+                    Language Subtitles
+                  </h3>
+                </div>
+
+                <div className="border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-lg p-3 min-w-0">
+                  <div className="flex flex-col gap-4 min-w-0">
+                    {displaySubOptions.length > 0 ? (
+                      <>
+                        <div className="flex flex-col gap-2 text-left min-w-0">
+                          <label className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                            Select Languages {subOptions.length === 0 && "(Pre-Given List)"}
+                          </label>
+                          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-xl min-w-0">
+                            {displaySubOptions.map((opt) => (
+                              <label key={opt.lang} className={`flex items-center gap-2 text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors shadow-sm ${selectedSubs.includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400 font-extrabold" : "bg-white dark:bg-zinc-850 border-zinc-200 dark:border-white/5 text-zinc-700 dark:text-zinc-300 hover:border-purple-500"}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSubs.includes(opt.lang)}
+                                  onChange={() => setSelectedSubs(prev => prev.includes(opt.lang) ? prev.filter(l => l !== opt.lang) : [...prev, opt.lang])}
+                                  className="accent-purple-500 w-3.5 h-3.5 cursor-pointer"
+                                />
+                                {opt.name} {opt.lang !== "all" && `(${opt.lang.toUpperCase()})`}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => downloadSubtitle(file.url, file.title)}
+                          disabled={selectedSubs.length === 0}
+                          className="flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-medium border border-zinc-200 dark:border-zinc-700 w-full py-2.5 rounded-lg transition-all duration-300 disabled:opacity-50 min-h-[38px] px-2 text-xs font-bold"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Download Subtitle
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-center py-6 flex flex-col items-center gap-2">
+                        <Globe className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400 italic">
+                          No subtitles found in this file extraction.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

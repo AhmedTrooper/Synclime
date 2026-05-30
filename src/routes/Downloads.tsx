@@ -82,21 +82,23 @@ export default function Downloads() {
       if (job.associatedMediaJobSlug && jobNodes[job.associatedMediaJobSlug]) {
         jobNodes[job.associatedMediaJobSlug].children.push(node);
       } 
-      else if (job.parsedFileSlug && job.isPlaylist) {
-        if (!playlistGroups[job.parsedFileSlug]) {
-          playlistGroups[job.parsedFileSlug] = {
-            id: `playlist-${job.parsedFileSlug}`,
-            type: "playlist",
-            name: job.playlistName || "Playlist Batch",
-            isPlaylistGroup: true,
-            children: []
-          };
-          rootNodes.push(playlistGroups[job.parsedFileSlug]);
-        }
-        playlistGroups[job.parsedFileSlug].children.push(node);
-      } 
       else {
-        rootNodes.push(node);
+        const groupSlug = job.parentPlaylistSlug || (job.isPlaylist ? job.parsedFileSlug : undefined);
+        if (groupSlug) {
+          if (!playlistGroups[groupSlug]) {
+            playlistGroups[groupSlug] = {
+              id: `playlist-${groupSlug}`,
+              type: "playlist",
+              name: job.playlistName || "Playlist Batch",
+              isPlaylistGroup: true,
+              children: []
+            };
+            rootNodes.push(playlistGroups[groupSlug]);
+          }
+          playlistGroups[groupSlug].children.push(node);
+        } else {
+          rootNodes.push(node);
+        }
       }
     });
 
@@ -114,23 +116,21 @@ export default function Downloads() {
     }
   };
 
-
-
   const renderTree = (nodes: TreeNode[], depth: number = 0) => {
     return nodes.map(node => (
-      <div key={node.id} className={`flex flex-col ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1 w-auto" : "py-1 w-full"}`}>
+      <div key={node.id} className={`flex flex-col min-w-0 ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1 w-auto" : "py-1 w-full"}`}>
         {node.isPlaylistGroup ? (
-          <div className="flex items-center gap-3 bg-purple-500/10 dark:bg-purple-500/10 p-3 sm:p-4 rounded-xl border border-purple-500/20 w-full shadow-sm mb-2 mt-2">
-            <div className="p-2 bg-purple-500 text-white rounded-lg shadow-sm">
+          <div className="flex items-center gap-3 bg-purple-500/10 dark:bg-purple-500/10 p-3 sm:p-4 rounded-xl border border-purple-500/20 w-full min-w-0 shadow-sm mb-2 mt-2">
+            <div className="p-2 bg-purple-500 text-white rounded-lg shadow-sm flex-shrink-0">
                <Folder className="w-4 h-4" />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white leading-tight line-clamp-1">{node.name}</span>
               <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider">Playlist Group ({node.children.length} items)</span>
             </div>
           </div>
         ) : (
-          <div className="w-full">
+          <div className="w-full min-w-0">
             <DownloadRow
               id={node.job!.slug}
               name={node.job!.name}
@@ -145,7 +145,7 @@ export default function Downloads() {
         )}
         
         {node.children.length > 0 && (
-          <div className="flex flex-col gap-1 mt-1 w-auto">
+          <div className="flex flex-col gap-1 mt-1 w-auto min-w-0">
             {renderTree(node.children, depth + 1)}
           </div>
         )}

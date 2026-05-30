@@ -14,6 +14,7 @@ export interface DownloadJob {
   parsedFileSlug?: string;
   isPlaylist?: boolean;
   playlistName?: string;
+  parentPlaylistSlug?: string;
 }
 
 interface QueueState {

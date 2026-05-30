@@ -17,7 +17,7 @@ export function DownloadRow({ id, name, progress, status, message, onPauseToggle
   return (
     <div
       data-id={id}
-      className={`flex items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 border-b last:border-b-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${
+      className={`flex items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 border-b last:border-b-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors min-w-0 ${
         isError ? "border-red-200 dark:border-red-900/30" : "border-zinc-200 dark:border-zinc-800"
       }`}
     >

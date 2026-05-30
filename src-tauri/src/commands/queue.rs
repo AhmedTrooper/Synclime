@@ -209,6 +209,8 @@ pub struct FrontDownloadJob {
     pub is_playlist: bool,
     #[serde(rename = "playlistName")]
     pub playlist_name: Option<String>,
+    #[serde(rename = "parentPlaylistSlug")]
+    pub parent_playlist_slug: Option<String>,
 }
 
 #[tauri::command]
@@ -234,7 +236,8 @@ pub async fn get_all_jobs(
             j.associated_media_job_slug,
             j.parsed_file_slug,
             COALESCE(p.is_playlist, 0) as is_playlist,
-            p.playlist_name
+            COALESCE(p.playlist_name, p.title, 'Playlist Batch') as playlist_name,
+            p.parent_playlist_slug
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         ORDER BY j.created_at DESC;
@@ -266,6 +269,7 @@ pub async fn get_all_jobs(
             parsed_file_slug: row.get(10).ok(),
             is_playlist: row.get::<_, i32>(11).unwrap_or(0) == 1,
             playlist_name: row.get(12).ok(),
+            parent_playlist_slug: row.get(13).ok(),
         });
     }
 
