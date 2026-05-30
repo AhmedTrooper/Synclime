@@ -5,58 +5,101 @@ on:
     branches:
       - release
 
-# This is the example from the readme.
-# On each push to the `release` branch it will create or update a GitHub release, build your app, and upload the artifacts to the release.
-
 jobs:
   publish-tauri:
+    # FIXED: Forces GitHub Actions (checkout and setup-bun) to use Node 24, fixing the deprecation warning
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
+          # --- APPLE ---
+          - platform: "macos-latest" # Apple Silicon
+            target: "aarch64-apple-darwin"
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
+          - platform: "macos-13" # Intel Mac
+            target: "x86_64-apple-darwin"
             args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+
+          # --- LINUX ---
+          - platform: "ubuntu-22.04" # Linux x64
+            target: "x86_64-unknown-linux-gnu"
             args: ""
-          - platform: "windows-latest"
+          - platform: "ubuntu-22.04-arm" # Linux ARM64
+            target: "aarch64-unknown-linux-gnu"
             args: ""
+
+          # --- WINDOWS ---
+          - platform: "windows-latest" # Windows x64
+            target: "x86_64-pc-windows-msvc"
+            vcpkg_triplet: "x64-windows-static-md"
+            args: ""
+          - platform: "windows-latest" # Windows ARM64
+            target: "aarch64-pc-windows-msvc"
+            vcpkg_triplet: "arm64-windows-static-md"
+            args: "--target aarch64-pc-windows-msvc"
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
-        uses: actions/setup-node@v4
+      - name: setup bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: lts/*
+          bun-version: latest
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          # Uses the target defined in the matrix above
+          targets: ${{ matrix.target }}
 
+      # --- UBUNTU SETUP (PRESERVED) ---
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        if: startsWith(matrix.platform, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
+          # PRESERVED: Includes xdg-utils to fix the Tauri AppImage bundle error
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libicu-dev libpng-dev libharfbuzz-dev libgraphite2-dev xdg-utils
+          # PRESERVED: Force the Rust linker to include the C++ standard library and Graphite2
+          echo "RUSTFLAGS=-C link-arg=-lstdc++ -C link-arg=-lgraphite2" >> $GITHUB_ENV
 
+      # --- MACOS SETUP (PRESERVED) ---
+      - name: Setup Tectonic Dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install pkg-config icu4c libpng
+          # PRESERVED: Specific brew paths for tectonic
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/icu4c/lib/pkgconfig:/opt/homebrew/opt/libpng/lib/pkgconfig:/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libpng/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+
+      # --- WINDOWS SETUP (PRESERVED & EXTENDED) ---
+      - name: Setup vcpkg and Dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git ${{ github.workspace }}\vcpkg
+          ${{ github.workspace }}\vcpkg\bootstrap-vcpkg.bat
+          # PRESERVED: Using the static-md triplet, now arch-aware via matrix
+          ${{ github.workspace }}\vcpkg\vcpkg.exe install icu:${{ matrix.vcpkg_triplet }} libpng:${{ matrix.vcpkg_triplet }} harfbuzz:${{ matrix.vcpkg_triplet }} graphite2:${{ matrix.vcpkg_triplet }} fontconfig:${{ matrix.vcpkg_triplet }}
+
+          echo "TECTONIC_DEP_BACKEND=vcpkg" >> $env:GITHUB_ENV
+          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
+          echo "VCPKGRS_TRIPLET=${{ matrix.vcpkg_triplet }}" >> $env:GITHUB_ENV
+          # PRESERVED: Force MSVC to use C++17 standard
+          echo "CXXFLAGS=/std:c++17" >> $env:GITHUB_ENV
+
+      # --- BUILD AND PUBLISH ---
       - name: install frontend dependencies
-        run: yarn install # change this to npm, pnpm or bun depending on which one you use.
+        run: bun install --frozen-lockfile
 
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "App v__VERSION__"
+          tagName: synclime-v__VERSION__
+          releaseName: "Synclime v__VERSION__"
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
