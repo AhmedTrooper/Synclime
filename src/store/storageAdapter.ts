@@ -1,7 +1,8 @@
 import { load, Store } from "@tauri-apps/plugin-store";
 
 // Detect if we are running inside the Tauri native OS shell
-const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+const isTauri =
+  typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
 
 // Create a single unified binary store file in the OS AppData directory
 let storePromise: Promise<Store> | null = null;
