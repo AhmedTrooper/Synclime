@@ -124,7 +124,8 @@ pub fn resolve_job_parameters(
             j.selected_subtitles,
             j.is_from_playlist,
             COALESCE(p.is_playlist, 0) as is_playlist_parent,
-            p.parent_playlist_slug
+            p.parent_playlist_slug,
+            j.parsed_file_slug
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         LEFT JOIN parsed_files parent_p ON p.parent_playlist_slug = parent_p.slug
@@ -171,6 +172,7 @@ pub fn resolve_job_parameters(
             let is_from_playlist: i32 = row.get(10).unwrap_or(0);
             let is_playlist_parent: i32 = row.get(11).unwrap_or(0);
             let parent_playlist_slug: Option<String> = row.get(12).ok();
+            let parsed_file_slug: Option<String> = row.get(13).ok();
 
             // 1. Fetch the user's selected download folder from the SQL `app_settings` table.
             let global_download_path = match conn.query_row(
@@ -203,7 +205,20 @@ pub fn resolve_job_parameters(
                 } else {
                     sanitized_playlist.clone().unwrap_or_else(|| "playlist".to_string())
                 };
-                let clean_playlist_name = sanitize_title(&raw_playlist_name);
+                let playlist_slug = if is_playlist_parent == 1 {
+                    parsed_file_slug.clone().unwrap_or_else(|| "playlist".to_string())
+                } else {
+                    parent_playlist_slug.clone().unwrap_or_else(|| "playlist".to_string())
+                };
+                let clean_playlist_name = {
+                    let base = sanitize_title(&raw_playlist_name);
+                    let clean_slug = sanitize_title(&playlist_slug);
+                    if base.is_empty() {
+                        clean_slug
+                    } else {
+                        format!("{}_{}", base, clean_slug)
+                    }
+                };
 
                 // Get video folder name (sanitized)
                 let raw_video_name = if is_playlist_parent == 1 {
@@ -211,7 +226,16 @@ pub fn resolve_job_parameters(
                 } else {
                     sanitized_title.clone().unwrap_or_else(|| "video".to_string())
                 };
-                let clean_video_name = sanitize_title(&raw_video_name);
+                let video_slug = parsed_file_slug.clone().unwrap_or_else(|| "video".to_string());
+                let clean_video_name = {
+                    let base = sanitize_title(&raw_video_name);
+                    let clean_slug = sanitize_title(&video_slug);
+                    if base.is_empty() {
+                        clean_slug
+                    } else {
+                        format!("{}_{}", base, clean_slug)
+                    }
+                };
 
                 final_path = final_path.join(clean_playlist_name).join(clean_video_name);
             } else {
@@ -220,7 +244,16 @@ pub fn resolve_job_parameters(
                     .clone()
                     .or(custom_title.clone())
                     .unwrap_or_else(|| "video".to_string());
-                let clean_video_name = sanitize_title(&raw_video_name);
+                let video_slug = parsed_file_slug.clone().unwrap_or_else(|| "video".to_string());
+                let clean_video_name = {
+                    let base = sanitize_title(&raw_video_name);
+                    let clean_slug = sanitize_title(&video_slug);
+                    if base.is_empty() {
+                        clean_slug
+                    } else {
+                        format!("{}_{}", base, clean_slug)
+                    }
+                };
                 final_path = final_path.join(clean_video_name);
             }
 
