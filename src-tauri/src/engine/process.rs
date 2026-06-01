@@ -430,7 +430,37 @@ pub async fn execute_download_worker(
 
     {
         let conn = state.db_conn.lock();
-        if clean_exit {
+        
+        // Check if the user paused this job
+        let mut is_paused = false;
+        if let Ok(status) = conn.query_row(
+            "SELECT status FROM download_jobs WHERE slug = ?1;",
+            rusqlite::params![job_slug],
+            |row| row.get::<_, String>(0)
+        ) {
+            if status == "paused" {
+                is_paused = true;
+            }
+        }
+
+        if is_paused {
+            // It was paused by the user! Preserve paused state, clear tracking message.
+            let _ = conn.execute(
+                "UPDATE download_jobs SET tracking_message = NULL, updated_at = datetime('now') WHERE slug = ?1;",
+                rusqlite::params![job_slug],
+            );
+            
+            // Push final paused snapshot into cache
+            let mut cache = state.progress_cache.lock();
+            cache.insert(
+                job_slug.clone(),
+                ProgressSnapshot {
+                    progress: current_progress,
+                    status_message: "Download paused by user.".to_string(),
+                    status: "paused".to_string(),
+                },
+            );
+        } else if clean_exit {
             // Update database to completed
             let _ = conn.execute(
                 "UPDATE download_jobs SET status = 'completed', progress = 100.0, updated_at = datetime('now') WHERE slug = ?1;",
