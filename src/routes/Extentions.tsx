@@ -128,10 +128,10 @@ export default function Extentions() {
     
     if (isTauri) {
       try {
-        const { open } = await import("@tauri-apps/plugin-opener");
-        await open(url);
+        const { openUrl } = await import("@tauri-apps/plugin-opener");
+        await openUrl(url);
       } catch (err) {
-        window.open(url, "_blank");
+        console.error("Failed to open URL via Tauri opener:", err);
       }
     } else {
       window.open(url, "_blank");
