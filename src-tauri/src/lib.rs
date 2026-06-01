@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
     value TEXT NOT NULL
 );
 INSERT OR IGNORE INTO app_settings (key, value) VALUES ('concurrency_limit', '3');
+INSERT OR IGNORE INTO app_settings (key, value) VALUES ('download_chunks', '4');
 
 CREATE TABLE IF NOT EXISTS parsed_files (
     slug TEXT PRIMARY KEY NOT NULL,
@@ -335,6 +336,8 @@ pub fn run() {
         crate::commands::queue::reveal_folder_in_explorer,
         crate::commands::queue::update_concurrency_limit,
         crate::commands::queue::get_concurrency_limit,
+        crate::commands::queue::update_download_chunks,
+        crate::commands::queue::get_download_chunks,
         commands::discovery::discover_asset_metadata,
         commands::discovery::insert_parsed_file,
         commands::config::add_cookie_profile,

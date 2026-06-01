@@ -361,3 +361,34 @@ pub async fn get_concurrency_limit(
     }
     Ok(3)
 }
+
+#[tauri::command]
+pub async fn update_download_chunks(
+    state: State<'_, AppEngineState>,
+    chunks: usize,
+) -> Result<CommandResponse, String> {
+    {
+        let conn = state.db_conn.lock();
+        let _ = conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('download_chunks', ?1);",
+            rusqlite::params![chunks.to_string()]
+        );
+    }
+
+    Ok(CommandResponse { success: true, message: "Download chunks updated.".to_string() })
+}
+
+#[tauri::command]
+pub async fn get_download_chunks(
+    state: State<'_, AppEngineState>,
+) -> Result<usize, String> {
+    {
+        let conn = state.db_conn.lock();
+        if let Ok(val) = conn.query_row("SELECT value FROM app_settings WHERE key = 'download_chunks'", [], |row| row.get::<_, String>(0)) {
+            if let Ok(parsed) = val.parse::<usize>() {
+                return Ok(parsed);
+            }
+        }
+    }
+    Ok(4)
+}

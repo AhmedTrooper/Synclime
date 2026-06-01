@@ -8,15 +8,18 @@ export default function Settings() {
   const [tempPath, setTempPath] = createSignal(useUIStore.state.downloadPath);
   const [savedSuccess, setSavedSuccess] = createSignal(false);
   const [concurrency, setConcurrency] = createSignal<number>(3);
+  const [chunks, setChunks] = createSignal<number>(4);
 
   onMount(async () => {
     try {
       if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
         const limit = await invoke<number>("get_concurrency_limit");
         setConcurrency(limit);
+        const chunkLimit = await invoke<number>("get_download_chunks");
+        setChunks(chunkLimit);
       }
     } catch (err) {
-      console.error("Failed to fetch concurrency limit:", err);
+      console.error("Failed to fetch settings from backend:", err);
     }
     useUIStore.setActivePath("/settings");
   });
@@ -32,6 +35,7 @@ export default function Settings() {
     try {
       if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
         await invoke("update_concurrency_limit", { limit: concurrency() });
+        await invoke("update_download_chunks", { chunks: chunks() });
         await invoke("update_download_path", { path: tempPath() });
       }
     } catch(err) {
@@ -156,6 +160,33 @@ export default function Settings() {
                   class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
                 <span class="text-[10px] font-bold text-zinc-400">10</span>
+              </div>
+            </div>
+
+            <div class="h-[1px] w-full bg-zinc-200 dark:bg-zinc-800" />
+
+            <div class="flex flex-col gap-3 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+              <div class="flex items-center justify-between">
+                <div class="flex flex-col gap-0.5 sm:gap-1">
+                  <span class="text-[12px] sm:text-[13px] font-bold text-zinc-900 dark:text-zinc-100">Concurrent Connections (Chunks)</span>
+                  <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Multi-part parallel connections per download job (min 3, max 8)</span>
+                </div>
+                <div class="w-10 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+                  {chunks()}
+                </div>
+              </div>
+              <div class="w-full flex items-center gap-4 px-1">
+                <span class="text-[10px] font-bold text-zinc-400">3</span>
+                <input
+                  type="range"
+                  min="3"
+                  max="8"
+                  step="1"
+                  value={chunks()}
+                  onInput={(e) => setChunks(parseInt(e.currentTarget.value))}
+                  class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <span class="text-[10px] font-bold text-zinc-400">8</span>
               </div>
             </div>
 
