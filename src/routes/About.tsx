@@ -24,6 +24,11 @@ export default function About() {
     version: "1.0.0",
   });
 
+  const [appInfo, setAppInfo] = createSignal({
+    name: "synclime",
+    version: "0.1.0",
+  });
+
   const [checkLoading, setCheckLoading] = createSignal(false);
 
   onMount(() => {
@@ -37,6 +42,14 @@ export default function About() {
             platform: os.platform(),
             arch: os.arch(),
             version: os.version(),
+          });
+
+          const { getVersion, getName } = await import("@tauri-apps/api/app");
+          const ver = await getVersion();
+          const name = await getName();
+          setAppInfo({
+            version: ver,
+            name: name,
           });
         }
       } catch (err) {
@@ -112,15 +125,15 @@ export default function About() {
           <div class="space-y-1.5 text-left">
             <div class="flex items-center gap-1.5">
               <span class="bg-white/20 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded font-semibold tracking-wider uppercase border border-white/5">
-                v0.1.0
+                v{appInfo().version}
               </span>
               <span class="bg-emerald-500/30 backdrop-blur-md text-emerald-200 text-[10px] px-2 py-0.5 rounded font-semibold tracking-wider uppercase border border-emerald-500/10 flex items-center gap-1">
                 <Activity class="w-3 h-3 animate-pulse" /> active
               </span>
             </div>
             
-            <h1 class="text-2xl font-bold tracking-tight drop-shadow-sm">
-              synclime
+            <h1 class="text-2xl font-bold tracking-tight drop-shadow-sm lowercase">
+              {appInfo().name}
             </h1>
             
             <p class="text-indigo-100 max-w-lg text-xs font-light leading-relaxed">
