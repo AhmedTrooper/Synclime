@@ -483,3 +483,46 @@ pub async fn execute_download_worker(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_progress_line_standard() {
+        let input = "[download]  23.4% of  12.34MiB at  1.23MiB/s ETA 00:10";
+        let res = parse_progress_line(input);
+        assert!(res.is_some());
+        let (pct, msg) = res.unwrap();
+        assert_eq!(pct, 23.4);
+        assert_eq!(msg, "of  12.34MiB at  1.23MiB/s ETA 00:10");
+    }
+
+    #[test]
+    fn test_parse_progress_line_spacing() {
+        let input = "[download]   0.1% of 100.0MiB";
+        let res = parse_progress_line(input);
+        assert!(res.is_some());
+        let (pct, msg) = res.unwrap();
+        assert_eq!(pct, 0.1);
+        assert_eq!(msg, "of 100.0MiB");
+    }
+
+    #[test]
+    fn test_parse_progress_line_ansi() {
+        let input = "\x1b[0;32m[download]  45.6% of  100.00MiB\x1b[0m";
+        let res = parse_progress_line(input);
+        assert!(res.is_some());
+        let (pct, msg) = res.unwrap();
+        assert_eq!(pct, 45.6);
+        assert_eq!(msg, "of  100.00MiB");
+    }
+
+    #[test]
+    fn test_parse_progress_line_invalid() {
+        let input = "[youtube] Extracting subtitles...";
+        let res = parse_progress_line(input);
+        assert!(res.is_none());
+    }
+}
+
