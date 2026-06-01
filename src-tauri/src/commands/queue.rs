@@ -35,7 +35,7 @@ pub async fn trigger_job_start(
     {
         let conn = state.db_conn.lock();
         let _ = conn.execute(
-            "UPDATE download_jobs SET status = 'downloading', updated_at = datetime('now') WHERE slug = ?1;",
+            "UPDATE download_jobs SET status = 'downloading', tracking_message = NULL, updated_at = datetime('now') WHERE slug = ?1;",
             rusqlite::params![job_slug]
         );
     }

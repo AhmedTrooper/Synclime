@@ -31,6 +31,10 @@ export default function Downloads() {
     
     const nextStatus = isDownloading ? "paused" : "downloading";
     useQueueStore.updateJobStatus(job.slug, nextStatus);
+    if (!isDownloading) {
+      // Clear any previous error/message when resuming/restarting
+      useQueueStore.updateJobProgress(job.slug, job.progress, "Resuming...");
+    }
 
     try {
       if (isDownloading) {

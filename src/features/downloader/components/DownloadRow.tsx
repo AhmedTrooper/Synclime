@@ -55,12 +55,13 @@ export function DownloadRow(props: DownloadRowProps) {
       </div>
 
       <div class="flex items-center gap-1 flex-shrink-0">
-        <Show when={status() !== "completed" && status() !== "error"}>
+        <Show when={status() !== "completed"}>
           <button
             onClick={() => props.onPauseToggle()}
             class="p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors"
+            title={status() === "error" ? "Restart / Resume Download" : status() === "paused" ? "Resume Download" : "Pause Download"}
           >
-            <Show when={status() === "paused"} fallback={<Pause class="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />}>
+            <Show when={status() === "paused" || status() === "error"} fallback={<Pause class="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />}>
               <Play class="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
             </Show>
           </button>
