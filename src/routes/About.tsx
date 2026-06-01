@@ -90,7 +90,7 @@ export default function About() {
         setUpdatesData(data);
       } catch (err) {
         console.warn(
-          "Failed to fetch online updates from test branch. Querying local updates.json...",
+          "Failed to fetch online updates from main branch. Querying local updates.json...",
         );
         const isTauri =
           typeof window !== "undefined" &&
@@ -221,7 +221,7 @@ export default function About() {
           </p>
         </div>
         <a
-          href="https://github.com/AhmedTrooper/Synclime/blob/test/extentions.md"
+          href="https://github.com/AhmedTrooper/Synclime/blob/main/extentions.md"
           target="_blank"
           rel="noopener noreferrer"
           class="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition-all whitespace-nowrap self-start sm:self-center"

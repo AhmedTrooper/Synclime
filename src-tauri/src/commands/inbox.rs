@@ -214,7 +214,7 @@ pub async fn delete_inbox_url(
 #[tauri::command]
 pub async fn get_online_updates() -> Result<AppUpdatesSchema, String> {
     let client = reqwest::Client::new();
-    let url = "https://raw.githubusercontent.com/AhmedTrooper/Synclime/test/updates.json";
+    let url = "https://raw.githubusercontent.com/AhmedTrooper/Synclime/main/updates.json";
     
     let response = client
         .get(url)
