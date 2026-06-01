@@ -31,7 +31,7 @@ export function DownloadRow(props: DownloadRowProps) {
           setTimeout(() => setCopied(false), 2000);
         })
         .catch((err) => {
-          console.error("Failed to copy URL to clipboard:", err);
+          // console.error("Failed to copy URL to clipboard:", err);
         });
     }
   };

@@ -5,7 +5,7 @@ export function useParseExecution() {
   const [data, setData] = createSignal<any>(null);
 
   const parse = async (url: string) => {
-    console.log("Parsing target URL:", url);
+    // console.log("Parsing target URL:", url);
     setLoading(true);
     try {
       // Simulate metadata fetching delay
@@ -22,7 +22,7 @@ export function useParseExecution() {
         ],
       });
     } catch (e) {
-      console.error(e);
+      // console.error(e);
     } finally {
       setLoading(false);
     }

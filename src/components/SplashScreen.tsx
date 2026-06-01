@@ -33,7 +33,7 @@ export default function SplashScreen() {
         setAppVersion(appVer);
         setTauriVersion(tauriVer);
       } catch (err) {
-        console.log("Safe fallback: Version info not available in browser.", err);
+        // console.log("Safe fallback: Version info not available in browser.", err);
       }
     };
     loadVersions();

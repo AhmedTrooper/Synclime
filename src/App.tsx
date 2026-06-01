@@ -38,7 +38,7 @@ export default function App(props: any) {
 
         if (dbPath && dbPath.trim().length > 0) {
           useUIStore.setDownloadPath(dbPath);
-          console.log("SyncLime: loaded persisted download path from SQLite settings:", dbPath);
+          // console.log("SyncLime: loaded persisted download path from SQLite settings:", dbPath);
         } else {
           let defaultDir = "";
           if (isTauri) {
@@ -50,10 +50,10 @@ export default function App(props: any) {
             defaultDir = "/home/user/Downloads";
           }
           useUIStore.setDownloadPath(defaultDir);
-          console.log("SyncLime: initialized first-run default download path:", defaultDir);
+          // console.log("SyncLime: initialized first-run default download path:", defaultDir);
         }
       } catch (err) {
-        console.error("Failed to resolve downloads path directory settings:", err);
+        // console.error("Failed to resolve downloads path directory settings:", err);
         if (!ui.downloadPath) {
           useUIStore.setDownloadPath("/home/user/Downloads");
         }
