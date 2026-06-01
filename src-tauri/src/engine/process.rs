@@ -247,17 +247,55 @@ pub fn resolve_job_parameters(
     }
 }
 
+fn log_spawn_error(
+    state: &AppEngineState,
+    job_slug: &str,
+    command_executed: &str,
+    error_message: &str,
+) {
+    let conn = state.db_conn.lock();
+
+    // 1. Update database to error and set tracking_message
+    let _ = conn.execute(
+        "UPDATE download_jobs SET status = 'error', tracking_message = ?1, updated_at = datetime('now') WHERE slug = ?2;",
+        rusqlite::params![error_message, job_slug],
+    );
+
+    // 2. Log detailed error record in SQLite error_logs
+    let error_slug = format!("err_{}", chrono::Utc::now().timestamp_millis());
+    let now_str = chrono::Utc::now().to_rfc3339();
+    let _ = conn.execute(
+        "INSERT INTO error_logs (slug, download_job_slug, command_executed, error_message, is_resolved, timestamp) VALUES (?1, ?2, ?3, ?4, 0, ?5);",
+        rusqlite::params![error_slug, job_slug, command_executed, error_message, now_str],
+    );
+
+    // 3. Push final error snapshot into cache
+    let mut cache = state.progress_cache.lock();
+    cache.insert(
+        job_slug.to_string(),
+        ProgressSnapshot {
+            progress: 0.0,
+            status_message: error_message.to_string(),
+            status: "error".to_string(),
+        },
+    );
+}
+
 pub async fn execute_download_worker(
     app_handle: AppHandle,
     job_slug: String,
 ) -> Result<(), EngineError> {
     let state = app_handle.state::<AppEngineState>();
+    let mut command_executed = "yt-dlp (failed during setup)".to_string();
 
     let config = {
         let conn = state.db_conn.lock();
         match resolve_job_parameters(&conn, &job_slug) {
             Ok(cfg) => cfg,
-            Err(err) => return Err(EngineError::ProcessSpawnFailed(err)),
+            Err(err) => {
+                log_spawn_error(&state, &job_slug, &command_executed, &err);
+                return Err(EngineError::ProcessSpawnFailed(err));
+            }
         }
     };
 
@@ -268,18 +306,22 @@ pub async fn execute_download_worker(
 
     let _permit = match semaphore.acquire_owned().await {
         Ok(p) => p,
-        Err(e) => return Err(EngineError::ProcessSpawnFailed(e.to_string())),
+        Err(e) => {
+            let err_msg = e.to_string();
+            log_spawn_error(&state, &job_slug, &command_executed, &err_msg);
+            return Err(EngineError::ProcessSpawnFailed(err_msg));
+        }
     };
 
-    let mut cmd = Command::new("yt-dlp");
-    cmd.arg("--no-playlist"); // FORCE SINGLE MEDIA EXCLUSIVITY
+    // Build full command arguments array
+    let mut command_args: Vec<String> = Vec::new();
+    command_args.push("--no-playlist".to_string());
+    command_args.push("-f".to_string());
+    command_args.push(config.format_string.clone());
+    command_args.push("--newline".to_string());
+    command_args.push("-P".to_string());
+    command_args.push(config.resolved_path.clone());
     
-    cmd.arg("-f").arg(&config.format_string);
-    cmd.arg("--newline");
-
-    // Explicit Destination Path Argument for yt-dlp execution mapping
-    cmd.arg("-P").arg(&config.resolved_path);
-
     // Specify the absolute output path directly in the output template to guarantee directory structure
     let output_template = if let Some(ref ct) = config.custom_title {
         if !ct.trim().is_empty() {
@@ -290,21 +332,30 @@ pub async fn execute_download_worker(
     } else {
         format!("{}/%(title)s.%(ext)s", &config.resolved_path)
     };
-    cmd.arg("-o").arg(output_template);
+    command_args.push("-o".to_string());
+    command_args.push(output_template.clone());
 
     if config.file_type == "subtitle" {
-        cmd.arg("--write-subs");
-        cmd.arg("--write-auto-subs");
-        cmd.arg("--skip-download");
+        command_args.push("--write-subs".to_string());
+        command_args.push("--write-auto-subs".to_string());
+        command_args.push("--skip-download".to_string());
         if let Some(ref subs) = config.selected_subtitles {
-            cmd.arg("--sub-langs").arg(subs);
+            command_args.push("--sub-langs".to_string());
+            command_args.push(subs.clone());
         } else {
-            cmd.arg("--sub-langs").arg("all");
+            command_args.push("--sub-langs".to_string());
+            command_args.push("all".to_string());
         }
     }
 
     if let Some(ref proxy_url) = config.proxy_string {
-        cmd.arg("--proxy").arg(proxy_url);
+        command_args.push("--proxy".to_string());
+        command_args.push(proxy_url.clone());
+    }
+
+    let mut cmd = Command::new("yt-dlp");
+    for arg in &command_args {
+        cmd.arg(arg);
     }
 
     let mut temp_cookie_path = None;
@@ -323,14 +374,18 @@ pub async fn execute_download_worker(
                     use std::io::Write;
                     let _ = file.write_all(cookies.as_bytes());
                     cmd.arg("--cookies").arg(&file_path);
-                    temp_cookie_path = Some(file_path);
+                    temp_cookie_path = Some(file_path.clone());
+                    command_args.push("--cookies".to_string());
+                    command_args.push(file_path.to_string_lossy().to_string());
                 }
             }
             #[cfg(not(unix))]
             {
                 if std::fs::write(&file_path, cookies).is_ok() {
                     cmd.arg("--cookies").arg(&file_path);
-                    temp_cookie_path = Some(file_path);
+                    temp_cookie_path = Some(file_path.clone());
+                    command_args.push("--cookies".to_string());
+                    command_args.push(file_path.to_string_lossy().to_string());
                 }
             }
         }
@@ -347,20 +402,29 @@ pub async fn execute_download_worker(
     let _cleanup_guard = CookieFileCleanup(temp_cookie_path);
 
     cmd.arg(&config.target_url);
+    command_args.push(config.target_url.clone());
+
+    // Build completed executed command string representation
+    command_executed = format!("yt-dlp {}", command_args.join(" "));
+
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
     let mut child = match cmd.spawn() {
         Ok(c) => c,
-        Err(e) => return Err(EngineError::ProcessSpawnFailed(e.to_string())),
+        Err(e) => {
+            let err_msg = e.to_string();
+            log_spawn_error(&state, &job_slug, &command_executed, &err_msg);
+            return Err(EngineError::ProcessSpawnFailed(err_msg));
+        }
     };
 
     let stdout_stream = match child.stdout.take() {
         Some(out) => out,
         None => {
-            return Err(EngineError::ProcessSpawnFailed(
-                "Failed to trap stdout.".to_string(),
-            ))
+            let err_msg = "Failed to trap stdout.".to_string();
+            log_spawn_error(&state, &job_slug, &command_executed, &err_msg);
+            return Err(EngineError::ProcessSpawnFailed(err_msg));
         }
     };
 
@@ -481,7 +545,22 @@ pub async fn execute_download_worker(
             let error_desc = if stderr_msg.is_empty() {
                 "Download process terminated with error status.".to_string()
             } else {
-                stderr_msg
+                let raw_err = stderr_msg.trim();
+                if (raw_err.starts_with('{') && raw_err.ends_with('}')) || (raw_err.starts_with('[') && raw_err.ends_with(']')) {
+                    if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(raw_err) {
+                        if let Some(msg) = parsed_json.get("message").and_then(|v| v.as_str()) {
+                            msg.to_string()
+                        } else if let Some(err) = parsed_json.get("error").and_then(|v| v.as_str()) {
+                            err.to_string()
+                        } else {
+                            parsed_json.to_string()
+                        }
+                    } else {
+                        raw_err.to_string()
+                    }
+                } else {
+                    raw_err.to_string()
+                }
             };
 
             // Update database to error and set tracking_message
@@ -495,7 +574,7 @@ pub async fn execute_download_worker(
             let now_str = chrono::Utc::now().to_rfc3339();
             let _ = conn.execute(
                 "INSERT INTO error_logs (slug, download_job_slug, command_executed, error_message, is_resolved, timestamp) VALUES (?1, ?2, ?3, ?4, 0, ?5);",
-                rusqlite::params![error_slug, job_slug, "yt-dlp execution", error_desc, now_str],
+                rusqlite::params![error_slug, job_slug, command_executed, error_desc, now_str],
             );
 
             // Push final error snapshot into cache
