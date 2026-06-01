@@ -242,6 +242,7 @@ pub async fn get_all_jobs(
             p.parent_playlist_slug
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
+        WHERE j.slug != 'app_fallback'
         ORDER BY j.created_at DESC;
     ";
 
