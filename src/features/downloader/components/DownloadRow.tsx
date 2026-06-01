@@ -1,5 +1,5 @@
-import { Play, Pause, FolderOpen, Trash } from "lucide-solid";
-import { Show, createMemo } from "solid-js";
+import { Play, Pause, FolderOpen, Trash, Copy, Check } from "lucide-solid";
+import { Show, createMemo, createSignal } from "solid-js";
 import { useQueueStore } from "../../../store/useQueueStore";
 
 interface DownloadRowProps {
@@ -11,6 +11,7 @@ interface DownloadRowProps {
 
 export function DownloadRow(props: DownloadRowProps) {
   const job = createMemo(() => useQueueStore.state.queue.find((j) => j.slug === props.id));
+  const [copied, setCopied] = createSignal(false);
   
   const name = () => job()?.name || "Unknown File";
   const progress = () => job()?.progress ?? 0;
@@ -20,6 +21,20 @@ export function DownloadRow(props: DownloadRowProps) {
   };
   const message = () => job()?.message || "";
   const isError = () => status() === "error";
+
+  const handleCopy = () => {
+    const url = job()?.url;
+    if (url) {
+      navigator.clipboard.writeText(url)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch((err) => {
+          console.error("Failed to copy URL to clipboard:", err);
+        });
+    }
+  };
 
   return (
     <div
@@ -75,9 +90,21 @@ export function DownloadRow(props: DownloadRowProps) {
             <FolderOpen class="w-3.5 h-3.5" />
           </button>
         </Show>
+        <Show when={job()?.url}>
+          <button
+            onClick={handleCopy}
+            class="p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors"
+            title={copied() ? "Copied!" : "Copy Source URL"}
+          >
+            <Show when={copied()} fallback={<Copy class="w-3.5 h-3.5" />}>
+              <Check class="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+            </Show>
+          </button>
+        </Show>
         <button
           onClick={() => props.onDelete()}
           class="p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
+          title="Delete Job"
         >
           <Trash class="w-3.5 h-3.5" />
         </button>
