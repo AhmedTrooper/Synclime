@@ -82,15 +82,16 @@ export default function ParsedFileDetail() {
     }
   };
 
-  const startDownload = async (formatString: string, isAudio = false, _customName?: string) => {
+  const startDownload = async (formatString: string, isAudio = false, _customName?: string, targetUrl?: string) => {
     const f = file();
     if (!f) return;
 
     const uniqueSlug = `dl-${Date.now()}`;
+    const urlToUse = targetUrl || f.url;
     
     await dispatchDownloadJob({
       slug: uniqueSlug,
-      url: f.url,
+      url: urlToUse,
       parsed_file_slug: f.slug,
       file_type: isAudio ? "audio" : "video",
       associated_media_job_slug: null,
@@ -102,21 +103,24 @@ export default function ParsedFileDetail() {
     });
 
     if (selectedSubs().length > 0) {
-      const subSlug = `dl-sub-${Date.now()}`;
-      const joinedSubs = selectedSubs().includes("all") ? "all" : selectedSubs().join(",");
-      await dispatchDownloadJob({
-        slug: subSlug,
-        url: f.url,
-        parsed_file_slug: f.slug,
-        file_type: "subtitle",
-        associated_media_job_slug: uniqueSlug, // PARENT IS THE VIDEO!
-        is_from_playlist: f.isPlaylist,
-        format_string: "bestvideo+bestaudio/best",
-        download_path: useUIStore.state.downloadPath,
-        created_at: new Date().toISOString(),
-        selected_subtitles: joinedSubs,
-        custom_title: `[sub_${joinedSubs}]_${_customName || f.title}`,
+      const subsToDispatch = selectedSubs().includes("all") ? ["all"] : selectedSubs();
+      const promises = subsToDispatch.map((sub, index) => {
+        const subSlug = `dl-sub-${Date.now()}-${sub}-${index}`;
+        return dispatchDownloadJob({
+          slug: subSlug,
+          url: urlToUse,
+          parsed_file_slug: f.slug,
+          file_type: "subtitle",
+          associated_media_job_slug: uniqueSlug,
+          is_from_playlist: f.isPlaylist,
+          format_string: "bestvideo+bestaudio/best",
+          download_path: useUIStore.state.downloadPath,
+          created_at: new Date().toISOString(),
+          selected_subtitles: sub,
+          custom_title: `[sub_${sub}]_${_customName || f.title}`,
+        });
       });
+      await Promise.all(promises);
     }
 
     navigate("/downloads");
@@ -294,20 +298,24 @@ export default function ParsedFileDetail() {
     });
 
     if (modalSelectedSubs().length > 0) {
-      const subSlug = `dl-sub-${Date.now()}`;
-      await dispatchDownloadJob({
-        slug: subSlug,
-        url: activeFile.url,
-        parsed_file_slug: activeFile.slug,
-        file_type: "subtitle",
-        associated_media_job_slug: uniqueSlug, // PARENT IS THE VIDEO!
-        is_from_playlist: activeFile.isPlaylist || false,
-        format_string: "bestvideo+bestaudio/best",
-        download_path: useUIStore.state.downloadPath,
-        created_at: new Date().toISOString(),
-        selected_subtitles: joinedSubs,
-        custom_title: `[sub_${joinedSubs}]_${activeFile.title}`,
+      const subsToDispatch = modalSelectedSubs().includes("all") ? ["all"] : modalSelectedSubs();
+      const promises = subsToDispatch.map((sub, index) => {
+        const subSlug = `dl-sub-${Date.now()}-${sub}-${index}`;
+        return dispatchDownloadJob({
+          slug: subSlug,
+          url: activeFile.url,
+          parsed_file_slug: activeFile.slug,
+          file_type: "subtitle",
+          associated_media_job_slug: uniqueSlug,
+          is_from_playlist: activeFile.isPlaylist || false,
+          format_string: "bestvideo+bestaudio/best",
+          download_path: useUIStore.state.downloadPath,
+          created_at: new Date().toISOString(),
+          selected_subtitles: sub,
+          custom_title: `[sub_${sub}]_${activeFile.title}`,
+        });
       });
+      await Promise.all(promises);
     }
 
     setShowModal(false);
@@ -326,10 +334,10 @@ export default function ParsedFileDetail() {
     
     const playlistFormatString = selectedPreset();
 
-    const promises = targetTracks.map((track: any, index: number) => {
+    const promises = targetTracks.map(async (track: any, index: number) => {
       const trackSlug = `track-${track.id}-${Date.now()}-${index}`;
       
-      return dispatchDownloadJob({
+      await dispatchDownloadJob({
         slug: trackSlug,
         url: track.url,
         parsed_file_slug: f.slug,
@@ -341,6 +349,27 @@ export default function ParsedFileDetail() {
         created_at: new Date().toISOString(),
         custom_title: track.title,
       });
+
+      if (selectedSubs().length > 0) {
+        const subsToDispatch = selectedSubs().includes("all") ? ["all"] : selectedSubs();
+        const subPromises = subsToDispatch.map((sub, sIdx) => {
+          const subSlug = `dl-sub-${Date.now()}-${sub}-${index}-${sIdx}`;
+          return dispatchDownloadJob({
+            slug: subSlug,
+            url: track.url,
+            parsed_file_slug: f.slug,
+            file_type: "subtitle",
+            associated_media_job_slug: trackSlug,
+            is_from_playlist: f.isPlaylist,
+            format_string: "bestvideo+bestaudio/best",
+            download_path: useUIStore.state.downloadPath,
+            created_at: new Date().toISOString(),
+            selected_subtitles: sub,
+            custom_title: `[sub_${sub}]_${track.title}`,
+          });
+        });
+        await Promise.all(subPromises);
+      }
     });
 
     await Promise.all(promises);
@@ -360,23 +389,25 @@ export default function ParsedFileDetail() {
     const queue = useQueueStore.state.queue;
     const parentJob = queue.find(j => j.url === targetUrl && j.fileType !== "subtitle");
     
-    const uniqueSlug = `dl-sub-${Date.now()}`;
-    const joinedSubs = selectedSubs().includes("all") ? "all" : selectedSubs().join(",");
-    
-    await dispatchDownloadJob({
-      slug: uniqueSlug,
-      url: targetUrl,
-      parsed_file_slug: f.slug,
-      file_type: "subtitle",
-      associated_media_job_slug: parentJob ? parentJob.slug : null,
-      is_from_playlist: f.isPlaylist,
-      format_string: "bestvideo+bestaudio/best",
-      download_path: useUIStore.state.downloadPath,
-      created_at: new Date().toISOString(),
-      selected_subtitles: joinedSubs,
-      custom_title: `[sub_${joinedSubs}]_${_trackTitle}`,
+    const subsToDispatch = selectedSubs().includes("all") ? ["all"] : selectedSubs();
+    const promises = subsToDispatch.map((sub, index) => {
+      const subSlug = `dl-sub-${Date.now()}-${sub}-${index}`;
+      return dispatchDownloadJob({
+        slug: subSlug,
+        url: targetUrl,
+        parsed_file_slug: f.slug,
+        file_type: "subtitle",
+        associated_media_job_slug: parentJob ? parentJob.slug : null,
+        is_from_playlist: f.isPlaylist,
+        format_string: "bestvideo+bestaudio/best",
+        download_path: useUIStore.state.downloadPath,
+        created_at: new Date().toISOString(),
+        selected_subtitles: sub,
+        custom_title: `[sub_${sub}]_${_trackTitle}`,
+      });
     });
     
+    await Promise.all(promises);
     navigate("/downloads");
   };
 

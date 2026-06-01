@@ -34,7 +34,7 @@ interface PlaylistViewProps {
   parsingTracks: Accessor<Record<string, boolean>>;
   handleParseTrack: (track: any) => void;
   downloadSubtitle: (targetUrl: string, trackTitle: string) => void;
-  startDownload: (formatString: string, isAudio: boolean, customName?: string) => void;
+  startDownload: (formatString: string, isAudio: boolean, customName?: string, targetUrl?: string) => void;
   formatDuration: (secs: number) => string;
 }
 
@@ -195,7 +195,7 @@ export function PlaylistView(props: PlaylistViewProps) {
 
                     <div class="group relative inline-block">
                       <button
-                        onClick={() => props.startDownload(props.selectedPreset(), false, track.title)}
+                        onClick={() => props.startDownload(props.selectedPreset(), false, track.title, track.url)}
                         class="p-1.5 sm:p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 rounded-lg sm:rounded-xl transition-colors min-h-[32px]"
                       >
                         <Download class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
