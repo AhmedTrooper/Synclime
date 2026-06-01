@@ -1,4 +1,4 @@
-import { createSignal, createMemo, Show } from "solid-js";
+import { createSignal, createMemo, Show, onMount, For } from "solid-js";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore } from "../store/useQueueStore";
@@ -8,6 +8,8 @@ import { logErrorToDb } from "../core/logger";
 import {
   ArrowLeft,
   PlayCircle,
+  GlobeLock,
+  ChevronDown,
 } from "lucide-solid";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -17,12 +19,100 @@ import { SingleVideoView } from "../features/parser/components/SingleVideoView";
 import { PlaylistView } from "../features/parser/components/PlaylistView";
 import { ConfigureTrackModal } from "../features/parser/components/ConfigureTrackModal";
 
+const CustomSelect = (props: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+}) => {
+  const [isOpen, setIsOpen] = createSignal(false);
+  const selected = () => props.options.find((o) => o.value === props.value);
+
+  return (
+    <div class={`relative w-full ${isOpen() ? "z-50" : "z-10"}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen())}
+        class="w-full flex items-center justify-between px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-900 text-xs sm:text-sm text-zinc-900 dark:text-white transition-all shadow-inner outline-none"
+      >
+        <div class="flex items-center gap-2 truncate text-left">
+          <GlobeLock class="w-4 h-4 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+          <span class="truncate">{selected() ? selected()!.label : props.placeholder}</span>
+        </div>
+        <ChevronDown
+          class={`w-4 h-4 text-zinc-400 dark:text-zinc-500 transition-transform duration-200 flex-shrink-0 ${
+            isOpen() ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <Show when={isOpen()}>
+        <div class="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+        <div class="absolute z-50 w-full mt-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar overscroll-contain animate-fade-in origin-top pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => {
+              props.onChange("");
+              setIsOpen(false);
+            }}
+            class={`w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-xs sm:text-sm transition-all ${
+              !props.value
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold"
+                : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
+            }`}
+          >
+            <GlobeLock class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+            <span class="truncate">{props.placeholder}</span>
+          </button>
+          <Show when={props.options.length > 0}>
+            <div class="h-[1px] bg-zinc-200 dark:bg-zinc-800 w-full my-1" />
+          </Show>
+          <For each={props.options}>
+            {(opt) => (
+              <button
+                type="button"
+                onClick={() => {
+                  props.onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                class={`w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-xs sm:text-sm transition-all truncate ${
+                  props.value === opt.value
+                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold"
+                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
+                }`}
+              >
+                <GlobeLock class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+                <span class="truncate">{opt.label}</span>
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
+  );
+};
+
 export default function ParsedFileDetail() {
   const params = useParams();
   const navigate = useNavigate();
 
   const file = createMemo(() => useParseStore.state.parsedFiles.find((f) => f.slug === params.slug));
   const payload = createMemo(() => file()?.payload || {});
+
+  const [siteConfigs, setSiteConfigs] = createSignal<any[]>([]);
+  const [selectedSiteSlug, setSelectedSiteSlug] = createSignal<string>("");
+
+  onMount(async () => {
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        const configs = await invoke<any[]>("get_site_configs");
+        setSiteConfigs(configs);
+      } catch (err) {
+        console.error("Failed to load site configs in ParsedFileDetail:", err);
+      }
+    }
+  });
 
   const [selectedSubs, setSelectedSubs] = createSignal<string[]>([]);
   const [selectionMode, setSelectionMode] = createSignal<"custom" | "fallback">("custom");
@@ -66,19 +156,24 @@ export default function ParsedFileDetail() {
   };
 
   const dispatchDownloadJob = async (jobPayload: any) => {
+    const payloadWithConfig = {
+      ...jobPayload,
+      site_config_slug: selectedSiteSlug() || null,
+    };
+
     const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
     if (isTauri) {
       try {
-        const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", { payload: jobPayload });
+        const insertRes = await invoke<{ success: boolean; message: string }>("insert_job_record", { payload: payloadWithConfig });
         if (!insertRes.success) throw new Error(insertRes.message);
         
-        const startRes = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: jobPayload.slug });
+        const startRes = await invoke<{ success: boolean; message: string }>("trigger_job_start", { jobSlug: payloadWithConfig.slug });
         if (!startRes.success) throw new Error(startRes.message);
       } catch (e: any) {
-        await logErrorToDb(e.message || String(e), "dispatch_download_job", jobPayload.slug);
+        await logErrorToDb(e.message || String(e), "dispatch_download_job", payloadWithConfig.slug);
       }
     } else {
-      console.log(`[Browser Preview] Job ${jobPayload.slug} dispatched to backend mock.`);
+      console.log(`[Browser Preview] Job ${payloadWithConfig.slug} dispatched to backend mock:`, payloadWithConfig);
     }
   };
 
@@ -172,7 +267,10 @@ export default function ParsedFileDetail() {
           success: boolean;
           payload: any;
           error_message: string | null;
-        }>("discover_asset_metadata", { targetUrl: cleanUrl });
+        }>("discover_asset_metadata", { 
+          targetUrl: cleanUrl, 
+          siteConfigSlug: selectedSiteSlug() || null 
+        });
 
         if (discoverRes.success && discoverRes.payload) {
           trackPayload = discoverRes.payload;
@@ -545,6 +643,24 @@ export default function ParsedFileDetail() {
           description={payload().description}
           formatDuration={formatDuration}
         />
+
+        {/* Active Site Configuration Profile Card */}
+        <div class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-sm text-left space-y-3 animate-fade-in">
+          <div class="flex flex-col gap-1">
+            <h3 class="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
+              Active Site Configuration Profile
+            </h3>
+            <p class="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+              Select an explicit profile to force specific cookies, proxy headers, or network limits for this download job.
+            </p>
+          </div>
+          <CustomSelect
+            value={selectedSiteSlug()}
+            onChange={setSelectedSiteSlug}
+            options={siteConfigs().map(c => ({ value: c.slug, label: `${c.title} (${c.domain})` }))}
+            placeholder="No Site Profile (Direct network fallback)"
+          />
+        </div>
 
         <Show
           when={file()!.isPlaylist}
