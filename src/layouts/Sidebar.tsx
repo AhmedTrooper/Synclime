@@ -14,7 +14,8 @@ import {
   Monitor, 
   Database,
   Inbox,
-  Layers
+  Layers,
+  BookOpen
 } from "lucide-solid";
 import { useUIStore } from "../store/useUIStore";
 import { invoke } from "@tauri-apps/api/core";
@@ -59,6 +60,23 @@ export default function Sidebar() {
       unlistenInbox();
     }
   });
+
+  const handleOpenTutorial = async (e: Event) => {
+    e.preventDefault();
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    const url = "https://github.com/AhmedTrooper/Synclime/blob/main/tutorial.md";
+    
+    if (isTauri) {
+      try {
+        const { openUrl } = await import("@tauri-apps/plugin-opener");
+        await openUrl(url);
+      } catch (err) {
+        console.error("Failed to open tutorial URL via Tauri opener:", err);
+      }
+    } else {
+      window.open(url, "_blank");
+    }
+  };
 
   const navItems = [
     { path: "/", label: "New Task", icon: Home, badgeKey: "home" as const },
@@ -123,6 +141,20 @@ export default function Sidebar() {
               );
             }}
           </For>
+
+          {/* User Guide External Catalog Link */}
+          <button
+            onClick={handleOpenTutorial}
+            class="flex-1 sm:flex-initial flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 px-1 sm:px-3 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-semibold transition-all duration-300 relative group overflow-hidden cursor-pointer text-left w-full"
+            title="Synclime User Guide"
+          >
+            <div class="relative flex items-center justify-center flex-shrink-0">
+              <BookOpen class="w-5 h-5 sm:w-4 sm:h-4 text-zinc-400 dark:text-zinc-500" />
+            </div>
+            <span class={`block sm:inline tracking-tight text-[9px] sm:text-xs font-semibold text-center sm:text-left truncate w-full sm:w-auto ${ui.isSidebarExpanded ? "" : "sm:hidden"}`}>
+              User Guide
+            </span>
+          </button>
         </nav>
       </div>
 
