@@ -416,7 +416,12 @@ export default function SitesConfig() {
 
                           <div class="grid grid-cols-2 gap-3.5 pt-3 border-t border-zinc-200 dark:border-zinc-800/80">
                             <div class="flex flex-col gap-1.5">
-                              <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Cookie Vault profile</span>
+                              <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Cookie Vault profile</span>
+                                <Show when={site.cookie_profile_slug && !cookies().some(c => c.slug === site.cookie_profile_slug)}>
+                                  <span class="text-[8px] font-black text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">Missing</span>
+                                </Show>
+                              </div>
                               <CustomSelect
                                 value={site.cookie_profile_slug || ""}
                                 onChange={(val) => handleUpdateSite(site.slug, val || null, site.proxy_profile_slug)}
@@ -426,7 +431,12 @@ export default function SitesConfig() {
                               />
                             </div>
                             <div class="flex flex-col gap-1.5">
-                              <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Proxy Network profile</span>
+                              <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Proxy Network profile</span>
+                                <Show when={site.proxy_profile_slug && !proxies().some(p => p.slug === site.proxy_profile_slug)}>
+                                  <span class="text-[8px] font-black text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">Missing</span>
+                                </Show>
+                              </div>
                               <CustomSelect
                                 value={site.proxy_profile_slug || ""}
                                 onChange={(val) => handleUpdateSite(site.slug, site.cookie_profile_slug, val || null)}

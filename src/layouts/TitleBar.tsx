@@ -44,14 +44,30 @@ export default function TitleBar() {
   };
 
   const handleClose = async () => {
+    const message = "Closing will stop active downloads. Some will be paused, and some may need to restart from the beginning when you reopen the app.\n\nAre you sure you want to close?";
     try {
-      const confirmed = window.confirm("Are you sure you want to close Synclime? Active downloads or operations will be interrupted.");
+      const { ask } = await import("@tauri-apps/plugin-dialog");
+      const confirmed = await ask(message, {
+        title: "Confirm Close",
+        kind: "warning",
+        okLabel: "Close",
+        cancelLabel: "Cancel"
+      });
       if (confirmed) {
         const appWindow = getCurrentWindow();
         await appWindow.close();
       }
     } catch (err) {
-      console.log("Close action fallback", err);
+      console.log("Native dialog fallback to browser confirm:", err);
+      const confirmed = window.confirm(message);
+      if (confirmed) {
+        try {
+          const appWindow = getCurrentWindow();
+          await appWindow.close();
+        } catch (e) {
+          console.log("App window close fallback:", e);
+        }
+      }
     }
   };
 
