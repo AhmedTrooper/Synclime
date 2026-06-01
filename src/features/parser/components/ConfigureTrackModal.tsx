@@ -42,7 +42,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
           
           <button
             onClick={() => props.setShowModal(false)}
-            class="absolute top-4 right-4 p-1.5 rounded text-zinc-400 hover:text-zinc-650 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+            class="absolute top-4 right-4 p-1.5 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
           >
             <X class="w-4 h-4" />
           </button>
@@ -52,8 +52,8 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
               <Sparkles class="w-4 h-4" />
             </div>
             <div class="min-w-0">
-              <h3 class="text-sm font-bold text-zinc-950 dark:text-zinc-150 leading-tight">Configure Custom Track</h3>
-              <p class="text-[9px] font-mono text-zinc-450 dark:text-zinc-500 truncate mt-1" title={props.activeTrackFile()?.title}>
+              <h3 class="text-sm font-bold text-zinc-950 dark:text-zinc-100 leading-tight">Configure Custom Track</h3>
+              <p class="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 truncate mt-1" title={props.activeTrackFile()?.title}>
                 {props.activeTrackFile()?.title}
               </p>
             </div>
@@ -67,7 +67,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
               class={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all select-none min-h-[38px] ${
                 props.modalSelectionMode() === "custom"
                   ? "bg-white dark:bg-zinc-950 text-blue-600 dark:text-blue-400 border-t-2 border-t-blue-500 dark:border-t-blue-400 font-extrabold"
-                  : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 hover:text-zinc-850 dark:hover:text-zinc-300"
+                  : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-300"
               }`}
             >
               <Film class="w-3.5 h-3.5" />
@@ -79,7 +79,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
               class={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all select-none min-h-[38px] ${
                 props.modalSelectionMode() === "fallback"
                   ? "bg-white dark:bg-zinc-950 text-blue-600 dark:text-blue-400 border-t-2 border-t-blue-500 dark:border-t-blue-400 font-extrabold"
-                  : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 hover:text-zinc-850 dark:hover:text-zinc-300"
+                  : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-300"
               }`}
             >
               <ToggleLeft class="w-3.5 h-3.5" />
@@ -109,7 +109,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
                               class={`border cursor-pointer select-none p-2.5 rounded flex items-center justify-between gap-2 text-left min-w-0 transition-colors ${
                                 isSelected()
                                   ? "border-blue-500 dark:border-blue-400 bg-blue-50/20 dark:bg-blue-500/5 shadow-sm"
-                                  : "border-zinc-200/60 dark:border-zinc-850 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
+                                  : "border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
                               }`}
                             >
                               <div class="min-w-0">
@@ -147,7 +147,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
                               class={`border cursor-pointer select-none p-2.5 rounded flex items-center justify-between gap-2 text-left min-w-0 transition-colors ${
                                 isSelected()
                                   ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50/20 dark:bg-emerald-500/5 shadow-sm"
-                                  : "border-zinc-200/60 dark:border-zinc-850 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
+                                  : "border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
                               }`}
                             >
                               <div class="min-w-0">
@@ -187,7 +187,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
                           class={`border cursor-pointer select-none p-2.5 rounded flex items-center justify-between gap-3 text-left min-w-0 transition-colors ${
                             isSelected()
                               ? "border-blue-500 dark:border-blue-400 bg-blue-50/20 dark:bg-blue-500/5 shadow-sm"
-                              : "border-zinc-200/60 dark:border-zinc-850 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
+                              : "border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
                           }`}
                         >
                           <div class="min-w-0">
@@ -215,7 +215,7 @@ export function ConfigureTrackModal(props: ConfigureTrackModalProps) {
               <div class="flex flex-wrap gap-1.5 p-2 bg-zinc-50/50 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800 rounded max-h-36 overflow-y-auto custom-scrollbar">
                 <For each={props.modalDisplaySubOptions}>
                   {(opt) => (
-                    <label class={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded border cursor-pointer transition-colors shadow-sm ${props.modalSelectedSubs().includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400 font-extrabold" : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 text-zinc-700 dark:text-zinc-305 hover:border-purple-500"}`}>
+                    <label class={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded border cursor-pointer transition-colors shadow-sm ${props.modalSelectedSubs().includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400 font-extrabold" : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:border-purple-500"}`}>
                       <input
                         type="checkbox"
                         checked={props.modalSelectedSubs().includes(opt.lang)}

@@ -87,7 +87,7 @@ export default function Logs() {
       
       <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
         <div class="flex items-center gap-2.5">
-          <div class="p-1.5 bg-zinc-650 rounded-md text-white shadow-sm dark:bg-zinc-800">
+          <div class="p-1.5 bg-zinc-600 rounded-md text-white shadow-sm dark:bg-zinc-800">
             <Database class="w-4 h-4 text-blue-500" />
           </div>
           <div class="text-left">
@@ -166,7 +166,7 @@ export default function Logs() {
                         <div class="border-t border-zinc-100 dark:border-zinc-800 p-4 bg-zinc-50/50 dark:bg-black/10 text-[11px] sm:text-xs text-left font-mono space-y-3.5 select-text overflow-x-auto">
                           <div>
                             <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Execution Command</span>
-                            <div class="bg-zinc-100 dark:bg-zinc-950 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-850 break-all">
+                            <div class="bg-zinc-100 dark:bg-zinc-950 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 break-all">
                               {log.command_executed}
                             </div>
                           </div>
@@ -238,7 +238,7 @@ export default function Logs() {
                         <div class="border-t border-zinc-100 dark:border-zinc-800 p-4 bg-zinc-50/50 dark:bg-black/10 text-[11px] sm:text-xs text-left font-mono space-y-3.5 select-text overflow-x-auto">
                           <div>
                             <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Discovery Command Executed</span>
-                            <div class="bg-zinc-100 dark:bg-zinc-950 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-850 break-all">
+                            <div class="bg-zinc-100 dark:bg-zinc-950 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 break-all">
                               {log.command_executed}
                             </div>
                           </div>

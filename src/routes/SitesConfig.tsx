@@ -392,7 +392,7 @@ export default function SitesConfig() {
                   <ShieldCheck class="w-4.5 h-4.5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div class="text-left">
                     <h4 class="font-bold">Cookie Format Notice</h4>
-                    <p class="text-[11px] text-zinc-650 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
                       Only the standard <strong>Netscape cookie format</strong> is supported by the download sub-engine. JSON or other cookie formats are <strong>not supported</strong> and will result in network authentication errors.
                     </p>
                   </div>

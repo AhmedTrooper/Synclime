@@ -50,9 +50,9 @@ export function PlaylistView(props: PlaylistViewProps) {
           <div class="flex flex-col gap-1 max-w-md">
             <div class="flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
               <Sliders class="w-4 h-4 text-blue-500" />
-              <h3 class="text-[10px] font-bold uppercase tracking-wider text-zinc-850 dark:text-zinc-200">Playlist Fallback Preferences</h3>
+              <h3 class="text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">Playlist Fallback Preferences</h3>
             </div>
-            <p class="text-[10px] text-zinc-500 dark:text-zinc-450 leading-relaxed font-sans">
+            <p class="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-sans">
               Select a fallback quality preset. This configuration rules target priorities for all media downloads inside this batch queue.
             </p>
           </div>
@@ -85,7 +85,7 @@ export function PlaylistView(props: PlaylistViewProps) {
       <div class="w-full bg-zinc-50/50 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3.5 flex flex-col gap-2.5">
         <div class="flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 px-0.5">
           <Globe class="w-4 h-4 text-emerald-500" />
-          <h3 class="text-[10px] font-bold uppercase tracking-wider text-zinc-850 dark:text-zinc-200">
+          <h3 class="text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
             {props.subOptions.length > 0 ? "Global Subtitle Selection" : "Global Subtitle Selection (Pre-Given List)"}
           </h3>
         </div>
@@ -94,10 +94,10 @@ export function PlaylistView(props: PlaylistViewProps) {
           when={props.displaySubOptions.length > 0}
           fallback={<span class="text-[10px] text-zinc-500 italic px-0.5">No subtitles available</span>}
         >
-          <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded">
+          <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded">
             <For each={props.displaySubOptions}>
               {(opt) => (
-                <label class={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded border cursor-pointer transition-colors shadow-sm ${props.selectedSubs().includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400 font-extrabold" : "bg-white dark:bg-zinc-905 border-zinc-200 dark:border-zinc-800/85 text-zinc-700 dark:text-zinc-350 hover:border-purple-500"}`}>
+                <label class={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded border cursor-pointer transition-colors shadow-sm ${props.selectedSubs().includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400 font-extrabold" : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/85 text-zinc-700 dark:text-zinc-300 hover:border-purple-500"}`}>
                   <input
                     type="checkbox"
                     checked={props.selectedSubs().includes(opt.lang)}
@@ -165,7 +165,7 @@ export function PlaylistView(props: PlaylistViewProps) {
                       <img
                         src={track.thumbnails![0].url}
                         alt={track.title}
-                        class="w-10 sm:w-16 aspect-video object-cover rounded border border-zinc-200 dark:border-zinc-850 flex-shrink-0"
+                        class="w-10 sm:w-16 aspect-video object-cover rounded border border-zinc-200 dark:border-zinc-800 flex-shrink-0"
                       />
                     </Show>
                     <div class="flex flex-col gap-0.5 min-w-0">
@@ -188,7 +188,7 @@ export function PlaylistView(props: PlaylistViewProps) {
                           <span class="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         </Show>
                       </button>
-                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-850 whitespace-nowrap">
+                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-800 whitespace-nowrap">
                         Configure Streams
                       </div>
                     </div>
@@ -202,7 +202,7 @@ export function PlaylistView(props: PlaylistViewProps) {
                         >
                           <Globe class="w-3.5 h-3.5" />
                         </button>
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-850 whitespace-nowrap">
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-800 whitespace-nowrap">
                           Download Captions
                         </div>
                       </div>
@@ -212,11 +212,11 @@ export function PlaylistView(props: PlaylistViewProps) {
                     <div class="group relative inline-block">
                       <button
                         onClick={() => props.startDownload(props.selectedPreset(), false, track.title, track.url)}
-                        class="p-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-250 dark:border-zinc-800 rounded transition-colors min-h-[30px]"
+                        class="p-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-800 rounded transition-colors min-h-[30px]"
                       >
                         <Download class="w-3.5 h-3.5" />
                       </button>
-                      <div class="absolute bottom-full right-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-850 whitespace-nowrap">
+                      <div class="absolute bottom-full right-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-800 whitespace-nowrap">
                         Queue Media
                       </div>
                     </div>

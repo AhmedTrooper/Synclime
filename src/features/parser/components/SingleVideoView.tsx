@@ -58,10 +58,10 @@ export function SingleVideoView(props: SingleVideoViewProps) {
           <button
             type="button"
             onClick={() => props.setSelectionMode("custom")}
-            class={`flex items-center gap-2 px-4 py-2.5 border-r border-zinc-250 dark:border-zinc-800 text-[11px] font-bold uppercase tracking-wider transition-all select-none min-h-[38px] ${
+            class={`flex items-center gap-2 px-4 py-2.5 border-r border-zinc-200 dark:border-zinc-800 text-[11px] font-bold uppercase tracking-wider transition-all select-none min-h-[38px] ${
               props.selectionMode() === "custom"
                 ? "bg-white dark:bg-zinc-950 text-blue-600 dark:text-blue-400 border-t-2 border-t-blue-500 dark:border-t-blue-400 font-extrabold"
-                : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 hover:text-zinc-850 dark:hover:text-zinc-300"
+                : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-300"
             }`}
           >
             <Sliders class="w-3.5 h-3.5" />
@@ -70,10 +70,10 @@ export function SingleVideoView(props: SingleVideoViewProps) {
           <button
             type="button"
             onClick={() => props.setSelectionMode("fallback")}
-            class={`flex items-center gap-2 px-4 py-2.5 border-r border-zinc-250 dark:border-zinc-800 text-[11px] font-bold uppercase tracking-wider transition-all select-none min-h-[38px] ${
+            class={`flex items-center gap-2 px-4 py-2.5 border-r border-zinc-200 dark:border-zinc-800 text-[11px] font-bold uppercase tracking-wider transition-all select-none min-h-[38px] ${
               props.selectionMode() === "fallback"
                 ? "bg-white dark:bg-zinc-950 text-blue-600 dark:text-blue-400 border-t-2 border-t-blue-500 dark:border-t-blue-400 font-extrabold"
-                : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 hover:text-zinc-850 dark:hover:text-zinc-300"
+                : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-300"
             }`}
           >
             <ToggleLeft class="w-3.5 h-3.5" />
@@ -102,7 +102,7 @@ export function SingleVideoView(props: SingleVideoViewProps) {
                           class={`border cursor-pointer select-none transition-colors rounded p-2.5 flex flex-row items-center justify-between gap-2 text-left min-w-0 ${
                             isSelected()
                               ? "border-blue-500 dark:border-blue-400 bg-blue-50/20 dark:bg-blue-500/5 shadow-sm"
-                              : "border-zinc-200 dark:border-zinc-850 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
+                              : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
                           }`}
                           onClick={() => props.setSelectedVideo(isSelected() ? "" : v.format_id)}
                         >
@@ -162,7 +162,7 @@ export function SingleVideoView(props: SingleVideoViewProps) {
                           class={`border cursor-pointer select-none transition-colors rounded p-2.5 flex flex-row items-center justify-between gap-2 text-left min-w-0 ${
                             isSelected()
                               ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50/20 dark:bg-emerald-500/5 shadow-sm"
-                              : "border-zinc-200 dark:border-zinc-850 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
+                              : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
                           }`}
                           onClick={() => props.setSelectedAudio(isSelected() ? "" : a.format_id)}
                         >
@@ -224,7 +224,7 @@ export function SingleVideoView(props: SingleVideoViewProps) {
                       class={`border cursor-pointer select-none transition-colors rounded p-2.5 flex flex-row items-center justify-between gap-2 text-left min-w-0 ${
                         isSelected()
                           ? "border-blue-500 dark:border-blue-400 bg-blue-50/20 dark:bg-blue-500/5 shadow-sm"
-                          : "border-zinc-200 dark:border-zinc-850 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
+                          : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-800"
                       }`}
                       onClick={() => props.setSelectedPreset(preset.value)}
                     >
@@ -232,7 +232,7 @@ export function SingleVideoView(props: SingleVideoViewProps) {
                         <span class="text-[11px] font-bold text-zinc-900 dark:text-zinc-200 leading-tight block">
                           {preset.label}
                         </span>
-                        <span class="text-[9px] text-zinc-550 dark:text-zinc-400 font-mono block truncate">
+                        <span class="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block truncate">
                           {preset.value}
                         </span>
                       </div>
@@ -277,8 +277,8 @@ export function SingleVideoView(props: SingleVideoViewProps) {
           <div class="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 rounded-md p-3.5 min-w-0">
             <div class="flex flex-col gap-3 min-w-0">
               <div class="flex flex-col gap-1.5 text-left min-w-0">
-                <label class="text-[9px] font-bold text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">Generated Format String</label>
-                <div class="bg-zinc-950 text-zinc-250 dark:bg-black border border-zinc-850 p-2.5 rounded font-mono text-[9px] break-all select-text">
+                <label class="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Generated Format String</label>
+                <div class="bg-zinc-950 text-zinc-300 dark:bg-black border border-zinc-800 p-2.5 rounded font-mono text-[9px] break-all select-text">
                   {props.getGeneratedFormatString()}
                 </div>
               </div>
@@ -306,16 +306,16 @@ export function SingleVideoView(props: SingleVideoViewProps) {
                 when={props.displaySubOptions.length > 0}
                 fallback={
                   <div class="text-center py-4 flex flex-col items-center gap-1.5">
-                    <Globe class="w-5 h-5 text-zinc-450 dark:text-zinc-650" />
+                    <Globe class="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                     <span class="text-[10px] text-zinc-500 dark:text-zinc-400 italic">No subtitles found.</span>
                   </div>
                 }
               >
                 <div class="flex flex-col gap-1.5 text-left min-w-0">
-                  <label class="text-[9px] font-bold text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">
+                  <label class="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                     Select Languages {props.subOptions.length === 0 && "(Pre-Given List)"}
                   </label>
-                  <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded min-w-0">
+                  <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded min-w-0">
                     <For each={props.displaySubOptions}>
                       {(opt) => (
                         <label class={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded border cursor-pointer transition-colors shadow-sm ${props.selectedSubs().includes(opt.lang) ? "bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-400 font-extrabold" : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:border-purple-500"}`}>
@@ -334,7 +334,7 @@ export function SingleVideoView(props: SingleVideoViewProps) {
                 <button
                   onClick={() => props.downloadSubtitle(props.url, props.title)}
                   disabled={props.selectedSubs().length === 0}
-                  class="flex items-center justify-center gap-1.5 bg-zinc-150 hover:bg-zinc-200 dark:bg-zinc-850 dark:hover:bg-zinc-750 text-zinc-900 dark:text-zinc-100 font-bold border border-zinc-250 dark:border-zinc-700 w-full py-2 rounded shadow-sm disabled:opacity-50 min-h-[34px] px-2 text-[10px] uppercase tracking-wider"
+                  class="flex items-center justify-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-bold border border-zinc-200 dark:border-zinc-700 w-full py-2 rounded shadow-sm disabled:opacity-50 min-h-[34px] px-2 text-[10px] uppercase tracking-wider"
                 >
                   <Download class="w-3.5 h-3.5" />
                   Download Subtitle

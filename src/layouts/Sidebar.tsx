@@ -76,7 +76,7 @@ export default function Sidebar() {
           href="https://github.com/AhmedTrooper/Synclime"
           target="_blank"
           rel="noopener noreferrer"
-          class={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-150 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-semibold text-[11px] transition-colors ${ui.isSidebarExpanded ? "" : "justify-center"}`}
+          class={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-semibold text-[11px] transition-colors ${ui.isSidebarExpanded ? "" : "justify-center"}`}
           title="Source Code (GitHub)"
         >
           <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -89,7 +89,7 @@ export default function Sidebar() {
           href="https://www.youtube.com/@AhmedTrooper"
           target="_blank"
           rel="noopener noreferrer"
-          class={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-150 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-semibold text-[11px] transition-colors ${ui.isSidebarExpanded ? "" : "justify-center"}`}
+          class={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-semibold text-[11px] transition-colors ${ui.isSidebarExpanded ? "" : "justify-center"}`}
           title="AhmedTrooper YouTube"
         >
           <svg class="w-4 h-4 flex-shrink-0 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

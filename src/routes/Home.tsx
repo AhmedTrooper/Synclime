@@ -49,7 +49,7 @@ const CustomSelect = (props: {
 
       <Show when={isOpen()}>
         <div class="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-        <div class="absolute z-50 w-full mt-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-lg shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar overscroll-contain animate-fade-in origin-top pointer-events-auto">
+        <div class="absolute z-50 w-full mt-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl overflow-x-hidden overflow-y-auto py-1 max-h-60 custom-scrollbar overscroll-contain animate-fade-in origin-top pointer-events-auto">
           <button
             type="button"
             onClick={() => {
@@ -59,7 +59,7 @@ const CustomSelect = (props: {
             class={`w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-xs sm:text-sm transition-all ${
               !props.value
                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold"
-                : "text-zinc-650 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
+                : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
             }`}
           >
             <GlobeLock class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
@@ -79,7 +79,7 @@ const CustomSelect = (props: {
                 class={`w-full flex items-center gap-2 text-left px-3.5 py-2.5 text-xs sm:text-sm transition-all truncate ${
                   props.value === opt.value
                     ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold"
-                    : "text-zinc-650 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
+                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10"
                 }`}
               >
                 <GlobeLock class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
@@ -428,7 +428,7 @@ export default function Home() {
                     as="button"
                     type="button"
                     onClick={() => setUrl("")}
-                    class="absolute right-3.5 p-1 rounded-full text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors"
+                    class="absolute right-3.5 p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors"
                   >
                     <X class="w-3.5 h-3.5" />
                   </Tooltip.Trigger>

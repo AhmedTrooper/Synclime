@@ -118,7 +118,7 @@ export default function About() {
   return (
     <div class="space-y-4 max-w-4xl mx-auto pb-6 select-none animate-fade-in font-sans">
       
-      <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-500 via-indigo-650 to-indigo-600 p-4 sm:p-5 text-white shadow-sm transition-all duration-300 hover:shadow-indigo-500/10 hover:shadow-md">
+      <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-500 via-indigo-600 to-indigo-600 p-4 sm:p-5 text-white shadow-sm transition-all duration-300 hover:shadow-indigo-500/10 hover:shadow-md">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_35%_35%,rgba(255,255,255,0.12),transparent)] pointer-events-none" />
         
         <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -193,7 +193,7 @@ export default function About() {
             </div>
             <div class="flex items-center justify-between py-2.5">
               <span class="text-zinc-500 dark:text-zinc-400 font-medium">Kernel Version</span>
-              <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-850 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-semibold truncate max-w-[150px]" title={osInfo().version}>{osInfo().version}</span>
+              <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-semibold truncate max-w-[150px]" title={osInfo().version}>{osInfo().version}</span>
             </div>
           </div>
         </div>
@@ -218,11 +218,11 @@ export default function About() {
             </div>
             <div class="flex items-center justify-between py-2.5">
               <span class="text-zinc-500 dark:text-zinc-400 font-medium">Completed Jobs</span>
-              <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-850 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-semibold">{completedJobsCount()} files</span>
+              <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-semibold">{completedJobsCount()} files</span>
             </div>
             <div class="flex items-center justify-between py-2.5">
               <span class="text-zinc-500 dark:text-zinc-400 font-medium">Parsed Channels</span>
-              <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-850 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-semibold">{useParseStore.state.parsedFiles.length} URLs</span>
+              <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-semibold">{useParseStore.state.parsedFiles.length} URLs</span>
             </div>
             <div class="flex items-center justify-between py-2.5">
               <span class="text-zinc-500 dark:text-zinc-400 font-medium">Engine Status</span>
@@ -241,7 +241,7 @@ export default function About() {
             </div>
             <div class="min-w-0 text-left">
               <h3 class="text-sm font-bold text-zinc-950 dark:text-white leading-none">Default Download Path</h3>
-              <p class="text-[10px] text-zinc-455 dark:text-zinc-400 truncate max-w-xs sm:max-w-md md:max-w-lg font-mono mt-1.5" title={useUIStore.state.downloadPath}>
+              <p class="text-[10px] text-zinc-500 dark:text-zinc-400 truncate max-w-xs sm:max-w-md md:max-w-lg font-mono mt-1.5" title={useUIStore.state.downloadPath}>
                 {useUIStore.state.downloadPath || "Not configured"}
               </p>
             </div>
@@ -252,7 +252,7 @@ export default function About() {
               <Tooltip.Trigger
                 as="button"
                 onClick={openDownloadFolder}
-                class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-850 dark:text-zinc-200 text-xs font-semibold transition-all min-h-[32px] min-w-[70px]"
+                class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold transition-all min-h-[32px] min-w-[70px]"
               >
                 <ExternalLink class="w-3.5 h-3.5" />
                 Open
@@ -277,7 +277,7 @@ export default function About() {
         </div>
         
         <div class="border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 shadow-sm rounded-xl p-3.5">
-          <div class="divide-y divide-zinc-100 dark:divide-zinc-850/80 text-xs">
+          <div class="divide-y divide-zinc-100 dark:divide-zinc-800/80 text-xs">
             
             <div class="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
               <div class="flex items-center gap-3">
@@ -285,7 +285,7 @@ export default function About() {
                   <Terminal class="w-5 h-5" />
                 </div>
                 <div class="text-left">
-                  <span class="font-bold text-zinc-855 dark:text-zinc-100 block leading-tight">Tauri Core Engine v2</span>
+                  <span class="font-bold text-zinc-900 dark:text-zinc-100 block leading-tight">Tauri Core Engine v2</span>
                   <span class="text-[10px] text-zinc-400 dark:text-zinc-500 leading-none">Rust Backend multi-threaded process management</span>
                 </div>
               </div>
@@ -298,7 +298,7 @@ export default function About() {
                   <Layers class="w-5 h-5" />
                 </div>
                 <div class="text-left">
-                  <span class="font-bold text-zinc-855 dark:text-zinc-100 block leading-tight">SolidJS & TypeScript</span>
+                  <span class="font-bold text-zinc-900 dark:text-zinc-100 block leading-tight">SolidJS & TypeScript</span>
                   <span class="text-[10px] text-zinc-400 dark:text-zinc-500 leading-none">High-performance reactive UI rendering</span>
                 </div>
               </div>
@@ -311,7 +311,7 @@ export default function About() {
                   <Sparkles class="w-5 h-5" />
                 </div>
                 <div class="text-left">
-                  <span class="font-bold text-zinc-855 dark:text-zinc-100 block leading-tight">Tailwind CSS & Kobalte</span>
+                  <span class="font-bold text-zinc-900 dark:text-zinc-100 block leading-tight">Tailwind CSS & Kobalte</span>
                   <span class="text-[10px] text-zinc-400 dark:text-zinc-500 leading-none">Utility-driven compact native styling configurations</span>
                 </div>
               </div>
@@ -324,7 +324,7 @@ export default function About() {
                   <Database class="w-5 h-5" />
                 </div>
                 <div class="text-left">
-                  <span class="font-bold text-zinc-855 dark:text-zinc-100 block leading-tight">SQLite & Solid Store</span>
+                  <span class="font-bold text-zinc-900 dark:text-zinc-100 block leading-tight">SQLite & Solid Store</span>
                   <span class="text-[10px] text-zinc-400 dark:text-zinc-500 leading-none">Relational local persistence indexed under store states</span>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function About() {
         </div>
       </div>
 
-      <div class="flex flex-col items-center justify-center gap-1 pt-4 text-center text-[10px] text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-855">
+      <div class="flex flex-col items-center justify-center gap-1 pt-4 text-center text-[10px] text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-800">
         <p class="flex items-center gap-1 justify-center">
           Designed with <Heart class="w-3 h-3 text-rose-500 fill-rose-500 animate-pulse" /> for extreme speed and precision.
         </p>
