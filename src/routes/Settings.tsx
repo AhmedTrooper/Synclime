@@ -8,7 +8,6 @@ export default function Settings() {
   const [tempPath, setTempPath] = createSignal(useUIStore.state.downloadPath);
   const [savedSuccess, setSavedSuccess] = createSignal(false);
   const [concurrency, setConcurrency] = createSignal<number>(3);
-  const [needsRelaunch, setNeedsRelaunch] = createSignal(false);
 
   onMount(async () => {
     try {
@@ -34,7 +33,6 @@ export default function Settings() {
       if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
         await invoke("update_concurrency_limit", { limit: concurrency() });
         await invoke("update_download_path", { path: tempPath() });
-        setNeedsRelaunch(true);
       }
     } catch(err) {
        console.error("Failed to update preferences:", err);
@@ -171,22 +169,7 @@ export default function Settings() {
                 <CheckCircle2 class="w-3.5 h-3.5" /> Configuration Applied
               </span>
             </Show>
-            <Show when={needsRelaunch()}>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const { relaunch } = await import("@tauri-apps/plugin-process");
-                    await relaunch();
-                  } catch (e) {
-                    console.error("Failed to relaunch app:", e);
-                  }
-                }}
-                class="flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-[13px] w-full sm:w-auto shadow-md shadow-rose-500/20"
-              >
-                Relaunch to Apply
-              </button>
-            </Show>
+
             <button
               type="submit"
               class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors text-xs sm:text-[13px] w-full sm:w-auto shadow-md shadow-blue-500/20"
