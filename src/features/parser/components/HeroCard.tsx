@@ -13,37 +13,37 @@ interface HeroCardProps {
 
 export function HeroCard(props: HeroCardProps) {
   return (
-    <div class="w-full bg-white/70 dark:bg-black/40 border border-zinc-200 dark:border-white/10 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-lg p-2 sm:p-5">
-      <div class="flex flex-row gap-2 sm:gap-6 items-start text-left">
+    <div class="w-full bg-zinc-50/50 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 sm:p-4 select-none">
+      <div class="flex flex-row gap-3 sm:gap-5 items-start text-left min-w-0">
         <Show when={props.thumbnail}>
           <img
             src={props.thumbnail}
             alt={props.title}
-            class="w-24 sm:w-48 md:w-80 aspect-video object-cover rounded-lg sm:rounded-2xl border border-zinc-200 dark:border-white/5 shadow-md flex-shrink-0"
+            class="w-20 sm:w-40 md:w-64 aspect-video object-cover rounded-md border border-zinc-250 dark:border-zinc-800 flex-shrink-0"
           />
         </Show>
 
-        <div class="flex flex-col justify-start sm:justify-between h-full py-0 sm:py-1 min-w-0 flex-1">
-          <div class="flex flex-col gap-1 sm:gap-2">
-            <h2 class="text-xs sm:text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white leading-tight line-clamp-2">
+        <div class="flex flex-col justify-between py-0.5 min-w-0 flex-grow">
+          <div class="flex flex-col gap-1.5 min-w-0">
+            <h2 class="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-150 leading-snug line-clamp-2">
               {props.title}
             </h2>
             
-            <div class="flex flex-wrap items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium w-full">
-              <span class="font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-lg border border-zinc-200 dark:border-white/5 truncate max-w-full">
+            <div class="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium w-full">
+              <span class="font-mono font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-750/30 truncate max-w-full">
                 {props.author}
               </span>
               <span>•</span>
               <Show
                 when={props.isPlaylist}
-                fallback={<span class="text-blue-500 font-semibold">Single Video</span>}
+                fallback={<span class="text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider text-[9px]">Single Video</span>}
               >
-                <span class="text-purple-500 font-semibold">Playlist</span>
+                <span class="text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider text-[9px]">Playlist</span>
               </Show>
               <Show when={!props.isPlaylist}>
                 <span>•</span>
-                <span class="flex items-center gap-1">
-                  <Clock class="w-3.5 h-3.5" />
+                <span class="flex items-center gap-1 font-mono">
+                  <Clock class="w-3.5 h-3.5 text-zinc-400" />
                   {props.formatDuration(props.duration)}
                 </span>
               </Show>
@@ -51,7 +51,7 @@ export function HeroCard(props: HeroCardProps) {
           </div>
 
           <Show when={props.description}>
-            <p class="hidden sm:block text-xs text-zinc-500 dark:text-zinc-400 mt-4 leading-relaxed line-clamp-3 select-text">
+            <p class="hidden sm:block text-[11px] text-zinc-450 dark:text-zinc-400 mt-2.5 leading-relaxed line-clamp-2 select-text font-sans">
               {props.description}
             </p>
           </Show>

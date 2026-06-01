@@ -525,9 +525,9 @@ export default function ParsedFileDetail() {
         <div class="flex justify-between items-center w-full">
           <A
             href="/parsed_files"
-            class="flex items-center justify-center sm:justify-start gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-white/10 w-full sm:w-auto px-3 py-3 sm:py-1.5 rounded-lg transition-all duration-300 text-[12px] sm:text-sm overflow-hidden"
+            class="flex items-center justify-center sm:justify-start gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-850 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 font-bold border border-zinc-250 dark:border-zinc-700 w-full sm:w-auto px-3 py-2 sm:py-1.5 rounded text-[10px] uppercase tracking-wider transition-all duration-150 overflow-hidden"
           >
-            <ArrowLeft class="w-4 h-4 flex-shrink-0" />
+            <ArrowLeft class="w-3.5 h-3.5 flex-shrink-0" />
             <span class="truncate">Back to Repository</span>
           </A>
         </div>
