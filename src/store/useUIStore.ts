@@ -72,13 +72,12 @@ nativeStorageAdapter.getItem("synclime-ui-storage").then((data) => {
 createRoot(() => {
   createEffect(
     on(
-      () => [uiState.theme, uiState.activePath, uiState.downloadPath, uiState.isSidebarExpanded],
+      () => [uiState.theme, uiState.downloadPath, uiState.isSidebarExpanded],
       () => {
         if (!uiState._hasHydrated) return;
         const stateToSave = {
           state: {
             theme: uiState.theme,
-            activePath: uiState.activePath,
             downloadPath: uiState.downloadPath,
             isSidebarExpanded: uiState.isSidebarExpanded,
           },
