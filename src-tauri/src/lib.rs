@@ -139,6 +139,14 @@ CREATE INDEX IF NOT EXISTS idx_parsed_files_parent ON parsed_files (parent_playl
 CREATE INDEX IF NOT EXISTS idx_download_jobs_parsed_file ON download_jobs (parsed_file_slug) WHERE parsed_file_slug IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_download_jobs_subtitles ON download_jobs (associated_media_job_slug) WHERE file_type = 'subtitle' AND associated_media_job_slug IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_download_jobs_queue_priority ON download_jobs (status, priority_index DESC, created_at ASC);
+
+CREATE TABLE IF NOT EXISTS inbox_urls (
+    slug TEXT PRIMARY KEY NOT NULL,
+    url TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'parsed', 'downloaded')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 "#;
 
 fn initialize_database(app: &tauri::App) -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
@@ -312,6 +320,12 @@ pub fn run() {
             }
         }
 
+        let axum_app_handle = app.handle().clone();
+        let axum_db_path = db_path.clone();
+        tauri::async_runtime::spawn(async move {
+            start_axum_server(axum_app_handle, axum_db_path).await;
+        });
+
         app.manage(AppEngineState {
             pool_semaphore: Arc::new(parking_lot::RwLock::new(Arc::new(Semaphore::new(concurrency_limit)))),
             db_path,
@@ -360,7 +374,13 @@ pub fn run() {
         commands::logs::get_parse_logs,
         commands::logs::insert_error_log,
         commands::logs::insert_parse_log,
-        commands::logs::clear_all_logs
+        commands::logs::clear_all_logs,
+        commands::inbox::get_inbox_urls,
+        commands::inbox::get_inbox_url_by_slug,
+        commands::inbox::add_inbox_url,
+        commands::inbox::update_inbox_status,
+        commands::inbox::delete_inbox_url,
+        commands::inbox::get_local_updates
     ]);
 
     match builder.run(tauri::generate_context!()) {
@@ -369,4 +389,112 @@ pub fn run() {
             eprintln!("error while running tauri application: {}", err);
         }
     }
+}
+
+async fn start_axum_server(app_handle: tauri::AppHandle, db_path: std::path::PathBuf) {
+    use axum::{
+        routing::post,
+        Json, Router,
+    };
+    use serde::Deserialize;
+    use tower_http::cors::CorsLayer;
+    use std::net::SocketAddr;
+
+    #[derive(Deserialize)]
+    struct AddUrlPayload {
+        url: String,
+    }
+
+    let app = Router::new()
+        .route("/add", post({
+            let app_handle = app_handle.clone();
+            let db_path = db_path.clone();
+            move |Json(payload): Json<AddUrlPayload>| {
+                let app_handle = app_handle.clone();
+                let db_path = db_path.clone();
+                async move {
+                    let url = payload.url.trim();
+                    if url.is_empty() {
+                        return (
+                            axum::http::StatusCode::BAD_REQUEST,
+                            Json(serde_json::json!({
+                                "success": false,
+                                "message": "URL cannot be empty"
+                            })),
+                        );
+                    }
+
+                    let slug = format!("inbox-{}", chrono::Utc::now().timestamp_millis());
+
+                    let conn = match rusqlite::Connection::open(&db_path) {
+                        Ok(c) => c,
+                        Err(e) => {
+                            return (
+                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                Json(serde_json::json!({
+                                    "success": false,
+                                    "message": format!("Database connection error: {}", e)
+                                })),
+                            );
+                        }
+                    };
+
+                    let query = "
+                        INSERT OR IGNORE INTO inbox_urls (slug, url, status, created_at, updated_at)
+                        VALUES (?1, ?2, 'pending', datetime('now'), datetime('now'));
+                    ";
+
+                    match conn.execute(query, rusqlite::params![slug, url]) {
+                        Ok(rows) => {
+                            if rows > 0 {
+                                let _ = app_handle.emit("inbox-updated", ());
+                                (
+                                    axum::http::StatusCode::OK,
+                                    Json(serde_json::json!({
+                                        "success": true,
+                                        "message": "URL successfully added to inbox",
+                                        "slug": slug
+                                    })),
+                                )
+                            } else {
+                                (
+                                    axum::http::StatusCode::OK,
+                                    Json(serde_json::json!({
+                                        "success": false,
+                                        "message": "URL already exists in inbox"
+                                    })),
+                                )
+                            }
+                        }
+                        Err(e) => (
+                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(serde_json::json!({
+                                "success": false,
+                                "message": format!("Database insert error: {}", e)
+                            })),
+                        ),
+                    }
+                }
+            }
+        }))
+        .layer(CorsLayer::permissive());
+
+    for port in 14221..=14230 {
+        let addr = SocketAddr::from(([127, 0, 0, 1], port));
+        let listener = match tokio::net::TcpListener::bind(addr).await {
+            Ok(l) => l,
+            Err(_) => {
+                eprintln!("[Axum Server] Port {} is in use, trying next...", port);
+                continue;
+            }
+        };
+
+        println!("[Axum Server] Successfully bound to port {}", port);
+        if let Err(e) = axum::serve(listener, app).await {
+            eprintln!("[Axum Server] Error serving axum: {}", e);
+        }
+        return;
+    }
+
+    eprintln!("[Axum Server] Critical: Could not bind to any port in range 14221 to 14230!");
 }

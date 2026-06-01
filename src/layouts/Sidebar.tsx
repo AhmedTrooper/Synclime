@@ -1,13 +1,68 @@
 import { A } from "@solidjs/router";
-import { For, Show } from "solid-js";
-import { Home, Info, Download, Settings, FileText, PanelLeftClose, PanelLeftOpen, GlobeLock, Moon, Sun, Monitor, Database } from "lucide-solid";
+import { For, Show, onMount, onCleanup } from "solid-js";
+import { 
+  Home, 
+  Info, 
+  Download, 
+  Settings, 
+  FileText, 
+  PanelLeftClose, 
+  PanelLeftOpen, 
+  GlobeLock, 
+  Moon, 
+  Sun, 
+  Monitor, 
+  Database,
+  Inbox,
+  Layers
+} from "lucide-solid";
 import { useUIStore } from "../store/useUIStore";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 export default function Sidebar() {
   const ui = useUIStore.state;
+  let unlistenInbox: (() => void) | null = null;
+
+  const updateInboxBadge = async () => {
+    const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        const items = await invoke<any[]>("get_inbox_urls");
+        const pendingCount = items.filter(item => item.status === "pending").length;
+        useUIStore.setBadge("inbox", pendingCount);
+      } catch (e) {
+        console.error("Failed to query inbox count for badge:", e);
+      }
+    }
+  };
+
+  onMount(() => {
+    updateInboxBadge();
+    const setupListener = async () => {
+      const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+      if (isTauri) {
+        try {
+          unlistenInbox = await listen("inbox-updated", () => {
+            updateInboxBadge();
+          });
+        } catch (e) {
+          console.error("Failed to setup sidebar inbox badge listener:", e);
+        }
+      }
+    };
+    setupListener();
+  });
+
+  onCleanup(() => {
+    if (unlistenInbox) {
+      unlistenInbox();
+    }
+  });
 
   const navItems = [
     { path: "/", label: "New Task", icon: Home, badgeKey: "home" as const },
+    { path: "/inbox", label: "Inbox", icon: Inbox, badgeKey: "inbox" as const },
     { path: "/downloads", label: "Queue", icon: Download, badgeKey: "downloads" as const },
     { path: "/parsed_files", label: "Library", icon: FileText, badgeKey: "parsedFiles" as const },
   ];
@@ -15,6 +70,7 @@ export default function Sidebar() {
   const bottomNavItems = [
     { path: "/sites_config", label: "Sites & Rules", icon: GlobeLock, badgeKey: "sites" as const },
     { path: "/logs", label: "Logs", icon: Database, badgeKey: "logs" as const },
+    { path: "/extentions", label: "Extensions", icon: Layers, badgeKey: "extentions" as const },
     { path: "/settings", label: "Preferences", icon: Settings, badgeKey: "settings" as const },
     { path: "/about", label: "About", icon: Info, badgeKey: "about" as const },
   ];

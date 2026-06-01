@@ -10,6 +10,8 @@ interface BadgeState {
   settings: number;
   sites: number;
   logs: number;
+  inbox: number;
+  extentions: number;
 }
 
 interface UIState {
@@ -31,6 +33,8 @@ const [uiState, setUIState] = createStore<UIState>({
     settings: 0,
     sites: 0,
     logs: 0,
+    inbox: 0,
+    extentions: 0,
   },
   theme: "system",
   downloadPath: "",

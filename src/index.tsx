@@ -15,6 +15,9 @@ import ParsedFileDetail from "./routes/ParsedFileDetail";
 import ParsedFiles from "./routes/ParsedFiles";
 import SitesConfig from "./routes/SitesConfig";
 import Logs from "./routes/Logs";
+import Inbox from "./routes/Inbox";
+import InboxDetail from "./routes/InboxDetail";
+import Extentions from "./routes/Extentions";
 
 const root = document.getElementById("root");
 
@@ -31,6 +34,9 @@ render(
         <Route path="/parsed_files" component={ParsedFiles} />
         <Route path="/sites_config" component={SitesConfig} />
         <Route path="/logs" component={Logs} />
+        <Route path="/inbox" component={Inbox} />
+        <Route path="/inbox/:slug" component={InboxDetail} />
+        <Route path="/extentions" component={Extentions} />
       </Route>
     </Router>
   ),
