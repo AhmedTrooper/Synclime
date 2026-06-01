@@ -86,6 +86,9 @@ export default function ParsedFileDetail() {
     const f = file();
     if (!f) return;
 
+    const uniqueSlug = `dl-${Date.now()}`;
+    const urlToUse = targetUrl || f.url;
+
     const fmt = formatString || "bestvideo+bestaudio/best";
     const safeFmt = fmt.replace(/\//g, "_");
     const baseTitle = _customName || f.title;
