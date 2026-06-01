@@ -105,18 +105,23 @@ pub async fn insert_error_log(
     let conn = rusqlite::Connection::open(&state.db_path)
         .map_err(|e| format!("Failed to open DB: {}", e))?;
 
-    // Ensure a fallback record exists in download_jobs to satisfy NOT NULL foreign key constraints
-    let _ = conn.execute(
-        "INSERT OR IGNORE INTO download_jobs (slug, file_type, is_direct_url, is_from_playlist, base_download_path, status, format_string, created_at, updated_at) VALUES (?1, 'video', 1, 0, 'n/a', 'error', 'n/a', datetime('now'), datetime('now'));",
-        params![download_job_slug],
-    );
+    let mut exists = false;
+    if let Ok(mut stmt) = conn.prepare("SELECT 1 FROM download_jobs WHERE slug = ?1") {
+        exists = stmt.exists(params![download_job_slug]).unwrap_or(false);
+    }
+
+    let resolved_slug = if exists {
+        download_job_slug
+    } else {
+        "app_fallback".to_string()
+    };
 
     let slug = format!("err_{}", chrono::Utc::now().timestamp_millis());
     let timestamp = chrono::Utc::now().to_rfc3339();
 
     conn.execute(
         "INSERT INTO error_logs (slug, download_job_slug, command_executed, error_message, is_resolved, timestamp) VALUES (?1, ?2, ?3, ?4, 0, ?5);",
-        params![slug, download_job_slug, command_executed, error_message, timestamp],
+        params![slug, resolved_slug, command_executed, error_message, timestamp],
     ).map_err(|e| format!("Failed to insert error log: {}", e))?;
 
     Ok(())
@@ -137,17 +142,22 @@ pub async fn insert_parse_log(
     let conn = rusqlite::Connection::open(&state.db_path)
         .map_err(|e| format!("Failed to open DB: {}", e))?;
 
-    // Ensure a fallback record exists in parsed_files to satisfy foreign key constraints
-    let _ = conn.execute(
-        "INSERT OR IGNORE INTO parsed_files (slug, url, title, sanitized_title, is_playlist, created_at) VALUES (?1, 'n/a', 'Fallback Extraction Target', 'fallback', 0, datetime('now'));",
-        params![parsed_file_slug],
-    );
+    let mut exists = false;
+    if let Ok(mut stmt) = conn.prepare("SELECT 1 FROM parsed_files WHERE slug = ?1") {
+        exists = stmt.exists(params![parsed_file_slug]).unwrap_or(false);
+    }
+
+    let resolved_slug = if exists {
+        parsed_file_slug
+    } else {
+        "app_fallback".to_string()
+    };
 
     let slug = format!("prse_{}", chrono::Utc::now().timestamp_millis());
 
     conn.execute(
         "INSERT INTO parse_logs (slug, parsed_file_slug, status, started_at, finished_at, duration_ms, command_executed, exit_code, bytes_returned) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);",
-        params![slug, parsed_file_slug, status, started_at, finished_at, duration_ms, command_executed, exit_code, bytes_returned],
+        params![slug, resolved_slug, status, started_at, finished_at, duration_ms, command_executed, exit_code, bytes_returned],
     ).map_err(|e| format!("Failed to insert parse log: {}", e))?;
 
     Ok(())

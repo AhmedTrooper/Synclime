@@ -124,13 +124,30 @@ pub async fn discover_asset_metadata(
 
     let mut temp_cookie_path = None;
     if let Some(ref cookies) = site_config.cookie_data {
-        let temp_dir = std::env::temp_dir();
-        let unique_id = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
-        let unique_name = format!("synclime_cookie_{}.txt", unique_id);
-        let file_path = temp_dir.join(unique_name);
-        if std::fs::write(&file_path, cookies).is_ok() {
-            cmd.arg("--cookies").arg(&file_path);
-            temp_cookie_path = Some(file_path);
+        if let Some(app_dir) = state.db_path.parent() {
+            let unique_id = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+            let unique_name = format!("synclime_cookie_{}.txt", unique_id);
+            let file_path = app_dir.join(unique_name);
+            
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::OpenOptionsExt;
+                let mut options = std::fs::OpenOptions::new();
+                options.create(true).write(true).truncate(true).mode(0o600);
+                if let Ok(mut file) = options.open(&file_path) {
+                    use std::io::Write;
+                    let _ = file.write_all(cookies.as_bytes());
+                    cmd.arg("--cookies").arg(&file_path);
+                    temp_cookie_path = Some(file_path);
+                }
+            }
+            #[cfg(not(unix))]
+            {
+                if std::fs::write(&file_path, cookies).is_ok() {
+                    cmd.arg("--cookies").arg(&file_path);
+                    temp_cookie_path = Some(file_path);
+                }
+            }
         }
     }
 

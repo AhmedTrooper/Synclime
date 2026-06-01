@@ -118,7 +118,8 @@ pub async fn batch_delete_cookie_profiles(
             .map_err(|e| format!("Prepare failed: {}", e))?;
 
         for slug in slugs {
-            let _ = stmt.execute(params![slug]);
+            stmt.execute(params![slug])
+                .map_err(|e| format!("Failed to delete cookie profile '{}': {}", slug, e))?;
         }
     }
 
@@ -239,7 +240,8 @@ pub async fn batch_delete_proxy_profiles(
             .map_err(|e| format!("Prepare failed: {}", e))?;
 
         for slug in slugs {
-            let _ = stmt.execute(params![slug]);
+            stmt.execute(params![slug])
+                .map_err(|e| format!("Failed to delete proxy profile '{}': {}", slug, e))?;
         }
     }
 

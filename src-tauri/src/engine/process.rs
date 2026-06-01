@@ -221,7 +221,12 @@ pub async fn execute_download_worker(
         Err(err) => return Err(EngineError::ProcessSpawnFailed(err)),
     };
 
-    let _permit = match state.pool_semaphore.acquire().await {
+    let semaphore = {
+        let lock = state.pool_semaphore.read();
+        std::sync::Arc::clone(&*lock)
+    };
+
+    let _permit = match semaphore.acquire_owned().await {
         Ok(p) => p,
         Err(e) => return Err(EngineError::ProcessSpawnFailed(e.to_string())),
     };
@@ -264,13 +269,30 @@ pub async fn execute_download_worker(
 
     let mut temp_cookie_path = None;
     if let Some(ref cookies) = config.cookie_data {
-        let temp_dir = std::env::temp_dir();
-        let unique_id = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
-        let unique_name = format!("synclime_cookie_{}.txt", unique_id);
-        let file_path = temp_dir.join(unique_name);
-        if std::fs::write(&file_path, cookies).is_ok() {
-            cmd.arg("--cookies").arg(&file_path);
-            temp_cookie_path = Some(file_path);
+        if let Some(app_dir) = state.db_path.parent() {
+            let unique_id = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+            let unique_name = format!("synclime_cookie_{}.txt", unique_id);
+            let file_path = app_dir.join(unique_name);
+            
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::OpenOptionsExt;
+                let mut options = std::fs::OpenOptions::new();
+                options.create(true).write(true).truncate(true).mode(0o600);
+                if let Ok(mut file) = options.open(&file_path) {
+                    use std::io::Write;
+                    let _ = file.write_all(cookies.as_bytes());
+                    cmd.arg("--cookies").arg(&file_path);
+                    temp_cookie_path = Some(file_path);
+                }
+            }
+            #[cfg(not(unix))]
+            {
+                if std::fs::write(&file_path, cookies).is_ok() {
+                    cmd.arg("--cookies").arg(&file_path);
+                    temp_cookie_path = Some(file_path);
+                }
+            }
         }
     }
 
@@ -288,21 +310,12 @@ pub async fn execute_download_worker(
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
-    let child = match cmd.spawn() {
+    let mut child = match cmd.spawn() {
         Ok(c) => c,
         Err(e) => return Err(EngineError::ProcessSpawnFailed(e.to_string())),
     };
 
-    let mut child_process = {
-        let mut active_instances = state.active_processes.instances.write();
-        active_instances.insert(job_slug.clone(), child);
-        match active_instances.remove(&job_slug) {
-            Some(c) => c,
-            None => return Ok(()),
-        }
-    };
-
-    let stdout_stream = match child_process.stdout.take() {
+    let stdout_stream = match child.stdout.take() {
         Some(out) => out,
         None => {
             return Err(EngineError::ProcessSpawnFailed(
@@ -313,7 +326,7 @@ pub async fn execute_download_worker(
 
     {
         let mut active_instances = state.active_processes.instances.write();
-        active_instances.insert(job_slug.clone(), child_process);
+        active_instances.insert(job_slug.clone(), child);
     }
 
     let mut reader = BufReader::new(stdout_stream).lines();

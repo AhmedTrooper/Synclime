@@ -27,7 +27,7 @@ pub struct ProgressSnapshot {
 }
 
 pub struct AppEngineState {
-    pub pool_semaphore: Arc<Semaphore>,
+    pub pool_semaphore: Arc<parking_lot::RwLock<Arc<Semaphore>>>,
     pub db_path: std::path::PathBuf,
     pub active_processes: Arc<ActiveProcessRegistry>,
     pub signal_tx: mpsc::Sender<QueueSignal>,
@@ -168,6 +168,16 @@ fn initialize_database(app: &tauri::App) -> Result<std::path::PathBuf, Box<dyn s
     // Safely execute alter column mapping if it doesn't already exist on active DB schema
     let _ = conn.execute("ALTER TABLE parsed_files ADD COLUMN site_config_slug TEXT REFERENCES site_configs(slug) ON DELETE SET NULL;", []);
 
+    // Insert fallback records to prevent FK constraints pollution
+    let _ = conn.execute(
+        "INSERT OR IGNORE INTO parsed_files (slug, url, title, sanitized_title, is_playlist, created_at) VALUES ('app_fallback', 'n/a', 'Fallback Cache Profile', 'fallback', 0, datetime('now'));",
+        []
+    );
+    let _ = conn.execute(
+        "INSERT OR IGNORE INTO download_jobs (slug, file_type, is_direct_url, is_from_playlist, base_download_path, status, format_string, created_at, updated_at) VALUES ('app_fallback', 'video', 1, 0, 'n/a', 'error', 'n/a', datetime('now'), datetime('now'));",
+        []
+    );
+
     Ok(db_path)
 }
 
@@ -272,8 +282,24 @@ pub fn run() {
             }
         });
 
+        // Cleanup stale cookie files from previous runs
+        if let Some(app_dir) = db_path.parent() {
+            if let Ok(entries) = std::fs::read_dir(app_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                            if filename.starts_with("synclime_cookie_") && filename.ends_with(".txt") {
+                                let _ = std::fs::remove_file(path);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         app.manage(AppEngineState {
-            pool_semaphore: Arc::new(Semaphore::new(concurrency_limit)),
+            pool_semaphore: Arc::new(parking_lot::RwLock::new(Arc::new(Semaphore::new(concurrency_limit)))),
             db_path,
             active_processes: process_registry,
             signal_tx,

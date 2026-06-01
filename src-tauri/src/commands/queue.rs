@@ -307,6 +307,13 @@ pub async fn update_concurrency_limit(
             rusqlite::params![limit.to_string()]
         );
     }
+
+    // Dynamic Concurrency Resizing: Update the active in-memory semaphore!
+    {
+        let mut lock = state.pool_semaphore.write();
+        *lock = std::sync::Arc::new(tokio::sync::Semaphore::new(limit));
+    }
+
     Ok(CommandResponse { success: true, message: "Concurrency limit updated.".to_string() })
 }
 
