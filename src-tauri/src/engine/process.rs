@@ -651,22 +651,7 @@ pub async fn execute_download_worker(
             let error_desc = if stderr_msg.is_empty() {
                 "Download process terminated with error status.".to_string()
             } else {
-                let raw_err = stderr_msg.trim();
-                if (raw_err.starts_with('{') && raw_err.ends_with('}')) || (raw_err.starts_with('[') && raw_err.ends_with(']')) {
-                    if let Ok(parsed_json) = serde_json::from_str::<serde_json::Value>(raw_err) {
-                        if let Some(msg) = parsed_json.get("message").and_then(|v| v.as_str()) {
-                            msg.to_string()
-                        } else if let Some(err) = parsed_json.get("error").and_then(|v| v.as_str()) {
-                            err.to_string()
-                        } else {
-                            parsed_json.to_string()
-                        }
-                    } else {
-                        raw_err.to_string()
-                    }
-                } else {
-                    raw_err.to_string()
-                }
+                stderr_msg.trim().to_string()
             };
 
             // Update database to error and set tracking_message
