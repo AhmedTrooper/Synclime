@@ -86,6 +86,25 @@ fn parse_progress_line(line: &str) -> Option<(f64, String)> {
     Some((percentage, status_msg))
 }
 
+/// Resilient progress line decoder for Aria2 external downloaders
+fn parse_aria2_progress(line: &str) -> Option<(f64, String)> {
+    if !line.contains("[#") || !line.contains("%") {
+        return None;
+    }
+
+    let pct_idx = line.find('%')?;
+    let open_paren = line[..pct_idx].rfind('(')?;
+    
+    let pct_str = line[open_paren + 1..pct_idx].trim();
+    let percentage = pct_str.parse::<f64>().ok()?;
+
+    let start_idx = line.find('[')?;
+    let end_idx = line.rfind(']').unwrap_or(line.len());
+    let status_msg = line[start_idx..end_idx + 1].trim().to_string();
+
+    Some((percentage, status_msg))
+}
+
 /// Dynamic Cross-Platform Fallback: Fetches the pure Rust path targeting user standard downloads
 fn get_system_downloads_fallback() -> String {
     directories::UserDirs::new()
@@ -412,6 +431,10 @@ pub async fn execute_download_worker(
     }
 
     let mut cmd = Command::new("yt-dlp");
+    #[cfg(unix)]
+    {
+        cmd.process_group(0);
+    }
     for arg in &command_args {
         cmd.arg(arg);
     }
@@ -500,7 +523,10 @@ pub async fn execute_download_worker(
             continue;
         }
 
-        if let Some((percentage, _)) = parse_progress_line(clean_line) {
+        let parsed_progress = parse_progress_line(clean_line)
+            .or_else(|| parse_aria2_progress(clean_line));
+
+        if let Some((percentage, _)) = parsed_progress {
             current_progress = percentage;
         }
 

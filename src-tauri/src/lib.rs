@@ -204,8 +204,19 @@ async fn start_cancellation_worker(
                 };
 
                 match target_process {
-                    Some(mut child_process) => {
-                        let _ = child_process.kill().await;
+                    Some(child_process) => {
+                        #[cfg(unix)]
+                        {
+                            if let Some(pid) = child_process.id() {
+                                let _ = std::process::Command::new("kill")
+                                    .args(&["-9", &format!("-{}", pid)])
+                                    .status();
+                            }
+                        }
+                        #[cfg(not(unix))]
+                        {
+                            let _ = child_process.kill().await;
+                        }
                     }
                     None => {}
                 }
@@ -321,9 +332,9 @@ pub fn run() {
         }
 
         let axum_app_handle = app.handle().clone();
-        let axum_db_path = db_path.clone();
+        let axum_db_conn = Arc::clone(&db_conn);
         tauri::async_runtime::spawn(async move {
-            start_axum_server(axum_app_handle, axum_db_path).await;
+            start_axum_server(axum_app_handle, axum_db_conn).await;
         });
 
         app.manage(AppEngineState {
@@ -391,9 +402,12 @@ pub fn run() {
     }
 }
 
-async fn start_axum_server(app_handle: tauri::AppHandle, db_path: std::path::PathBuf) {
+async fn start_axum_server(
+    app_handle: tauri::AppHandle,
+    db_conn: Arc<parking_lot::Mutex<rusqlite::Connection>>,
+) {
     use axum::{
-        routing::post,
+        routing::{get, post},
         Json, Router,
     };
     use serde::Deserialize;
@@ -406,12 +420,19 @@ async fn start_axum_server(app_handle: tauri::AppHandle, db_path: std::path::Pat
     }
 
     let app = Router::new()
+        .route("/health", get(|| async {
+            Json(serde_json::json!({
+                "status": "ok",
+                "message": "Synclime Local API server is healthy and online",
+                "version": "0.1.0"
+            }))
+        }))
         .route("/add", post({
             let app_handle = app_handle.clone();
-            let db_path = db_path.clone();
+            let db_conn = db_conn.clone();
             move |Json(payload): Json<AddUrlPayload>| {
                 let app_handle = app_handle.clone();
-                let db_path = db_path.clone();
+                let db_conn = db_conn.clone();
                 async move {
                     let url = payload.url.trim();
                     if url.is_empty() {
@@ -426,18 +447,7 @@ async fn start_axum_server(app_handle: tauri::AppHandle, db_path: std::path::Pat
 
                     let slug = format!("inbox-{}", chrono::Utc::now().timestamp_millis());
 
-                    let conn = match rusqlite::Connection::open(&db_path) {
-                        Ok(c) => c,
-                        Err(e) => {
-                            return (
-                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(serde_json::json!({
-                                    "success": false,
-                                    "message": format!("Database connection error: {}", e)
-                                })),
-                            );
-                        }
-                    };
+                    let conn = db_conn.lock();
 
                     let query = "
                         INSERT OR IGNORE INTO inbox_urls (slug, url, status, created_at, updated_at)
