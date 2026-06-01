@@ -20,6 +20,7 @@ export default function TitleBar() {
     checkFullscreen();
   });
 
+  // this function makes the window very small and hides it in taskbar
   const handleMinimize = async () => {
     try {
       const appWindow = getCurrentWindow();
@@ -29,6 +30,7 @@ export default function TitleBar() {
     }
   };
 
+  // this function makes the window big or standard size again
   const handleMaximize = async () => {
     try {
       const appWindow = getCurrentWindow();
@@ -43,6 +45,7 @@ export default function TitleBar() {
     }
   };
 
+  // this function shuts the app but first asks you if you really want to close
   const handleClose = async () => {
     const message = "Closing will stop active downloads. Some will be paused, and some may need to restart from the beginning when you reopen the app.\n\nAre you sure you want to close?";
     try {
@@ -77,9 +80,7 @@ export default function TitleBar() {
       data-fullscreen={isFullscreen()}
       class="flex items-center justify-between w-full h-10 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 select-none relative z-50 transition-colors duration-300"
     >
-      {/* Navigation & Drag region */}
       <div data-tauri-drag-region class="flex items-center gap-3 sm:gap-4 cursor-default">
-        {/* History Controls */}
         <div class="flex items-center gap-0.5">
           <button
             onClick={() => navigate(-1)}
@@ -97,14 +98,12 @@ export default function TitleBar() {
           </button>
         </div>
 
-        {/* App Title */}
         <div data-tauri-drag-region class="flex items-center gap-2 font-semibold text-xs tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
           <span data-tauri-drag-region class="bg-blue-500 w-1.5 h-1.5 rounded-full" />
           <span data-tauri-drag-region class="hidden sm:inline">Synclime</span>
         </div>
       </div>
 
-      {/* Accidental Close Prevention: Center Close Button */}
       <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
         <button
           onClick={handleClose}
@@ -116,7 +115,6 @@ export default function TitleBar() {
         </button>
       </div>
 
-      {/* Control Buttons (Right Side - Only Minus and Fullscreen) */}
       <div class="flex items-center gap-1.5">
         <button
           onClick={handleMinimize}

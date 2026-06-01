@@ -31,7 +31,7 @@ export default function MainLayout(props: any) {
     }
   });
 
-  // Seamless path sync that filters transient detail routes
+  // this effect checks where you are in the app and highlights correct button in sidebar
   createEffect(() => {
     const path = location.pathname;
     if (path.startsWith("/parsed_file/")) {
@@ -42,8 +42,6 @@ export default function MainLayout(props: any) {
       useUIStore.setActivePath(path);
     }
   });
-
-  // Removed invisible startup restoration of the active route as requested
 
   return (
     <div class="relative h-screen w-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-colors duration-300 overflow-hidden flex flex-col font-sans select-none">

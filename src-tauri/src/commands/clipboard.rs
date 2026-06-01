@@ -8,11 +8,10 @@ pub struct IngestionResult {
     pub message: String,
 }
 
-/// Sanitizes dirty web links by stripping telemetry and marketing tracking queries.
+// this function cleans the link and deletes tracking things that spy on you
 fn strip_tracking_parameters(target_url: &str) -> String {
     match url::Url::parse(target_url) {
         Ok(mut parsed_url) => {
-            // Collect the clean parameters we want to keep
             let clean_pairs: Vec<(String, String)> = parsed_url
                 .query_pairs()
                 .filter(|(key, _)| {
@@ -28,7 +27,6 @@ fn strip_tracking_parameters(target_url: &str) -> String {
                 .map(|(k, v)| (k.into_owned(), v.into_owned()))
                 .collect();
 
-            // Clear the query string and rebuild it with sanitized key pairs
             parsed_url.set_query(None);
             if !clean_pairs.is_empty() {
                 let mut serializer = parsed_url.query_pairs_mut();
@@ -42,7 +40,7 @@ fn strip_tracking_parameters(target_url: &str) -> String {
     }
 }
 
-/// Tauri IPC Command: Validates and sanitizes incoming URLs from the frontend paste event layer.
+// this function checks if you pasted a real website link and fixes it
 #[tauri::command]
 pub async fn process_clipboard_paste(
     raw_input: String,
@@ -58,7 +56,6 @@ pub async fn process_clipboard_paste(
         });
     }
 
-    // Explicit validation matching against standard URL structures
     match url::Url::parse(trimmed) {
         Ok(_) => {
             let clean_url = strip_tracking_parameters(trimmed);

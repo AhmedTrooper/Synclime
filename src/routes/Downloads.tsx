@@ -26,13 +26,13 @@ export default function Downloads() {
     }
   });
 
+  // this function pauses or resumes a download when you click the button
   const handlePauseToggle = async (job: DownloadJob) => {
     const isDownloading = job.status === "downloading";
     
     const nextStatus = isDownloading ? "paused" : "downloading";
     useQueueStore.updateJobStatus(job.slug, nextStatus);
     if (!isDownloading) {
-      // Clear any previous error/message when resuming/restarting
       useQueueStore.updateJobProgress(job.slug, job.progress, "Resuming...");
     }
 
@@ -151,6 +151,7 @@ export default function Downloads() {
     return rootNodes;
   });
 
+  // this function opens the folder where your file was downloaded
   const handleReveal = async (job: DownloadJob) => {
     try {
       const res = await invoke<{ success: boolean; message: string }>("reveal_job_in_explorer", { jobSlug: job.slug });
@@ -208,6 +209,7 @@ export default function Downloads() {
     );
   };
 
+  // this function deletes a single download from the list
   const handleDelete = async (slug: string) => {
     useQueueStore.removeJob(slug);
     
@@ -221,6 +223,7 @@ export default function Downloads() {
     }
   };
 
+  // this function clears all downloads from the list
   const handleClearAll = async () => {
     useQueueStore.clearQueue();
 

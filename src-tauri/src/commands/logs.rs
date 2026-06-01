@@ -26,6 +26,7 @@ pub struct ParseLog {
     pub bytes_returned: i64,
 }
 
+// this function gets all errors that happened so you can read them
 #[tauri::command]
 pub async fn get_error_logs(
     state: State<'_, AppEngineState>,
@@ -58,6 +59,7 @@ pub async fn get_error_logs(
     Ok(logs)
 }
 
+// this function gets all log files for parsed stuff from the database
 #[tauri::command]
 pub async fn get_parse_logs(
     state: State<'_, AppEngineState>,
@@ -93,6 +95,7 @@ pub async fn get_parse_logs(
     Ok(logs)
 }
 
+// this function writes a new error in the database to remember it
 #[tauri::command]
 pub async fn insert_error_log(
     state: State<'_, AppEngineState>,
@@ -124,6 +127,7 @@ pub async fn insert_error_log(
     Ok(())
 }
 
+// this function writes a new parse log in the database
 #[tauri::command]
 pub async fn insert_parse_log(
     state: State<'_, AppEngineState>,
@@ -159,6 +163,7 @@ pub async fn insert_parse_log(
     Ok(())
 }
 
+// this function deletes all error logs and parse logs from database
 #[tauri::command]
 pub async fn clear_all_logs(
     state: State<'_, AppEngineState>,

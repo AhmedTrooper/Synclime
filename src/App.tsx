@@ -7,7 +7,7 @@ export default function App(props: any) {
   const ui = useUIStore.state;
 
   onMount(() => {
-    // Disable standard browser reloading & inspector key combinations
+    // this stops you from pressing f5 or inspect element to break the app
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === "F5" ||
@@ -23,9 +23,9 @@ export default function App(props: any) {
   });
 
   createEffect(() => {
-    // Wait until hydration finishes before determining path
     if (!ui._hasHydrated) return;
     
+    // this function finds where to save downloaded files on your computer
     const resolveDefaultDirectory = async () => {
       try {
         const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
@@ -40,7 +40,6 @@ export default function App(props: any) {
           useUIStore.setDownloadPath(dbPath);
           console.log("SyncLime: loaded persisted download path from SQLite settings:", dbPath);
         } else {
-          // Initialize default download path
           let defaultDir = "";
           if (isTauri) {
             const { downloadDir } = await import("@tauri-apps/api/path");
@@ -63,7 +62,6 @@ export default function App(props: any) {
 
     resolveDefaultDirectory();
 
-    // Simulate system startup and asset loading delay to present premium entrance
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 2000);

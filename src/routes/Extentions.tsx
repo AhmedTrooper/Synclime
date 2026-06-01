@@ -42,7 +42,6 @@ export default function Extentions() {
     const initializeData = async () => {
       const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
       
-      // Get current local version
       if (isTauri) {
         try {
           const { getVersion } = await import("@tauri-apps/api/app");
@@ -60,7 +59,6 @@ export default function Extentions() {
       } catch (err) {
         console.warn("Offline or blocked: Failed to fetch live updates from GitHub. Falling back to local updates.json...");
         
-        // Local fallback
         if (isTauri) {
           try {
             const data = await invoke<UpdatesSchema>("get_local_updates");
@@ -71,7 +69,6 @@ export default function Extentions() {
             setErrorMsg("Could not load updates changelog details.");
           }
         } else {
-          // Web mockup
           const mockData: UpdatesSchema = {
             latest_update: "d05m06y2026_xyz_unique_slug",
             updates: [
@@ -104,17 +101,16 @@ export default function Extentions() {
     initializeData();
   });
 
+  // this function compares your app version with online version to see if it is new
   const compareVersions = (data: UpdatesSchema) => {
     if (!data.updates || data.updates.length === 0) return;
     
     const latest = data.updates[0];
     setLatestVersionNum(latest.application_online_version);
 
-    // simple check
     const current = currentVersion();
     const online = latest.application_online_version;
     
-    // If online version is higher, mark isLatest as false
     if (online !== current) {
       setIsLatestVersion(false);
     } else {
@@ -122,6 +118,7 @@ export default function Extentions() {
     }
   };
 
+  // this function opens github website in your browser so you can read more
   const handleOpenGithub = async () => {
     const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
     const url = "https://github.com/AhmedTrooper/Synclime/blob/main/extentions.md";

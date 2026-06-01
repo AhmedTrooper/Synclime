@@ -8,16 +8,13 @@ pub struct CommandResponse {
     pub message: String,
 }
 
-/// Tauri IPC Command: Safe background handler to initialize an extraction task line thread
+// this function starts a download job in the background
 #[tauri::command]
 pub async fn trigger_job_start(
     app_handle: AppHandle,
     state: State<'_, AppEngineState>,
     job_slug: String,
 ) -> Result<CommandResponse, String> {
-    // 1. Check the true in-memory registry to see if the process is currently alive
-    // This entirely bypasses SQLite disk-write lag race conditions where a killed worker
-    // hasn't finished writing its 'paused' state yet.
     let is_running = {
         let instances = state.active_processes.instances.read();
         instances.contains_key(&job_slug)
@@ -31,7 +28,6 @@ pub async fn trigger_job_start(
         });
     }
 
-    // 2. Safely enforce the downloading state in SQLite now that we know it's not running
     {
         let conn = state.db_conn.lock();
         let _ = conn.execute(
@@ -40,7 +36,6 @@ pub async fn trigger_job_start(
         );
     }
 
-    // 3. Offload the heavy execution tracking thread task safely onto Tauri's managed background worker pool
     let worker_slug = job_slug.clone();
     tauri::async_runtime::spawn(async move {
         let _ = execute_download_worker(app_handle, worker_slug).await;
@@ -52,20 +47,18 @@ pub async fn trigger_job_start(
     })
 }
 
-/// Tauri IPC Command: Safe multi-threaded handler to halt an active downloading shell container process
+// this function pauses a running download job
 #[tauri::command]
 pub async fn request_job_pause(
     state: State<'_, AppEngineState>,
     job_slug: String,
 ) -> Result<CommandResponse, String> {
-    // 1. Pipe a Pause signal into our thread-isolated channel worker pipeline
     match state
         .signal_tx
         .send(QueueSignal::PauseJob(job_slug.clone()))
         .await
     {
         Ok(_) => {
-            // 2. Cleanly reflect the 'paused' state change status back down into SQLite records immediately
             {
                 let conn = state.db_conn.lock();
                 let _ = conn.execute(
@@ -105,7 +98,7 @@ pub struct InsertJobPayload {
     pub custom_title: Option<String>,
 }
 
-/// Tauri IPC Command: Injects a brand new download job directly into the SQLite database securely
+// this function adds a new download task into database
 #[tauri::command]
 pub async fn insert_job_record(
     state: State<'_, AppEngineState>,
@@ -155,7 +148,7 @@ pub async fn insert_job_record(
     }
 }
 
-/// Tauri IPC Command: Drops a single download job from the SQLite database
+// this function removes a download task from database
 #[tauri::command]
 pub async fn delete_job_record(
     state: State<'_, AppEngineState>,
@@ -174,7 +167,7 @@ pub async fn delete_job_record(
     }
 }
 
-/// Tauri IPC Command: Clears all download jobs completely from the SQLite database
+// this function deletes all download tasks from database
 #[tauri::command]
 pub async fn clear_all_jobs_records(
     state: State<'_, AppEngineState>,
@@ -218,6 +211,7 @@ pub struct FrontDownloadJob {
     pub parent_playlist_slug: Option<String>,
 }
 
+// this function gets all download tasks so frontend can show them
 #[tauri::command]
 pub async fn get_all_jobs(
     state: State<'_, AppEngineState>,
@@ -279,6 +273,7 @@ pub async fn get_all_jobs(
     Ok(jobs)
 }
 
+// this function opens the folder where the downloaded file is saved
 #[tauri::command]
 pub async fn reveal_job_in_explorer(
     state: State<'_, AppEngineState>,
@@ -302,6 +297,7 @@ pub async fn reveal_job_in_explorer(
     })
 }
 
+// this function opens the folder in your operating system
 #[tauri::command]
 pub async fn reveal_folder_in_explorer(
     path: String,
@@ -325,6 +321,7 @@ pub async fn reveal_folder_in_explorer(
     })
 }
 
+// this function updates how many downloads can run at same time
 #[tauri::command]
 pub async fn update_concurrency_limit(
     state: State<'_, AppEngineState>,
@@ -338,7 +335,6 @@ pub async fn update_concurrency_limit(
         );
     }
 
-    // Dynamic Concurrency Resizing: Update the active in-memory semaphore!
     {
         let mut lock = state.pool_semaphore.write();
         *lock = std::sync::Arc::new(tokio::sync::Semaphore::new(limit));
@@ -347,6 +343,7 @@ pub async fn update_concurrency_limit(
     Ok(CommandResponse { success: true, message: "Concurrency limit updated.".to_string() })
 }
 
+// this function gets the max number of parallel downloads
 #[tauri::command]
 pub async fn get_concurrency_limit(
     state: State<'_, AppEngineState>,
@@ -362,6 +359,7 @@ pub async fn get_concurrency_limit(
     Ok(3)
 }
 
+// this function updates how many parts to download at once
 #[tauri::command]
 pub async fn update_download_chunks(
     state: State<'_, AppEngineState>,
@@ -378,6 +376,7 @@ pub async fn update_download_chunks(
     Ok(CommandResponse { success: true, message: "Download chunks updated.".to_string() })
 }
 
+// this function gets the chunk count for speed settings
 #[tauri::command]
 pub async fn get_download_chunks(
     state: State<'_, AppEngineState>,

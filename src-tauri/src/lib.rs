@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS inbox_urls (
 );
 "#;
 
+// this function sets up the database file and creates tables if they are not there
 fn initialize_database(app: &tauri::App) -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     let app_dir = match app.path().app_data_dir() {
         Ok(dir) => dir,
@@ -175,10 +176,8 @@ fn initialize_database(app: &tauri::App) -> Result<std::path::PathBuf, Box<dyn s
         return Err(Box::new(e));
     }
 
-    // Safely execute alter column mapping if it doesn't already exist on active DB schema
     let _ = conn.execute("ALTER TABLE parsed_files ADD COLUMN site_config_slug TEXT REFERENCES site_configs(slug) ON DELETE SET NULL;", []);
 
-    // Insert fallback records to prevent FK constraints pollution
     let _ = conn.execute(
         "INSERT OR IGNORE INTO parsed_files (slug, url, title, sanitized_title, is_playlist, created_at) VALUES ('app_fallback', 'n/a', 'Fallback Cache Profile', 'fallback', 0, datetime('now'));",
         []
@@ -191,6 +190,7 @@ fn initialize_database(app: &tauri::App) -> Result<std::path::PathBuf, Box<dyn s
     Ok(db_path)
 }
 
+// this function listens to pause button and stops downloading command
 async fn start_cancellation_worker(
     mut rx: mpsc::Receiver<QueueSignal>,
     registry: Arc<ActiveProcessRegistry>,
@@ -225,6 +225,7 @@ async fn start_cancellation_worker(
     }
 }
 
+// this function starts the whole application and registers all Tauri things
 pub fn run() {
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
@@ -243,7 +244,6 @@ pub fn run() {
             }
         };
 
-        // Open the single persistent connection for the entire application life cycle!
         let db_conn = match Connection::open(&db_path) {
             Ok(c) => {
                 let _ = c.execute("PRAGMA foreign_keys = ON;", []);
@@ -315,7 +315,6 @@ pub fn run() {
             }
         });
 
-        // Cleanup stale cookie files from previous runs
         if let Some(app_dir) = db_path.parent() {
             if let Ok(entries) = std::fs::read_dir(app_dir) {
                 for entry in entries.flatten() {
@@ -404,6 +403,7 @@ pub fn run() {
     }
 }
 
+// this function runs axum local server so websites can send links to the app
 async fn start_axum_server(
     app_handle: tauri::AppHandle,
     db_conn: Arc<parking_lot::Mutex<rusqlite::Connection>>,

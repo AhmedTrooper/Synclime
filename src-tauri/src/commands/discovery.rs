@@ -29,7 +29,7 @@ pub struct InsertParsedFilePayload {
     pub site_config_slug: Option<String>,
 }
 
-/// Tauri IPC Command: Saves a parsed video/playlist directly to the parsed_files SQLite table
+// this function saves a parsed file to database so we don't lose it
 #[tauri::command]
 pub async fn insert_parsed_file(
     state: tauri::State<'_, AppEngineState>,
@@ -67,7 +67,7 @@ struct OptionalSiteConfig {
     proxy_string: Option<String>,
 }
 
-/// Dynamic Configuration Resolver: Queries SQLite site config directly using selected site config slug
+// this function finds cookies and proxy settings for a website from database
 fn resolve_selected_site_configs(conn: &Connection, slug: &str) -> OptionalSiteConfig {
     let mut config = OptionalSiteConfig {
         cookie_data: None,
@@ -93,7 +93,7 @@ fn resolve_selected_site_configs(conn: &Connection, slug: &str) -> OptionalSiteC
     config
 }
 
-/// Tauri IPC Command: Spawns a high-speed json extraction worker pool thread to read site parameters
+// this function runs yt-dlp to find info about a video or playlist link
 #[tauri::command]
 pub async fn discover_asset_metadata(
     app_handle: AppHandle,
@@ -102,7 +102,6 @@ pub async fn discover_asset_metadata(
 ) -> Result<DiscoveryResponse, String> {
     let state = app_handle.state::<AppEngineState>();
 
-    // 1. Automatically fetch proxy and cookie parameters from the selected site configuration
     let site_config = if let Some(ref slug) = site_config_slug {
         let conn = state.db_conn.lock();
         resolve_selected_site_configs(&conn, slug)
@@ -113,10 +112,9 @@ pub async fn discover_asset_metadata(
         }
     };
 
-    // 2. Assemble optimized yt-dlp arguments for safe structural metadata extraction
     let mut cmd = Command::new("yt-dlp");
     cmd.arg("--dump-single-json");
-    cmd.arg("--flat-playlist"); // Enables instantaneous metadata extraction for 100+ item playlists
+    cmd.arg("--flat-playlist");
 
     if let Some(ref proxy) = site_config.proxy_string {
         cmd.arg("--proxy").arg(proxy);
@@ -165,7 +163,6 @@ pub async fn discover_asset_metadata(
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
-    // 3. Spawn the child container process safely
     let mut child = match cmd.spawn() {
         Ok(c) => c,
         Err(err) => {
@@ -195,7 +192,6 @@ pub async fn discover_asset_metadata(
 
     let stderr_pipe = child.stderr.take();
 
-    // 4. In-Memory Aggregator: Read the json text stream lines chunk-by-chunk
     let mut reader = BufReader::new(stdout_pipe).lines();
     let mut raw_json_accumulator = String::new();
 
@@ -203,7 +199,6 @@ pub async fn discover_asset_metadata(
         raw_json_accumulator.push_str(&line);
     }
 
-    // Await process exit completion status safely
     let _ = child.wait().await;
 
     if raw_json_accumulator.is_empty() {
@@ -238,7 +233,6 @@ pub async fn discover_asset_metadata(
         });
     }
 
-    // 5. Evaluate accumulator data through our resilient fallback property prober engine
     match parse_extraction_payload(&raw_json_accumulator) {
         Ok(discovery_variant) => Ok(DiscoveryResponse {
             success: true,

@@ -17,7 +17,7 @@ pub struct InboxResponse {
     pub slug: Option<String>,
 }
 
-/// Tauri IPC Command: Retrieve all inbox items ordered by created_at DESC
+// this function gets all links in inbox from database, newest first
 #[tauri::command]
 pub async fn get_inbox_urls(state: State<'_, AppEngineState>) -> Result<Vec<InboxUrlRow>, String> {
     let conn = state.db_conn.lock();
@@ -46,7 +46,7 @@ pub async fn get_inbox_urls(state: State<'_, AppEngineState>) -> Result<Vec<Inbo
     Ok(list)
 }
 
-/// Tauri IPC Command: Retrieve a single inbox item by its slug
+// this function gets only one inbox link by its special name slug
 #[tauri::command]
 pub async fn get_inbox_url_by_slug(
     state: State<'_, AppEngineState>,
@@ -77,7 +77,7 @@ pub async fn get_inbox_url_by_slug(
     }
 }
 
-/// Tauri IPC Command: Add a new URL into the inbox manually or via extension fallback
+// this function saves a new url in the inbox and tells the front page
 #[tauri::command]
 pub async fn add_inbox_url(
     app_handle: AppHandle,
@@ -96,7 +96,6 @@ pub async fn add_inbox_url(
     match conn.execute(query, rusqlite::params![target_slug, url]) {
         Ok(rows_affected) => {
             if rows_affected > 0 {
-                // Emit event to update frontends in real-time
                 let _ = app_handle.emit("inbox-updated", ());
                 Ok(InboxResponse {
                     success: true,
@@ -115,7 +114,7 @@ pub async fn add_inbox_url(
     }
 }
 
-/// Tauri IPC Command: Update the status of an inbox item ('pending', 'parsed', 'downloaded')
+// this function changes the status of url, like parsed or downloading
 #[tauri::command]
 pub async fn update_inbox_status(
     app_handle: AppHandle,
@@ -167,10 +166,9 @@ pub struct AppUpdatesSchema {
     pub updates: Vec<AppUpdateItem>,
 }
 
-/// Tauri IPC Command: Read local updates.json file as an offline fallback
+// this function reads the update file updates.json on your computer if offline
 #[tauri::command]
 pub async fn get_local_updates() -> Result<AppUpdatesSchema, String> {
-    // Read updates.json in the app's relative workspace directories
     let data = std::fs::read_to_string("updates.json")
         .or_else(|_| std::fs::read_to_string("../updates.json"))
         .map_err(|e| format!("Failed to read updates.json: {}", e))?;
@@ -181,7 +179,7 @@ pub async fn get_local_updates() -> Result<AppUpdatesSchema, String> {
     Ok(parsed)
 }
 
-/// Tauri IPC Command: Delete an item from the inbox queue
+// this function deletes a url from your inbox completely
 #[tauri::command]
 pub async fn delete_inbox_url(
     app_handle: AppHandle,
@@ -210,7 +208,7 @@ pub async fn delete_inbox_url(
     }
 }
 
-/// Tauri IPC Command: Fetch updates from the online repository via Rust backend (CORS safe!)
+// this function gets new updates from github online, very safe no cors problem!
 #[tauri::command]
 pub async fn get_online_updates() -> Result<AppUpdatesSchema, String> {
     let client = reqwest::Client::new();
@@ -235,7 +233,7 @@ pub async fn get_online_updates() -> Result<AppUpdatesSchema, String> {
     Ok(parsed)
 }
 
-/// Tauri IPC Command: Query the active bound port of the Axum API server from SQLite settings
+// this function asks database what port our API server is using
 #[tauri::command]
 pub async fn get_active_api_port(state: State<'_, AppEngineState>) -> Result<u16, String> {
     let conn = state.db_conn.lock();

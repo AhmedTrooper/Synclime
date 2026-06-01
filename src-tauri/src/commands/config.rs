@@ -13,6 +13,7 @@ pub struct CookieProfile {
     pub updated_at: String,
 }
 
+// this function makes a new cookies profile for websites
 #[tauri::command]
 pub async fn add_cookie_profile(
     state: State<'_, AppEngineState>,
@@ -33,6 +34,7 @@ pub async fn add_cookie_profile(
     Ok(slug)
 }
 
+// this function gets all cookies profiles you made
 #[tauri::command]
 pub async fn get_cookie_profiles(
     state: State<'_, AppEngineState>,
@@ -65,6 +67,7 @@ pub async fn get_cookie_profiles(
     Ok(profiles)
 }
 
+// this function updates cookie text for a profile
 #[tauri::command]
 pub async fn update_cookie_data(
     state: State<'_, AppEngineState>,
@@ -83,6 +86,7 @@ pub async fn update_cookie_data(
     Ok(())
 }
 
+// this function deletes a cookies profile from database
 #[tauri::command]
 pub async fn delete_cookie_profile(
     state: State<'_, AppEngineState>,
@@ -96,6 +100,7 @@ pub async fn delete_cookie_profile(
     Ok(())
 }
 
+// this function deletes many cookies profiles at once
 #[tauri::command]
 pub async fn batch_delete_cookie_profiles(
     state: State<'_, AppEngineState>,
@@ -132,6 +137,7 @@ pub struct ProxyProfile {
     pub updated_at: String,
 }
 
+// this function makes a new proxy profile to change your IP
 #[tauri::command]
 pub async fn add_proxy_profile(
     state: State<'_, AppEngineState>,
@@ -151,6 +157,7 @@ pub async fn add_proxy_profile(
     Ok(slug)
 }
 
+// this function gets all proxy profiles from database
 #[tauri::command]
 pub async fn get_proxy_profiles(
     state: State<'_, AppEngineState>,
@@ -182,6 +189,7 @@ pub async fn get_proxy_profiles(
     Ok(profiles)
 }
 
+// this function updates the proxy IP address text
 #[tauri::command]
 pub async fn update_proxy_data(
     state: State<'_, AppEngineState>,
@@ -200,6 +208,7 @@ pub async fn update_proxy_data(
     Ok(())
 }
 
+// this function deletes a proxy profile from database
 #[tauri::command]
 pub async fn delete_proxy_profile(
     state: State<'_, AppEngineState>,
@@ -213,6 +222,7 @@ pub async fn delete_proxy_profile(
     Ok(())
 }
 
+// this function deletes many proxy profiles at the same time
 #[tauri::command]
 pub async fn batch_delete_proxy_profiles(
     state: State<'_, AppEngineState>,
@@ -252,6 +262,7 @@ pub struct SiteConfig {
     pub updated_at: String,
 }
 
+// this function adds a new website setting with cookies and proxy
 #[tauri::command]
 pub async fn add_site_config(
     state: State<'_, AppEngineState>,
@@ -274,6 +285,7 @@ pub async fn add_site_config(
     Ok(slug)
 }
 
+// this function gets all website settings from database
 #[tauri::command]
 pub async fn get_site_configs(state: State<'_, AppEngineState>) -> Result<Vec<SiteConfig>, String> {
     let conn = state.db_conn.lock();
@@ -306,6 +318,7 @@ pub async fn get_site_configs(state: State<'_, AppEngineState>) -> Result<Vec<Si
     Ok(configs)
 }
 
+// this function changes the cookies and proxy for a website setting
 #[tauri::command]
 pub async fn update_site_config(
     state: State<'_, AppEngineState>,
@@ -324,6 +337,7 @@ pub async fn update_site_config(
     Ok(())
 }
 
+// this function deletes a website setting from database
 #[tauri::command]
 pub async fn delete_site_config(
     state: State<'_, AppEngineState>,
@@ -337,6 +351,7 @@ pub async fn delete_site_config(
     Ok(())
 }
 
+// this function saves where you want to download files on your computer
 #[tauri::command]
 pub async fn update_download_path(
     state: State<'_, AppEngineState>,
@@ -353,6 +368,7 @@ pub async fn update_download_path(
     Ok(())
 }
 
+// this function gets the folder path where files are saved
 #[tauri::command]
 pub async fn get_download_path(
     state: State<'_, AppEngineState>,
