@@ -48,7 +48,7 @@ export default function MainLayout(props: any) {
       {/* Custom OS Titlebar */}
       <TitleBar />
 
-      <div class="flex flex-col-reverse sm:flex-row flex-1 overflow-hidden relative z-10 w-full h-full">
+      <div class="flex flex-col-reverse sm:flex-row flex-1 overflow-hidden relative z-10 w-full">
         {/* Native Sidebar / Bottom Nav */}
         <Sidebar />
 

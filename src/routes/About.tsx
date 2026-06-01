@@ -18,6 +18,7 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle,
+  Info,
 } from "lucide-solid";
 
 interface UpdateItem {
