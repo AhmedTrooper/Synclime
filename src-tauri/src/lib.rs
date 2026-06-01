@@ -29,6 +29,7 @@ pub struct ProgressSnapshot {
 pub struct AppEngineState {
     pub pool_semaphore: Arc<parking_lot::RwLock<Arc<Semaphore>>>,
     pub db_path: std::path::PathBuf,
+    pub db_conn: Arc<parking_lot::Mutex<Connection>>,
     pub active_processes: Arc<ActiveProcessRegistry>,
     pub signal_tx: mpsc::Sender<QueueSignal>,
     pub progress_cache: Arc<parking_lot::Mutex<HashMap<String, ProgressSnapshot>>>,
@@ -222,8 +223,21 @@ pub fn run() {
             }
         };
 
+        // Open the single persistent connection for the entire application life cycle!
+        let db_conn = match Connection::open(&db_path) {
+            Ok(c) => {
+                let _ = c.execute("PRAGMA foreign_keys = ON;", []);
+                Arc::new(parking_lot::Mutex::new(c))
+            }
+            Err(err) => {
+                eprintln!("[CRITICAL] Failed to open native SQLite thread-safe connection: {}", err);
+                std::process::exit(1);
+            }
+        };
+
         let mut concurrency_limit = 3;
-        if let Ok(conn) = rusqlite::Connection::open(&db_path) {
+        {
+            let conn = db_conn.lock();
             let _ = conn.execute(
                 "UPDATE download_jobs SET status = 'paused', updated_at = datetime('now') WHERE status = 'downloading' OR status = 'pending';",
                 [],
@@ -251,7 +265,7 @@ pub fn run() {
         let progress_cache: Arc<parking_lot::Mutex<HashMap<String, ProgressSnapshot>>> =
             Arc::new(parking_lot::Mutex::new(HashMap::new()));
 
-        let flush_db_path = db_path.clone();
+        let flush_conn = Arc::clone(&db_conn);
         let flush_cache = Arc::clone(&progress_cache);
         let tic_emitter = app.handle().clone();
         tauri::async_runtime::spawn(async move {
@@ -259,25 +273,24 @@ pub fn run() {
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 let mut cache = flush_cache.lock();
                 if !cache.is_empty() {
-                    if let Ok(conn) = rusqlite::Connection::open(&flush_db_path) {
-                        for (slug, snapshot) in cache.iter() {
-                            let _ = conn.execute(
-                                "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, status = ?3, updated_at = datetime('now') WHERE slug = ?4;",
-                                rusqlite::params![snapshot.progress, snapshot.status_message, snapshot.status, slug]
-                            );
-                            
-                            let _ = tic_emitter.emit(
-                                "download-progress-token",
-                                serde_json::json!({
-                                    "slug": slug,
-                                    "progress": snapshot.progress,
-                                    "message": snapshot.status_message,
-                                    "status": snapshot.status
-                                })
-                            );
-                        }
-                        cache.clear();
+                    let conn = flush_conn.lock();
+                    for (slug, snapshot) in cache.iter() {
+                        let _ = conn.execute(
+                            "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, status = ?3, updated_at = datetime('now') WHERE slug = ?4;",
+                            rusqlite::params![snapshot.progress, snapshot.status_message, snapshot.status, slug]
+                        );
+                        
+                        let _ = tic_emitter.emit(
+                            "download-progress-token",
+                            serde_json::json!({
+                                "slug": slug,
+                                "progress": snapshot.progress,
+                                "message": snapshot.status_message,
+                                "status": snapshot.status
+                            })
+                        );
                     }
+                    cache.clear();
                 }
             }
         });
@@ -301,6 +314,7 @@ pub fn run() {
         app.manage(AppEngineState {
             pool_semaphore: Arc::new(parking_lot::RwLock::new(Arc::new(Semaphore::new(concurrency_limit)))),
             db_path,
+            db_conn,
             active_processes: process_registry,
             signal_tx,
             progress_cache,

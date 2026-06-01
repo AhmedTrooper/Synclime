@@ -32,7 +32,8 @@ pub async fn trigger_job_start(
     }
 
     // 2. Safely enforce the downloading state in SQLite now that we know it's not running
-    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+    {
+        let conn = state.db_conn.lock();
         let _ = conn.execute(
             "UPDATE download_jobs SET status = 'downloading', updated_at = datetime('now') WHERE slug = ?1;",
             rusqlite::params![job_slug]
@@ -65,7 +66,8 @@ pub async fn request_job_pause(
     {
         Ok(_) => {
             // 2. Cleanly reflect the 'paused' state change status back down into SQLite records immediately
-            if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+            {
+                let conn = state.db_conn.lock();
                 let _ = conn.execute(
                     "UPDATE download_jobs SET status = 'paused', updated_at = datetime('now') WHERE slug = ?1;",
                     rusqlite::params![job_slug]
@@ -140,7 +142,8 @@ pub async fn insert_job_record(
         updated_at: payload.created_at,
     };
 
-    match crate::database::operations::create_download_job(&state.db_path, &row) {
+    let conn = state.db_conn.lock();
+    match crate::database::operations::create_download_job(&conn, &row) {
         Ok(_) => Ok(CommandResponse {
             success: true,
             message: "Job inserted into SQLite registry successfully.".to_string(),
@@ -158,7 +161,8 @@ pub async fn delete_job_record(
     state: State<'_, AppEngineState>,
     job_slug: String,
 ) -> Result<CommandResponse, String> {
-    match crate::database::operations::delete_download_job(&state.db_path, &job_slug) {
+    let conn = state.db_conn.lock();
+    match crate::database::operations::delete_download_job(&conn, &job_slug) {
         Ok(_) => Ok(CommandResponse {
             success: true,
             message: "Job dropped from SQLite registry successfully.".to_string(),
@@ -175,7 +179,8 @@ pub async fn delete_job_record(
 pub async fn clear_all_jobs_records(
     state: State<'_, AppEngineState>,
 ) -> Result<CommandResponse, String> {
-    match crate::database::operations::clear_all_download_jobs(&state.db_path) {
+    let conn = state.db_conn.lock();
+    match crate::database::operations::clear_all_download_jobs(&conn) {
         Ok(_) => Ok(CommandResponse {
             success: true,
             message: "All jobs dropped from SQLite registry successfully.".to_string(),
@@ -217,10 +222,7 @@ pub struct FrontDownloadJob {
 pub async fn get_all_jobs(
     state: State<'_, AppEngineState>,
 ) -> Result<Vec<FrontDownloadJob>, String> {
-    let conn = match rusqlite::Connection::open(&state.db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(e.to_string()),
-    };
+    let conn = state.db_conn.lock();
 
     let query = "
         SELECT
@@ -281,9 +283,12 @@ pub async fn reveal_job_in_explorer(
     state: State<'_, AppEngineState>,
     job_slug: String,
 ) -> Result<CommandResponse, String> {
-    let config = match crate::engine::process::resolve_job_parameters(&state.db_path, &job_slug) {
-        Ok(cfg) => cfg,
-        Err(e) => return Err(e),
+    let config = {
+        let conn = state.db_conn.lock();
+        match crate::engine::process::resolve_job_parameters(&conn, &job_slug) {
+            Ok(cfg) => cfg,
+            Err(e) => return Err(e),
+        }
     };
 
     if let Err(e) = opener::open(&config.resolved_path) {

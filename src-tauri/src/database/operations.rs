@@ -1,5 +1,4 @@
 use rusqlite::{params, Connection};
-use std::path::Path;
 
 #[derive(Debug)]
 pub struct DbError(pub String);
@@ -50,12 +49,7 @@ pub struct DownloadJobRow {
 }
 
 /// Secure Database Gateway: Saves an analytical file tracking manifest to SQLite safely
-pub fn save_parsed_file(db_path: &Path, row: &ParsedFileRow) -> Result<(), DbError> {
-    let conn = match Connection::open(db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(DbError(e.to_string())),
-    };
-
+pub fn save_parsed_file(conn: &Connection, row: &ParsedFileRow) -> Result<(), DbError> {
     let query = "
         INSERT OR REPLACE INTO parsed_files (
             slug, url, title, sanitized_title, is_playlist,
@@ -86,12 +80,7 @@ pub fn save_parsed_file(db_path: &Path, row: &ParsedFileRow) -> Result<(), DbErr
 }
 
 /// Transactional Queue Handler: Injects a brand new download execution thread line to SQLite
-pub fn create_download_job(db_path: &Path, job: &DownloadJobRow) -> Result<(), DbError> {
-    let conn = match Connection::open(db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(DbError(e.to_string())),
-    };
-
+pub fn create_download_job(conn: &Connection, job: &DownloadJobRow) -> Result<(), DbError> {
     let query = "
         INSERT OR IGNORE INTO download_jobs (
             slug, parsed_file_slug, file_type, associated_media_job_slug,
@@ -133,12 +122,7 @@ pub fn create_download_job(db_path: &Path, job: &DownloadJobRow) -> Result<(), D
 }
 
 /// Queue Scheduling Token Lookup: Pulls the absolute highest-priority pending task lines out of SQLite
-pub fn get_next_pending_job(db_path: &Path) -> Result<Option<DownloadJobRow>, DbError> {
-    let conn = match Connection::open(db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(DbError(e.to_string())),
-    };
-
+pub fn get_next_pending_job(conn: &Connection) -> Result<Option<DownloadJobRow>, DbError> {
     let query = "
         SELECT
             slug, parsed_file_slug, file_type, associated_media_job_slug,
@@ -227,12 +211,7 @@ pub fn get_next_pending_job(db_path: &Path) -> Result<Option<DownloadJobRow>, Db
 }
 
 /// Secure Queue Operation: Drops a single download job tracker from SQLite
-pub fn delete_download_job(db_path: &Path, job_slug: &str) -> Result<(), DbError> {
-    let conn = match Connection::open(db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(DbError(e.to_string())),
-    };
-
+pub fn delete_download_job(conn: &Connection, job_slug: &str) -> Result<(), DbError> {
     match conn.execute(
         "DELETE FROM download_jobs WHERE slug = ?1;",
         params![job_slug],
@@ -243,12 +222,7 @@ pub fn delete_download_job(db_path: &Path, job_slug: &str) -> Result<(), DbError
 }
 
 /// Secure Queue Operation: Drops all download tracker jobs completely
-pub fn clear_all_download_jobs(db_path: &Path) -> Result<(), DbError> {
-    let conn = match Connection::open(db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(DbError(e.to_string())),
-    };
-
+pub fn clear_all_download_jobs(conn: &Connection) -> Result<(), DbError> {
     match conn.execute("DELETE FROM download_jobs WHERE status IN ('completed', 'error');", []) {
         Ok(_) => Ok(()),
         Err(e) => Err(DbError(e.to_string())),

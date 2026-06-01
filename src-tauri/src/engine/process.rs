@@ -65,13 +65,9 @@ fn sanitize_title(title: &str) -> String {
 
 /// Query SQLite to extract all configuration parameters attached to this explicit job row
 pub fn resolve_job_parameters(
-    db_path: &std::path::Path,
+    conn: &Connection,
     job_slug: &str,
 ) -> Result<ResolvedJobConfig, String> {
-    let conn = match Connection::open(db_path) {
-        Ok(c) => c,
-        Err(e) => return Err(e.to_string()),
-    };
 
     let query = "
         SELECT
@@ -216,9 +212,12 @@ pub async fn execute_download_worker(
 ) -> Result<(), EngineError> {
     let state = app_handle.state::<AppEngineState>();
 
-    let config = match resolve_job_parameters(&state.db_path, &job_slug) {
-        Ok(cfg) => cfg,
-        Err(err) => return Err(EngineError::ProcessSpawnFailed(err)),
+    let config = {
+        let conn = state.db_conn.lock();
+        match resolve_job_parameters(&conn, &job_slug) {
+            Ok(cfg) => cfg,
+            Err(err) => return Err(EngineError::ProcessSpawnFailed(err)),
+        }
     };
 
     let semaphore = {

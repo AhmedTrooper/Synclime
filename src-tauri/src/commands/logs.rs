@@ -30,8 +30,7 @@ pub struct ParseLog {
 pub async fn get_error_logs(
     state: State<'_, AppEngineState>,
 ) -> Result<Vec<ErrorLog>, String> {
-    let conn = rusqlite::Connection::open(&state.db_path)
-        .map_err(|e| format!("Failed to open DB: {}", e))?;
+    let conn = state.db_conn.lock();
 
     let mut stmt = conn
         .prepare("SELECT slug, download_job_slug, command_executed, error_message, is_resolved, timestamp FROM error_logs ORDER BY timestamp DESC")
@@ -63,8 +62,7 @@ pub async fn get_error_logs(
 pub async fn get_parse_logs(
     state: State<'_, AppEngineState>,
 ) -> Result<Vec<ParseLog>, String> {
-    let conn = rusqlite::Connection::open(&state.db_path)
-        .map_err(|e| format!("Failed to open DB: {}", e))?;
+    let conn = state.db_conn.lock();
 
     let mut stmt = conn
         .prepare("SELECT slug, parsed_file_slug, status, started_at, finished_at, duration_ms, command_executed, exit_code, bytes_returned FROM parse_logs ORDER BY started_at DESC")
@@ -102,8 +100,7 @@ pub async fn insert_error_log(
     command_executed: String,
     error_message: String,
 ) -> Result<(), String> {
-    let conn = rusqlite::Connection::open(&state.db_path)
-        .map_err(|e| format!("Failed to open DB: {}", e))?;
+    let conn = state.db_conn.lock();
 
     let mut exists = false;
     if let Ok(mut stmt) = conn.prepare("SELECT 1 FROM download_jobs WHERE slug = ?1") {
@@ -139,8 +136,7 @@ pub async fn insert_parse_log(
     exit_code: Option<i32>,
     bytes_returned: i64,
 ) -> Result<(), String> {
-    let conn = rusqlite::Connection::open(&state.db_path)
-        .map_err(|e| format!("Failed to open DB: {}", e))?;
+    let conn = state.db_conn.lock();
 
     let mut exists = false;
     if let Ok(mut stmt) = conn.prepare("SELECT 1 FROM parsed_files WHERE slug = ?1") {
@@ -167,8 +163,7 @@ pub async fn insert_parse_log(
 pub async fn clear_all_logs(
     state: State<'_, AppEngineState>,
 ) -> Result<(), String> {
-    let conn = rusqlite::Connection::open(&state.db_path)
-        .map_err(|e| format!("Failed to open DB: {}", e))?;
+    let conn = state.db_conn.lock();
 
     conn.execute("DELETE FROM error_logs", [])
         .map_err(|e| format!("Failed to clear error logs: {}", e))?;

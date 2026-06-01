@@ -49,7 +49,8 @@ pub async fn insert_parsed_file(
         site_config_slug: payload.site_config_slug,
     };
 
-    match crate::database::operations::save_parsed_file(&state.db_path, &row) {
+    let conn = state.db_conn.lock();
+    match crate::database::operations::save_parsed_file(&conn, &row) {
         Ok(_) => Ok(crate::commands::queue::CommandResponse {
             success: true,
             message: "Parsed file registered in SQLite successfully.".to_string(),
@@ -67,27 +68,25 @@ struct OptionalSiteConfig {
 }
 
 /// Dynamic Configuration Resolver: Queries SQLite site config directly using selected site config slug
-fn resolve_selected_site_configs(db_path: &std::path::Path, slug: &str) -> OptionalSiteConfig {
+fn resolve_selected_site_configs(conn: &Connection, slug: &str) -> OptionalSiteConfig {
     let mut config = OptionalSiteConfig {
         cookie_data: None,
         proxy_string: None,
     };
 
-    if let Ok(conn) = Connection::open(db_path) {
-        let query = "
-            SELECT c.cookie_data, pr.proxy_string
-            FROM site_configs s
-            LEFT JOIN cookie_profiles c ON s.cookie_profile_slug = c.slug
-            LEFT JOIN proxy_profiles pr ON s.proxy_profile_slug = pr.slug
-            WHERE s.slug = ?1;
-        ";
+    let query = "
+        SELECT c.cookie_data, pr.proxy_string
+        FROM site_configs s
+        LEFT JOIN cookie_profiles c ON s.cookie_profile_slug = c.slug
+        LEFT JOIN proxy_profiles pr ON s.proxy_profile_slug = pr.slug
+        WHERE s.slug = ?1;
+    ";
 
-        if let Ok(mut stmt) = conn.prepare(query) {
-            if let Ok(mut rows) = stmt.query(params![slug]) {
-                if let Ok(Some(row)) = rows.next() {
-                    config.cookie_data = row.get(0).ok();
-                    config.proxy_string = row.get(1).ok();
-                }
+    if let Ok(mut stmt) = conn.prepare(query) {
+        if let Ok(mut rows) = stmt.query(params![slug]) {
+            if let Ok(Some(row)) = rows.next() {
+                config.cookie_data = row.get(0).ok();
+                config.proxy_string = row.get(1).ok();
             }
         }
     }
@@ -105,7 +104,8 @@ pub async fn discover_asset_metadata(
 
     // 1. Automatically fetch proxy and cookie parameters from the selected site configuration
     let site_config = if let Some(ref slug) = site_config_slug {
-        resolve_selected_site_configs(&state.db_path, slug)
+        let conn = state.db_conn.lock();
+        resolve_selected_site_configs(&conn, slug)
     } else {
         OptionalSiteConfig {
             cookie_data: None,
