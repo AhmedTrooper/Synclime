@@ -306,7 +306,8 @@ pub async fn update_concurrency_limit(
     state: State<'_, AppEngineState>,
     limit: usize,
 ) -> Result<CommandResponse, String> {
-    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+    {
+        let conn = state.db_conn.lock();
         let _ = conn.execute(
             "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('concurrency_limit', ?1);",
             rusqlite::params![limit.to_string()]
@@ -326,7 +327,8 @@ pub async fn update_concurrency_limit(
 pub async fn get_concurrency_limit(
     state: State<'_, AppEngineState>,
 ) -> Result<usize, String> {
-    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+    {
+        let conn = state.db_conn.lock();
         if let Ok(val) = conn.query_row("SELECT value FROM app_settings WHERE key = 'concurrency_limit'", [], |row| row.get::<_, String>(0)) {
             if let Ok(parsed) = val.parse::<usize>() {
                 return Ok(parsed);

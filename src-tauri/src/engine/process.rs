@@ -428,7 +428,8 @@ pub async fn execute_download_worker(
         };
     }
 
-    if let Ok(conn) = rusqlite::Connection::open(&state.db_path) {
+    {
+        let conn = state.db_conn.lock();
         if clean_exit {
             // Update database to completed
             let _ = conn.execute(
