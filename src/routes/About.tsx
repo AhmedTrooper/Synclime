@@ -86,15 +86,8 @@ export default function About() {
 
     const fetchUpdates = async () => {
       try {
-        const res = await fetch(
-          "https://raw.githubusercontent.com/AhmedTrooper/Synclime/test/updates.json",
-        );
-        if (res.ok) {
-          const data: UpdatesSchema = await res.json();
-          setUpdatesData(data);
-        } else {
-          throw new Error("HTTP error fetching online manifest");
-        }
+        const data = await invoke<UpdatesSchema>("get_online_updates");
+        setUpdatesData(data);
       } catch (err) {
         console.warn(
           "Failed to fetch online updates from test branch. Querying local updates.json...",
@@ -252,8 +245,8 @@ export default function About() {
               </span>
             </div>
 
-            <h1 class="text-2xl font-bold tracking-tight drop-shadow-sm lowercase">
-              {appInfo().name.toUpperCase()}
+            <h1 class="text-2xl font-bold tracking-tight drop-shadow-sm">
+              {appInfo().name}
             </h1>
 
             <p class="text-indigo-100 max-w-lg text-xs font-light leading-relaxed">

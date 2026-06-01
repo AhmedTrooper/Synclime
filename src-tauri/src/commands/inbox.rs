@@ -209,3 +209,28 @@ pub async fn delete_inbox_url(
         Err(e) => Err(e.to_string()),
     }
 }
+
+/// Tauri IPC Command: Fetch updates from the online repository via Rust backend (CORS safe!)
+#[tauri::command]
+pub async fn get_online_updates() -> Result<AppUpdatesSchema, String> {
+    let client = reqwest::Client::new();
+    let url = "https://raw.githubusercontent.com/AhmedTrooper/Synclime/test/updates.json";
+    
+    let response = client
+        .get(url)
+        .header("User-Agent", "Synclime-Desktop-App")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to send request: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Server returned error code: {}", response.status()));
+    }
+
+    let parsed: AppUpdatesSchema = response
+        .json::<AppUpdatesSchema>()
+        .await
+        .map_err(|e| format!("Failed to parse JSON response: {}", e))?;
+
+    Ok(parsed)
+}

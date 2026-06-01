@@ -53,16 +53,10 @@ export default function Extentions() {
         }
       }
 
-      // Try fetching updates live from GitHub, with local sqlite/fs read fallback
       try {
-        const res = await fetch("https://raw.githubusercontent.com/AhmedTrooper/Synclime/main/updates.json");
-        if (res.ok) {
-          const data: UpdatesSchema = await res.json();
-          setUpdatesData(data);
-          compareVersions(data);
-        } else {
-          throw new Error("HTTP error fetching online manifest");
-        }
+        const data = await invoke<UpdatesSchema>("get_online_updates");
+        setUpdatesData(data);
+        compareVersions(data);
       } catch (err) {
         console.warn("Offline or blocked: Failed to fetch live updates from GitHub. Falling back to local updates.json...");
         

@@ -391,7 +391,8 @@ pub fn run() {
         commands::inbox::add_inbox_url,
         commands::inbox::update_inbox_status,
         commands::inbox::delete_inbox_url,
-        commands::inbox::get_local_updates
+        commands::inbox::get_local_updates,
+        commands::inbox::get_online_updates
     ]);
 
     match builder.run(tauri::generate_context!()) {
