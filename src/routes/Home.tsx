@@ -475,9 +475,9 @@ export default function Home() {
                     disabled={loading()}
                     class="flex items-center"
                   >
-                    <Switch.Input class="peer" />
-                    <Switch.Control class="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 peer-checked:bg-blue-500 dark:peer-checked:bg-blue-600 rounded-full relative outline-none cursor-pointer transition-colors disabled:opacity-50 flex-shrink-0">
-                      <Switch.Thumb class="block w-4 h-4 mt-0.5 ml-0.5 bg-white rounded-full shadow-sm transition-transform translate-x-0 peer-checked:translate-x-[16px]" />
+                    <Switch.Input class="sr-only" />
+                    <Switch.Control class="w-9 h-5 bg-zinc-200 dark:bg-zinc-800 data-[checked]:bg-blue-500 dark:data-[checked]:bg-blue-600 rounded-full relative outline-none cursor-pointer transition-colors disabled:opacity-50 flex-shrink-0">
+                      <Switch.Thumb class="block w-4 h-4 mt-0.5 ml-0.5 bg-white rounded-full shadow-sm transition-transform translate-x-0 data-[checked]:translate-x-[16px]" />
                     </Switch.Control>
                   </Switch>
                 </Tooltip.Trigger>

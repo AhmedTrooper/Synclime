@@ -505,8 +505,8 @@ export default function InboxDetail() {
                   class="flex items-center"
                 >
                   <Switch.Input class="sr-only" />
-                  <Switch.Control class="w-10 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-full transition-colors flex items-center cursor-pointer p-0.5 ui-checked:bg-emerald-500">
-                    <Switch.Thumb class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ui-checked:translate-x-4" />
+                  <Switch.Control class="w-10 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-full transition-colors flex items-center cursor-pointer p-0.5 data-[checked]:bg-emerald-500">
+                    <Switch.Thumb class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform translate-x-0 data-[checked]:translate-x-4" />
                   </Switch.Control>
                 </Switch>
               </div>
