@@ -88,13 +88,17 @@ export default function About() {
   const openDownloadFolder = async () => {
     try {
       if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
-        const { openPath } = await import("@tauri-apps/plugin-opener");
-        await openPath(useUIStore.state.downloadPath);
+        const { invoke } = await import("@tauri-apps/api/core");
+        const res = await invoke<{ success: boolean; message: string }>("reveal_folder_in_explorer", {
+          path: useUIStore.state.downloadPath,
+        });
+        if (!res.success) throw new Error(res.message);
       } else {
         alert(`Storage path open simulated for path:\n${useUIStore.state.downloadPath}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to reveal download folder path:", err);
+      alert(`Download folder path could not be revealed: ${err.message || err}`);
     }
   };
 

@@ -302,6 +302,20 @@ pub async fn reveal_job_in_explorer(
 }
 
 #[tauri::command]
+pub async fn reveal_folder_in_explorer(
+    path: String,
+) -> Result<CommandResponse, String> {
+    if let Err(e) = opener::open(&path) {
+        return Err(format!("Native OS failed to open path: {}", e));
+    }
+
+    Ok(CommandResponse {
+        success: true,
+        message: "Successfully opened folder natively.".to_string(),
+    })
+}
+
+#[tauri::command]
 pub async fn update_concurrency_limit(
     state: State<'_, AppEngineState>,
     limit: usize,

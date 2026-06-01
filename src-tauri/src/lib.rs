@@ -332,6 +332,7 @@ pub fn run() {
         crate::commands::queue::clear_all_jobs_records,
         crate::commands::queue::get_all_jobs,
         crate::commands::queue::reveal_job_in_explorer,
+        crate::commands::queue::reveal_folder_in_explorer,
         crate::commands::queue::update_concurrency_limit,
         crate::commands::queue::get_concurrency_limit,
         commands::discovery::discover_asset_metadata,
