@@ -333,10 +333,10 @@ export default function ParsedFileDetail() {
     
     const playlistFormatString = selectedPreset();
 
-    for (const track of targetTracks) {
-      const trackSlug = `track-${track.id}-${Date.now()}`;
+    const promises = targetTracks.map((track: any, index: number) => {
+      const trackSlug = `track-${track.id}-${Date.now()}-${index}`;
       
-      await dispatchDownloadJob({
+      return dispatchDownloadJob({
         slug: trackSlug,
         url: track.url,
         parsed_file_slug: f.slug,
@@ -348,7 +348,9 @@ export default function ParsedFileDetail() {
         created_at: new Date().toISOString(),
         custom_title: track.title,
       });
-    }
+    });
+
+    await Promise.all(promises);
 
     navigate("/downloads");
   };

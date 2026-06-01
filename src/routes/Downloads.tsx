@@ -1,4 +1,4 @@
-import { onMount, createMemo } from "solid-js";
+import { onMount, createMemo, For } from "solid-js";
 import { useUIStore } from "../store/useUIStore";
 import { useQueueStore, DownloadJob } from "../store/useQueueStore";
 import { DownloadRow } from "../features/downloader/components/DownloadRow";
@@ -158,50 +158,50 @@ export default function Downloads() {
   };
 
   const renderTree = (nodes: TreeNode[], depth: number = 0): any => {
-    return nodes.map(node => (
-      <div class={`flex flex-col min-w-0 ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1 w-auto" : "py-1 w-full"}`}>
-        {node.isPlaylistGroup ? (
-          <div class="flex items-center gap-3 bg-purple-500/10 dark:bg-purple-500/10 p-3 sm:p-4 rounded-xl border border-purple-500/20 w-full min-w-0 shadow-sm mb-2 mt-2">
-            <div class="p-2 bg-purple-500 text-white rounded-lg shadow-sm flex-shrink-0">
-               <Folder class="w-4 h-4" />
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white leading-tight line-clamp-1">{node.name}</span>
-              <span class="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider">Playlist Group ({node.children.length} items)</span>
-            </div>
-          </div>
-        ) : !node.job ? (
-          <div class="flex items-center gap-3 bg-blue-500/5 dark:bg-blue-500/5 p-3 rounded-xl border border-blue-500/10 w-full min-w-0 shadow-sm mb-2 mt-1">
-            <div class="p-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-lg flex-shrink-0">
-               <Folder class="w-4 h-4" />
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="font-semibold text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-tight line-clamp-1">{node.name}</span>
-              <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Video Subtitles ({node.children.length} active)</span>
-            </div>
-          </div>
-        ) : (
-          <div class="w-full min-w-0">
-            <DownloadRow
-              id={node.job!.slug}
-              name={node.job!.name}
-              progress={node.job!.progress}
-              status={node.job!.status === "pending" ? "paused" : node.job!.status}
-              message={node.job!.message}
-              onPauseToggle={() => handlePauseToggle(node.job!)}
-              onReveal={() => handleReveal(node.job!)}
-              onDelete={() => handleDelete(node.job!.slug)}
-            />
+    return (
+      <For each={nodes}>
+        {(node) => (
+          <div class={`flex flex-col min-w-0 ${depth > 0 ? "ml-4 sm:ml-8 border-l-2 border-zinc-200 dark:border-white/10 pl-4 py-1 w-auto" : "py-1 w-full"}`}>
+            {node.isPlaylistGroup ? (
+              <div class="flex items-center gap-3 bg-purple-500/10 dark:bg-purple-500/10 p-3 sm:p-4 rounded-xl border border-purple-500/20 w-full min-w-0 shadow-sm mb-2 mt-2">
+                <div class="p-2 bg-purple-500 text-white rounded-lg shadow-sm flex-shrink-0">
+                   <Folder class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white leading-tight line-clamp-1">{node.name}</span>
+                  <span class="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider">Playlist Group ({node.children.length} items)</span>
+                </div>
+              </div>
+            ) : !node.job ? (
+              <div class="flex items-center gap-3 bg-blue-500/5 dark:bg-blue-500/5 p-3 rounded-xl border border-blue-500/10 w-full min-w-0 shadow-sm mb-2 mt-1">
+                <div class="p-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-lg flex-shrink-0">
+                   <Folder class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-semibold text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-tight line-clamp-1">{node.name}</span>
+                  <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Video Subtitles ({node.children.length} active)</span>
+                </div>
+              </div>
+            ) : (
+              <div class="w-full min-w-0">
+                <DownloadRow
+                  id={node.job.slug}
+                  onPauseToggle={() => handlePauseToggle(node.job!)}
+                  onReveal={() => handleReveal(node.job!)}
+                  onDelete={() => handleDelete(node.job.slug)}
+                />
+              </div>
+            )}
+            
+            {node.children.length > 0 && (
+              <div class="flex flex-col gap-1 mt-1 w-auto min-w-0">
+                {renderTree(node.children, depth + 1)}
+              </div>
+            )}
           </div>
         )}
-        
-        {node.children.length > 0 && (
-          <div class="flex flex-col gap-1 mt-1 w-auto min-w-0">
-            {renderTree(node.children, depth + 1)}
-          </div>
-        )}
-      </div>
-    ));
+      </For>
+    );
   };
 
   const handleDelete = async (slug: string) => {

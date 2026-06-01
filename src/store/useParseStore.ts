@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { createEffect, on } from "solid-js";
+import { createEffect, on, createRoot } from "solid-js";
 import { nativeStorageAdapter } from "./storageAdapter";
 
 export interface ParsedFile {
@@ -57,15 +57,17 @@ nativeStorageAdapter.getItem("synclime-parse-storage").then((data) => {
   hasHydrated = true;
 });
 
-// Async Persistence (Syncs updates back to store automatically)
-createEffect(
-  on(
-    () => parseState.parsedFiles,
-    () => {
-      if (!hasHydrated) return;
-      const stateToSave = { state: { parsedFiles: parseState.parsedFiles } };
-      nativeStorageAdapter.setItem("synclime-parse-storage", JSON.stringify(stateToSave));
-    },
-    { defer: true }
-  )
-);
+// Async Persistence (Syncs updates back to store automatically, bound to reactive root context)
+createRoot(() => {
+  createEffect(
+    on(
+      () => parseState.parsedFiles,
+      () => {
+        if (!hasHydrated) return;
+        const stateToSave = { state: { parsedFiles: parseState.parsedFiles } };
+        nativeStorageAdapter.setItem("synclime-parse-storage", JSON.stringify(stateToSave));
+      },
+      { defer: true }
+    )
+  );
+});

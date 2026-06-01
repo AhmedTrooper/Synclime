@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { createEffect, on } from "solid-js";
+import { createEffect, on, createRoot } from "solid-js";
 import { nativeStorageAdapter } from "./storageAdapter";
 
 interface BadgeState {
@@ -68,22 +68,24 @@ nativeStorageAdapter.getItem("synclime-ui-storage").then((data) => {
   useUIStore.setHasHydrated(true);
 });
 
-// Async Persistence (Syncs updates back to store automatically)
-createEffect(
-  on(
-    () => [uiState.theme, uiState.activePath, uiState.downloadPath, uiState.isSidebarExpanded],
-    () => {
-      if (!uiState._hasHydrated) return;
-      const stateToSave = {
-        state: {
-          theme: uiState.theme,
-          activePath: uiState.activePath,
-          downloadPath: uiState.downloadPath,
-          isSidebarExpanded: uiState.isSidebarExpanded,
-        },
-      };
-      nativeStorageAdapter.setItem("synclime-ui-storage", JSON.stringify(stateToSave));
-    },
-    { defer: true }
-  )
-);
+// Async Persistence (Syncs updates back to store automatically, bound to reactive root context)
+createRoot(() => {
+  createEffect(
+    on(
+      () => [uiState.theme, uiState.activePath, uiState.downloadPath, uiState.isSidebarExpanded],
+      () => {
+        if (!uiState._hasHydrated) return;
+        const stateToSave = {
+          state: {
+            theme: uiState.theme,
+            activePath: uiState.activePath,
+            downloadPath: uiState.downloadPath,
+            isSidebarExpanded: uiState.isSidebarExpanded,
+          },
+        };
+        nativeStorageAdapter.setItem("synclime-ui-storage", JSON.stringify(stateToSave));
+      },
+      { defer: true }
+    )
+  );
+});
