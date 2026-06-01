@@ -21,24 +21,65 @@ pub struct ResolvedJobConfig {
     pub custom_title: Option<String>,
 }
 
-/// Helper function to parse raw text lines into metrics strings cleanly
+/// Helper function to parse raw text lines into metrics strings cleanly using a resilient backwards scanner
 fn parse_progress_line(line: &str) -> Option<(f64, String)> {
     if !line.contains("[download]") || !line.contains("%") {
         return None;
     }
 
-    let parts: Vec<&str> = line.split_whitespace().collect();
-    if parts.len() < 2 {
+    // 1. Strip common ANSI control sequences to keep parsing clean
+    let mut clean_line = String::new();
+    let mut in_ansi = false;
+    for c in line.chars() {
+        if c == '\x1b' || c == '\u{001b}' {
+            in_ansi = true;
+        } else if in_ansi {
+            if c.is_ascii_alphabetic() {
+                in_ansi = false;
+            }
+        } else {
+            clean_line.push(c);
+        }
+    }
+    let clean_str = clean_line.trim();
+
+    // 2. Find the percent index
+    let pct_idx = clean_str.find('%')?;
+    if pct_idx == 0 {
         return None;
     }
 
-    let clean_pct = parts[1].trim_end_matches('%');
-    let percentage = match clean_pct.parse::<f64>() {
-        Ok(val) => val,
-        Err(_) => return None,
-    };
+    // 3. Scan backward to extract the numeric string
+    let mut numeric_chars = Vec::new();
+    let chars: Vec<char> = clean_str.chars().collect();
+    let mut i = pct_idx;
+    while i > 0 {
+        i -= 1;
+        let c = chars[i];
+        if c.is_ascii_digit() || c == '.' {
+            numeric_chars.push(c);
+        } else if c.is_whitespace() {
+            if numeric_chars.is_empty() {
+                continue;
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
 
-    let status_msg = parts[2..].join(" ");
+    if numeric_chars.is_empty() {
+        return None;
+    }
+
+    numeric_chars.reverse();
+    let num_str: String = numeric_chars.into_iter().collect();
+    let percentage = num_str.parse::<f64>().ok()?;
+
+    // Extract status message (everything after the percentage symbol)
+    let status_msg = clean_str[pct_idx + 1..].trim().to_string();
+
     Some((percentage, status_msg))
 }
 
