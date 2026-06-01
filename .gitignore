@@ -151,5 +151,4 @@ dist-ssr
 .antigravitycli/
 
 # Clone security
-AIShouldAvoidSynclime/
 .vscode/extensions.json

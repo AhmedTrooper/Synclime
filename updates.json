@@ -1,0 +1,13 @@
+{
+  "latest_update": "d05m06y2026_xyz_unique_slug",
+  "updates": [
+    {
+      "version_slug": "d05m06y2026_xyz_unique_slug",
+      "application_online_version": "1.0.0",
+      "date": "05-06-2026",
+      "features": ["f1", "f2"],
+      "fixes": ["f1", "f2"],
+      "severity": "critical"
+    }
+  ]
+}
