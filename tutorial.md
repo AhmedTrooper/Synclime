@@ -58,8 +58,23 @@ Secure credential overrides and proxy bypasses globally or on a per-domain basis
 
 ---
 
-## 4. Diagnostics & Troubleshooting Logs
-
 * Check active system parameters, kernel platforms, and SQLite indexing caches inside the **System Diagnostics** tab.
 * In case of connection faults or download errors, check **Console Diagnostics** to inspect full stdout/stderr streams.
 * Use the **Copy Command** and **Copy Payload** quick-action buttons to copy logs to your clipboard instantly.
+
+---
+
+## 5. Core Dependencies & AI Installation Assistance
+
+To unlock all of Synclime's native engines, ensure you have the required CLI utilities installed on your operating system:
+
+1. **yt-dlp** (Mandatory): Powers all video, playlist, and stream parameter extractions.
+2. **ffmpeg** (Mandatory): Handles merging separate high-definition video and audio tracks.
+3. **Deno** (Mandatory): Powers local background Axum port stream listeners.
+4. **aria2** / **aria2c** (Optional, but **Strongly Recommended**): The multithreaded network writer daemon that accelerates downloads.
+
+> [!TIP]
+> **Need help installing these utilities?**
+> Installing command-line packages differs depending on your OS (Windows, macOS, or Linux). If you are unsure of the commands, you can copy the prompt below and ask AI assistants like **Gemini** or **ChatGPT** to guide you:
+> 
+> *"How do I install the command-line dependencies yt-dlp, ffmpeg, Deno, and aria2 on [Ubuntu / Arch / macOS / Windows]?"*

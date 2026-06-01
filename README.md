@@ -10,6 +10,13 @@ A premium native desktop media downloader built with Tauri v2, SolidJS, Rust, an
 
 ---
 
+## 📚 Documentation & Guides
+Get up to speed quickly with our dedicated resources:
+*   📖 **[System User Guide & Tutorial](tutorial.md)** - Detailed instructions on download strategies, browser extensions, network overrides, and logs diagnostics.
+*   🧩 **[Browser Extensions Catalog](extentions.md)** - Companion capture add-ons for Chrome, Firefox, and Brave.
+
+---
+
 ## 📌 What is this?
 SyncLime is a native desktop application designed for downloading videos, playlists, audio streams, and web documents. 
 
@@ -230,16 +237,27 @@ pub async fn request_job_pause(
 
 ## ⚡ Installation
 
-You need `yt-dlp`, `ffmpeg`, and `Deno` installed on your computer.
+### 1. Core Dependencies
+To run the core engines, ensure the following utilities are installed on your system:
+*   **yt-dlp** (Mandatory - for asset metadata extraction and analysis)
+*   **ffmpeg** (Mandatory - for merging formats, muxing streams, and post-processing)
+*   **Deno** (Mandatory - for companion browser extension local Axum listeners)
+*   **aria2** / **aria2c** (Optional, but **Strongly Recommended** - unlocks extreme high-speed multithreaded network write queues)
 
-### 1. Check Dependencies
+> [!TIP]
+> **Need help installing these?**
+> If you are unsure how to install these dependencies on your specific operating system (Windows, macOS, or Linux distributions), we highly recommend asking AI assistants like **Gemini** or **ChatGPT** for tailored, step-by-step instructions. Just paste this simple prompt:
+> *"How do I install yt-dlp, ffmpeg, Deno, and aria2 on [Ubuntu / Debian / Arch / macOS / Windows]?"*
+
+### 2. Check Installed Utilities
 ```bash
 yt-dlp --version
 ffmpeg -version
 deno --version
+aria2c --version
 ```
 
-### 2. Download
+### 3. Download App Releases
 *   Go to [GitHub Releases](https://github.com/AhmedTrooper/OSGUI/releases).
 *   Download the installer for your OS (Windows `.exe`, macOS `.dmg`, or Linux `.deb`).
 
