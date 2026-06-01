@@ -392,7 +392,8 @@ pub fn run() {
         commands::inbox::update_inbox_status,
         commands::inbox::delete_inbox_url,
         commands::inbox::get_local_updates,
-        commands::inbox::get_online_updates
+        commands::inbox::get_online_updates,
+        commands::inbox::get_active_api_port
     ]);
 
     match builder.run(tauri::generate_context!()) {
@@ -501,6 +502,13 @@ async fn start_axum_server(
         };
 
         println!("[Axum Server] Successfully bound to port {}", port);
+        {
+            let conn = db_conn.lock();
+            let _ = conn.execute(
+                "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('active_api_port', ?1);",
+                rusqlite::params![port.to_string()]
+            );
+        }
         if let Err(e) = axum::serve(listener, app).await {
             eprintln!("[Axum Server] Error serving axum: {}", e);
         }

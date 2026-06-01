@@ -13,7 +13,8 @@ import {
   Search, 
   RefreshCw,
   Sparkles,
-  Link2
+  Link2,
+  Info
 } from "lucide-solid";
 
 export interface InboxItem {
@@ -30,6 +31,9 @@ export default function InboxRoute() {
   const [searchQuery, setSearchQuery] = createSignal("");
   const [loading, setLoading] = createSignal(true);
   const [errorMsg, setErrorMsg] = createSignal("");
+  const [activePort, setActivePort] = createSignal(14221);
+  const [healthStatus, setHealthStatus] = createSignal<"idle" | "checking" | "online" | "offline">("idle");
+  const [healthMsg, setHealthMsg] = createSignal("");
   let unlistenInbox: (() => void) | null = null;
 
   const fetchInbox = async () => {
@@ -77,9 +81,42 @@ export default function InboxRoute() {
     }
   };
 
+  const testConnection = async () => {
+    setHealthStatus("checking");
+    setHealthMsg("");
+    try {
+      const res = await fetch(`http://localhost:${activePort()}/health`);
+      if (res.ok) {
+        const data = await res.json();
+        setHealthStatus("online");
+        setHealthMsg(data.message || "Local API connection test succeeded.");
+      } else {
+        setHealthStatus("offline");
+        setHealthMsg(`Local Server responded with status: ${res.status}`);
+      }
+    } catch (e: any) {
+      setHealthStatus("offline");
+      setHealthMsg(e.message || "Failed to make HTTP socket handshake.");
+    }
+  };
+
   onMount(() => {
     useUIStore.setActivePath("/inbox");
     fetchInbox();
+
+    // Fetch the active bound port
+    const getPort = async () => {
+      const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
+      if (isTauri) {
+        try {
+          const port = await invoke<number>("get_active_api_port");
+          setActivePort(port);
+        } catch (e) {
+          console.error("Failed to query active Axum port from SQLite:", e);
+        }
+      }
+    };
+    getPort();
 
     // Listen to real-time update events from Axum background server
     const setupListener = async () => {
@@ -296,6 +333,95 @@ export default function InboxRoute() {
           </Show>
         </Show>
       </Show>
+
+      {/* Local API server Connection Diagnostics & Quick Tutorial Panel */}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+        
+        {/* Connection Diagnostics Card */}
+        <div class="border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/30 p-5 rounded-xl shadow-sm space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 rounded-lg">
+              <RefreshCw class={`w-4.5 h-4.5 ${healthStatus() === "checking" ? "animate-spin" : ""}`} />
+            </div>
+            <div class="text-left">
+              <h3 class="text-xs font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Local Server Diagnostics</h3>
+              <p class="text-[10px] text-zinc-400">Validate local companion API connectivity</p>
+            </div>
+          </div>
+
+          <div class="text-xs space-y-3 bg-zinc-50 dark:bg-zinc-950 p-3 rounded-lg border border-zinc-200/50 dark:border-zinc-800/50">
+            <div class="flex items-center justify-between">
+              <span class="text-zinc-500 font-medium">Bound Port:</span>
+              <code class="bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-[10px] px-2 py-0.5 rounded font-mono font-extrabold">
+                {activePort()}
+              </code>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-zinc-500 font-medium">Diagnostic:</span>
+              <Show when={healthStatus() === "idle"}>
+                <span class="text-zinc-400 font-bold uppercase text-[9px]">Unchecked</span>
+              </Show>
+              <Show when={healthStatus() === "checking"}>
+                <span class="text-blue-500 font-bold uppercase text-[9px] animate-pulse">Testing...</span>
+              </Show>
+              <Show when={healthStatus() === "online"}>
+                <span class="inline-flex items-center gap-1 text-emerald-500 font-bold uppercase text-[9px]">
+                  <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                  ONLINE
+                </span>
+              </Show>
+              <Show when={healthStatus() === "offline"}>
+                <span class="text-red-500 font-bold uppercase text-[9px]">OFFLINE</span>
+              </Show>
+            </div>
+
+            <Show when={healthMsg()}>
+              <div class="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50 text-[10px] text-zinc-400 leading-relaxed font-mono whitespace-pre-wrap break-all">
+                {healthMsg()}
+              </div>
+            </Show>
+          </div>
+
+          <button
+            onClick={testConnection}
+            disabled={healthStatus() === "checking"}
+            class="w-full flex items-center justify-center gap-1.5 py-2 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors disabled:opacity-50"
+          >
+            <span>Test API Connection</span>
+          </button>
+        </div>
+
+        {/* Quick Tutorial Card */}
+        <div class="border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/30 p-5 rounded-xl shadow-sm space-y-3 text-left">
+          <div class="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-bold text-[10px] uppercase tracking-wider">
+            <Sparkles class="w-4.5 h-4.5 text-purple-500" />
+            <span>Developer POST Payload Schema</span>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-[10px] text-zinc-400 leading-normal font-sans">
+              Send a JSON POST payload to direct links directly to your inbox queue:
+            </p>
+            
+            <div class="relative">
+              <pre class="bg-zinc-950 text-zinc-300 p-3 rounded-lg overflow-x-auto font-mono text-[9px] leading-relaxed select-text select-all">
+{`POST http://localhost:${activePort()}/add
+Content-Type: application/json
+
+{
+  "url": "https://youtube.com/watch?v=..."
+}`}
+              </pre>
+            </div>
+
+            <div class="text-[9px] text-zinc-400 flex items-start gap-1 font-sans">
+              <Info class="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <span>Returns success response with generated inbox item unique slug.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
 
     </div>
   );

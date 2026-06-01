@@ -234,3 +234,17 @@ pub async fn get_online_updates() -> Result<AppUpdatesSchema, String> {
 
     Ok(parsed)
 }
+
+/// Tauri IPC Command: Query the active bound port of the Axum API server from SQLite settings
+#[tauri::command]
+pub async fn get_active_api_port(state: State<'_, AppEngineState>) -> Result<u16, String> {
+    let conn = state.db_conn.lock();
+    let val: String = conn.query_row(
+        "SELECT value FROM app_settings WHERE key = 'active_api_port';",
+        [],
+        |row| row.get(0)
+    ).map_err(|e| e.to_string())?;
+
+    let port = val.parse::<u16>().map_err(|_| "Invalid port parsed from SQLite settings".to_string())?;
+    Ok(port)
+}
