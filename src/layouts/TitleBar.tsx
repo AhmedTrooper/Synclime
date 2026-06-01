@@ -45,8 +45,11 @@ export default function TitleBar() {
 
   const handleClose = async () => {
     try {
-      const appWindow = getCurrentWindow();
-      await appWindow.close();
+      const confirmed = window.confirm("Are you sure you want to close Synclime? Active downloads or operations will be interrupted.");
+      if (confirmed) {
+        const appWindow = getCurrentWindow();
+        await appWindow.close();
+      }
     } catch (err) {
       console.log("Close action fallback", err);
     }
@@ -64,14 +67,14 @@ export default function TitleBar() {
         <div class="flex items-center gap-0.5">
           <button
             onClick={() => navigate(-1)}
-            class="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
+            class="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
             title="Go Back"
           >
             <ChevronLeft class="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate(1)}
-            class="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
+            class="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
             title="Go Forward"
           >
             <ChevronRight class="w-4 h-4" />
@@ -85,28 +88,33 @@ export default function TitleBar() {
         </div>
       </div>
 
-      {/* Control Buttons */}
+      {/* Accidental Close Prevention: Center Close Button */}
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+        <button
+          onClick={handleClose}
+          class="flex items-center gap-1 px-3 py-1 bg-red-500 hover:bg-red-600 dark:bg-red-650 dark:hover:bg-red-550 text-white text-[9px] font-black tracking-wider uppercase rounded-full shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer border border-red-500/20"
+          title="Quit Application"
+        >
+          <X class="w-2.5 h-2.5" />
+          <span class="hidden xs:inline">Quit App</span>
+        </button>
+      </div>
+
+      {/* Control Buttons (Right Side - Only Minus and Fullscreen) */}
       <div class="flex items-center gap-1.5">
         <button
           onClick={handleMinimize}
-          class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
+          class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
           title="Minimize"
         >
           <Minus class="w-3.5 h-3.5" />
         </button>
         <button
           onClick={handleMaximize}
-          class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200"
+          class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
           title="Maximize"
         >
           <Square class="w-3 h-3" />
-        </button>
-        <button
-          onClick={handleClose}
-          class="p-1 rounded hover:bg-red-500/20 text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
-          title="Close"
-        >
-          <X class="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
