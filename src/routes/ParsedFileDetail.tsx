@@ -1,4 +1,4 @@
-import { createSignal, createMemo, Show, onMount, For } from "solid-js";
+import { createSignal, createMemo, Show, onMount, For, createEffect } from "solid-js";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { useParseStore } from "../store/useParseStore";
 import { useQueueStore } from "../store/useQueueStore";
@@ -101,6 +101,13 @@ export default function ParsedFileDetail() {
 
   const [siteConfigs, setSiteConfigs] = createSignal<any[]>([]);
   const [selectedSiteSlug, setSelectedSiteSlug] = createSignal<string>("");
+
+  createEffect(() => {
+    const f = file();
+    if (f && f.siteConfigSlug) {
+      setSelectedSiteSlug(f.siteConfigSlug);
+    }
+  });
 
   onMount(async () => {
     const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;

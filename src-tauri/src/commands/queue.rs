@@ -96,6 +96,7 @@ pub struct InsertJobPayload {
     pub is_from_playlist: Option<bool>,
     pub selected_subtitles: Option<String>,
     pub custom_title: Option<String>,
+    pub site_config_slug: Option<String>,
 }
 
 // this function adds a new download task into database
@@ -104,6 +105,44 @@ pub async fn insert_job_record(
     state: State<'_, AppEngineState>,
     payload: InsertJobPayload,
 ) -> Result<CommandResponse, String> {
+    let conn = state.db_conn.lock();
+
+    let mut cookie_profile_slug = None;
+    let mut proxy_profile_slug = None;
+
+    // 1. Resolve from site_config_slug passed in payload
+    if let Some(ref slug) = payload.site_config_slug {
+        let query = "SELECT cookie_profile_slug, proxy_profile_slug FROM site_configs WHERE slug = ?1;";
+        if let Ok(mut stmt) = conn.prepare(query) {
+            if let Ok(mut rows) = stmt.query(rusqlite::params![slug]) {
+                if let Ok(Some(row)) = rows.next() {
+                    cookie_profile_slug = row.get(0).ok();
+                    proxy_profile_slug = row.get(1).ok();
+                }
+            }
+        }
+    }
+    
+    // 2. Fallback: Resolve from the parsed file itself if no site_config_slug was passed
+    if cookie_profile_slug.is_none() && proxy_profile_slug.is_none() {
+        if let Some(ref parsed_slug) = payload.parsed_file_slug {
+            let query = "
+                SELECT sc.cookie_profile_slug, sc.proxy_profile_slug
+                FROM parsed_files p
+                JOIN site_configs sc ON p.site_config_slug = sc.slug
+                WHERE p.slug = ?1;
+            ";
+            if let Ok(mut stmt) = conn.prepare(query) {
+                if let Ok(mut rows) = stmt.query(rusqlite::params![parsed_slug]) {
+                    if let Ok(Some(row)) = rows.next() {
+                        cookie_profile_slug = row.get(0).ok();
+                        proxy_profile_slug = row.get(1).ok();
+                    }
+                }
+            }
+        }
+    }
+
     let row = crate::database::operations::DownloadJobRow {
         slug: payload.slug,
         parsed_file_slug: payload.parsed_file_slug.clone(),
@@ -124,8 +163,8 @@ pub async fn insert_job_record(
         total_parts: 1,
         base_download_path: payload.download_path,
         custom_download_path: payload.custom_title,
-        cookie_profile_slug: None,
-        proxy_profile_slug: None,
+        cookie_profile_slug,
+        proxy_profile_slug,
         status: "pending".to_string(),
         format_string: payload.format_string,
         audio_format: None,
@@ -135,7 +174,6 @@ pub async fn insert_job_record(
         updated_at: payload.created_at,
     };
 
-    let conn = state.db_conn.lock();
     match crate::database::operations::create_download_job(&conn, &row) {
         Ok(_) => Ok(CommandResponse {
             success: true,

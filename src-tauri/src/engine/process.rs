@@ -480,6 +480,11 @@ pub async fn execute_download_worker(
                     temp_cookie_path = Some(file_path.clone());
                     command_args.push("--cookies".to_string());
                     command_args.push(file_path.to_string_lossy().to_string());
+                    println!("[SYNCLIME DOWNLOADER] Secure Netscape cookies file created (Unix 0600):");
+                    println!("  - Path: {:?}", file_path);
+                    println!("  - Size: {} bytes", cookies.len());
+                } else {
+                    println!("[SYNCLIME DOWNLOADER] ERROR: Failed to open secure temporary cookie file at {:?}", file_path);
                 }
             }
             #[cfg(not(unix))]
@@ -489,6 +494,11 @@ pub async fn execute_download_worker(
                     temp_cookie_path = Some(file_path.clone());
                     command_args.push("--cookies".to_string());
                     command_args.push(file_path.to_string_lossy().to_string());
+                    println!("[SYNCLIME DOWNLOADER] Secure Netscape cookies file created (non-Unix):");
+                    println!("  - Path: {:?}", file_path);
+                    println!("  - Size: {} bytes", cookies.len());
+                } else {
+                    println!("[SYNCLIME DOWNLOADER] ERROR: Failed to write secure temporary cookie file at {:?}", file_path);
                 }
             }
         }
@@ -498,17 +508,26 @@ pub async fn execute_download_worker(
     impl Drop for CookieFileCleanup {
         fn drop(&mut self) {
             if let Some(ref path) = self.0 {
-                let _ = std::fs::remove_file(path);
+                if std::fs::remove_file(path).is_ok() {
+                    println!("[SYNCLIME DOWNLOADER] Secure temporary cookies file successfully deleted: {:?}", path);
+                } else {
+                    println!("[SYNCLIME DOWNLOADER] WARNING: Failed to delete secure temporary cookies file: {:?}", path);
+                }
             }
         }
     }
-    let _cleanup_guard = CookieFileCleanup(temp_cookie_path);
+    let _cleanup_guard = CookieFileCleanup(temp_cookie_path.clone());
 
     cmd.arg(&config.target_url);
     command_args.push(config.target_url.clone());
 
     // Build completed executed command string representation
     command_executed = format!("yt-dlp {}", command_args.join(" "));
+    println!("[SYNCLIME DOWNLOADER] Spawning download process:");
+    println!("  - Command string: {}", command_executed);
+    if let Some(ref p) = temp_cookie_path {
+        println!("  - Associated cookies file: {:?}", p);
+    }
 
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());

@@ -187,6 +187,7 @@ export default function Home() {
                 format_string: "bestvideo+bestaudio/best",
                 download_path: useUIStore.state.downloadPath,
                 created_at: newJob.createdAt,
+                site_config_slug: selectedSiteSlug() || null,
               }
             });
             if (!insertRes.success) throw new Error(insertRes.message);

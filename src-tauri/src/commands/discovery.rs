@@ -104,8 +104,13 @@ pub async fn discover_asset_metadata(
 
     let site_config = if let Some(ref slug) = site_config_slug {
         let conn = state.db_conn.lock();
-        resolve_selected_site_configs(&conn, slug)
+        let cfg = resolve_selected_site_configs(&conn, slug);
+        println!("[SYNCLIME BACKEND] Resolved site configuration for slug '{}'", slug);
+        println!("  - Proxy resolved: {:?}", cfg.proxy_string);
+        println!("  - Cookies resolved: {} characters", cfg.cookie_data.as_ref().map(|c| c.len()).unwrap_or(0));
+        cfg
     } else {
+        println!("[SYNCLIME BACKEND] No site configuration selected (direct connection)");
         OptionalSiteConfig {
             cookie_data: None,
             proxy_string: None,
@@ -136,14 +141,24 @@ pub async fn discover_asset_metadata(
                     use std::io::Write;
                     let _ = file.write_all(cookies.as_bytes());
                     cmd.arg("--cookies").arg(&file_path);
-                    temp_cookie_path = Some(file_path);
+                    temp_cookie_path = Some(file_path.clone());
+                    println!("[SYNCLIME BACKEND] Secure Netscape cookies file created (Unix 0600):");
+                    println!("  - Path: {:?}", file_path);
+                    println!("  - Size: {} bytes", cookies.len());
+                } else {
+                    println!("[SYNCLIME BACKEND] ERROR: Failed to open secure temporary cookie file at {:?}", file_path);
                 }
             }
             #[cfg(not(unix))]
             {
                 if std::fs::write(&file_path, cookies).is_ok() {
                     cmd.arg("--cookies").arg(&file_path);
-                    temp_cookie_path = Some(file_path);
+                    temp_cookie_path = Some(file_path.clone());
+                    println!("[SYNCLIME BACKEND] Secure Netscape cookies file created (non-Unix):");
+                    println!("  - Path: {:?}", file_path);
+                    println!("  - Size: {} bytes", cookies.len());
+                } else {
+                    println!("[SYNCLIME BACKEND] ERROR: Failed to write secure temporary cookie file at {:?}", file_path);
                 }
             }
         }
@@ -153,15 +168,28 @@ pub async fn discover_asset_metadata(
     impl Drop for CookieFileCleanup {
         fn drop(&mut self) {
             if let Some(ref path) = self.0 {
-                let _ = std::fs::remove_file(path);
+                if std::fs::remove_file(path).is_ok() {
+                    println!("[SYNCLIME BACKEND] Secure temporary cookies file successfully deleted: {:?}", path);
+                } else {
+                    println!("[SYNCLIME BACKEND] WARNING: Failed to delete secure temporary cookies file: {:?}", path);
+                }
             }
         }
     }
-    let _cleanup_guard = CookieFileCleanup(temp_cookie_path);
+    let _cleanup_guard = CookieFileCleanup(temp_cookie_path.clone());
 
     cmd.arg(&target_url);
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
+
+    println!("[SYNCLIME BACKEND] Spawning parsing command:");
+    println!("  - Extractor command: yt-dlp --dump-single-json --flat-playlist{}",
+        if site_config.proxy_string.is_some() { " --proxy <proxy_url>" } else { "" }
+    );
+    if let Some(ref p) = temp_cookie_path {
+        println!("  - Using temporary cookies file: {:?}", p);
+    }
+    println!("  - Target URL: '{}'", target_url);
 
     let mut child = match cmd.spawn() {
         Ok(c) => c,
