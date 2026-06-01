@@ -36,17 +36,15 @@ export const useQueueStore = {
     setQueueState("queue", (queue) => [job, ...queue.filter((j) => j.slug !== job.slug)]),
   updateJobStatus: (slug: string, status: DownloadJob["status"]) =>
     setQueueState("queue", (j) => j.slug === slug, "status", status),
-  updateJobProgress: (slug: string, progress: number, message?: string) =>
-    setQueueState(
-      "queue",
-      (j) => j.slug === slug,
-      (j) => ({
-        ...j,
-        progress,
-        message: message !== undefined ? message : j.message,
-        status: progress >= 100 ? "completed" : j.status,
-      })
-    ),
+  updateJobProgress: (slug: string, progress: number, message?: string) => {
+    setQueueState("queue", (j) => j.slug === slug, "progress", progress);
+    if (message !== undefined) {
+      setQueueState("queue", (j) => j.slug === slug, "message", message);
+    }
+    if (progress >= 100) {
+      setQueueState("queue", (j) => j.slug === slug, "status", "completed");
+    }
+  },
   removeJob: (slug: string) => setQueueState("queue", (q) => q.filter((j) => j.slug !== slug)),
   setProgress: (id: string, progress: number) => setQueueState("progressUpdates", id, progress),
   clearProgress: (id: string) => setQueueState("progressUpdates", id, undefined as any),
