@@ -305,7 +305,16 @@ pub async fn reveal_job_in_explorer(
 pub async fn reveal_folder_in_explorer(
     path: String,
 ) -> Result<CommandResponse, String> {
-    if let Err(e) = opener::open(&path) {
+    let mut final_path = std::path::PathBuf::from(&path);
+    if final_path.file_name().map(|n| n.to_string_lossy().to_string().to_lowercase()) != Some("synclime".to_string()) {
+        final_path = final_path.join("Synclime");
+    }
+
+    if !final_path.exists() {
+        let _ = std::fs::create_dir_all(&final_path);
+    }
+
+    if let Err(e) = opener::open(&final_path) {
         return Err(format!("Native OS failed to open path: {}", e));
     }
 
