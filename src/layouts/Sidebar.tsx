@@ -38,7 +38,7 @@ export default function Sidebar() {
               return (
                 <A
                   href={item.path}
-                  class={`flex items-center gap-3 px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 relative group overflow-hidden ${
+                  class={`flex-1 sm:flex-initial flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 px-1 sm:px-3 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 relative group overflow-hidden ${
                     isActive()
                       ? "bg-white dark:bg-white/10 text-blue-600 dark:text-white font-bold shadow-sm"
                       : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white font-medium"
@@ -60,7 +60,7 @@ export default function Sidebar() {
                       </span>
                     </Show>
                   </div>
-                  <span class={`block sm:inline tracking-tight line-clamp-1 text-center w-full ${ui.isSidebarExpanded ? "" : "sm:hidden"}`}>
+                  <span class={`block sm:inline tracking-tight text-[9px] sm:text-xs font-semibold text-center sm:text-left truncate w-full sm:w-auto ${ui.isSidebarExpanded ? "" : "sm:hidden"}`}>
                     {item.label}
                   </span>
                 </A>

@@ -86,8 +86,9 @@ export default function ParsedFileDetail() {
     const f = file();
     if (!f) return;
 
-    const uniqueSlug = `dl-${Date.now()}`;
-    const urlToUse = targetUrl || f.url;
+    const fmt = formatString || "bestvideo+bestaudio/best";
+    const safeFmt = fmt.replace(/\//g, "_");
+    const baseTitle = _customName || f.title;
     
     await dispatchDownloadJob({
       slug: uniqueSlug,
@@ -96,10 +97,10 @@ export default function ParsedFileDetail() {
       file_type: isAudio ? "audio" : "video",
       associated_media_job_slug: null,
       is_from_playlist: f.isPlaylist,
-      format_string: formatString || "bestvideo+bestaudio/best",
+      format_string: fmt,
       download_path: useUIStore.state.downloadPath,
       created_at: new Date().toISOString(),
-      custom_title: _customName || f.title,
+      custom_title: `[${safeFmt}]_${baseTitle}`,
     });
 
     if (selectedSubs().length > 0) {
@@ -282,7 +283,8 @@ export default function ParsedFileDetail() {
     const isAudio = formatString.includes("bestaudio") && !formatString.includes("bestvideo");
     const uniqueSlug = `dl-${Date.now()}`;
     const joinedSubs = modalSelectedSubs().includes("all") ? "all" : modalSelectedSubs().join(",");
-
+    const safeFmt = formatString.replace(/\//g, "_");
+ 
     await dispatchDownloadJob({
       slug: uniqueSlug,
       url: activeFile.url,
@@ -293,7 +295,7 @@ export default function ParsedFileDetail() {
       format_string: formatString,
       download_path: useUIStore.state.downloadPath,
       created_at: new Date().toISOString(),
-      custom_title: activeFile.title,
+      custom_title: `[${safeFmt}]_${activeFile.title}`,
       selected_subtitles: joinedSubs || null,
     });
 
@@ -332,8 +334,9 @@ export default function ParsedFileDetail() {
     }
     if (targetTracks.length === 0) return;
     
-    const playlistFormatString = selectedPreset();
-
+    const playlistFormatString = selectedPreset() || "bestvideo+bestaudio/best";
+    const safeFmt = playlistFormatString.replace(/\//g, "_");
+ 
     const promises = targetTracks.map(async (track: any, index: number) => {
       const trackSlug = `track-${track.id}-${Date.now()}-${index}`;
       
@@ -344,10 +347,10 @@ export default function ParsedFileDetail() {
         file_type: "video",
         associated_media_job_slug: null,
         is_from_playlist: f.isPlaylist,
-        format_string: playlistFormatString || "bestvideo+bestaudio/best",
+        format_string: playlistFormatString,
         download_path: useUIStore.state.downloadPath,
         created_at: new Date().toISOString(),
-        custom_title: track.title,
+        custom_title: `[${safeFmt}]_${track.title}`,
       });
 
       if (selectedSubs().length > 0) {
