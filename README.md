@@ -6,19 +6,24 @@
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://sqlite.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A desktop media downloader built with Tauri v2, SolidJS, Rust, and SQLite. SyncLime is designed to manage many downloads at the same time without crashing.
+A premium native desktop media downloader built with Tauri v2, SolidJS, Rust, and SQLite. SyncLime is engineered to manage high-speed multithreaded network queues and large extraction loads smoothly without frontend thread freezes or process ghosting.
 
 ---
 
 ## 📌 What is this?
-SyncLime is a desktop application for downloading videos and music. 
-Many downloader apps freeze when you download too many files. SyncLime solves this by separating the background work from the user screen. 
+SyncLime is a native desktop application designed for downloading videos, playlists, audio streams, and web documents. 
+
+Many traditional web-style downloaders freeze or lag when dealing with high network loads or capturing massive collections. SyncLime resolves this by offloading parsing operations to a native Rust background task layer and utilizing a lightweight SQLite transactional cache to debouce and serialize UI updates.
 
 ### Core Features
-*   **Fast Parsing:** Reads big playlists (100+ videos) quickly.
-*   **Custom Profiles:** You can use specific cookies and proxies for different websites.
-*   **Safe Memory:** Limits how many downloads run at once to protect your computer.
-*   **Native Window:** Custom dark mode UI that handles thousands of items smoothly.
+*   **Fast Playlist Parsing:** Reads and populates massive playlists (100+ videos) quickly using highly optimized concurrent yt-dlp metadata extraction.
+*   **Tactile Desktop Interface:** Redesigned split-pane panels across Home setup, Settings, Extensions marketplace, and Specs dialogs that follow operating system light and dark themes dynamically.
+*   **Domain Routing Prefs:** Global and per-domain routing matched rules linking directly to Netscape cookie credentials vaults and custom SOCKS5/HTTP proxies.
+*   **Process Protection Limits:** Limits concurrent download worker threads to safeguard local memory, hardware structures, and connection bandwidth.
+*   **Quit App Safety confirmation**: Relocates window close buttons to the absolute center of TitleBars, issuing native operating system warnings (`ask()` API) before letting the app close to prevent accidental interruptions.
+*   **Diagnostics Logs & Staging**: Monospaced diagnostics streams showing stdout/stderr transactions, featuring one-click clipboard copying triggers and visual copy indicators.
+*   **Real-Time Reference Validation**: Real-time validation checks rendering red warning badges on domain rules matching deleted/missing network credentials.
+*   **Browser Extensions Sync**: Direct, real-time background syncing of raw links from un-packed browser extensions via local port listener (`127.0.0.1:14221`).
 
 ---
 
