@@ -228,7 +228,7 @@ pub async fn discover_asset_metadata(
         let final_err = if stderr_msg.is_empty() {
             "Extraction sub-engine returned a completely empty stream buffer data block.".to_string()
         } else {
-            format!("yt-dlp error: {}", stderr_msg)
+            stderr_msg.trim().to_string()
         };
 
         return Ok(DiscoveryResponse {
