@@ -19,6 +19,9 @@ pub struct ResolvedJobConfig {
     pub proxy_string: Option<String>,
     pub resolved_path: String,
     pub custom_title: Option<String>,
+    pub sanitized_title: String,
+    pub download_chunks: usize,
+    pub is_direct_url: bool,
 }
 
 /// Helper function to parse raw text lines into metrics strings cleanly using a resilient backwards scanner
@@ -125,7 +128,8 @@ pub fn resolve_job_parameters(
             j.is_from_playlist,
             COALESCE(p.is_playlist, 0) as is_playlist_parent,
             p.parent_playlist_slug,
-            j.parsed_file_slug
+            j.parsed_file_slug,
+            j.is_direct_url
         FROM download_jobs j
         LEFT JOIN parsed_files p ON j.parsed_file_slug = p.slug
         LEFT JOIN parsed_files parent_p ON p.parent_playlist_slug = parent_p.slug
@@ -173,6 +177,7 @@ pub fn resolve_job_parameters(
             let is_playlist_parent: i32 = row.get(11).unwrap_or(0);
             let parent_playlist_slug: Option<String> = row.get(12).ok();
             let parsed_file_slug: Option<String> = row.get(13).ok();
+            let is_direct_url: i32 = row.get(14).unwrap_or(0);
 
             // 1. Fetch the user's selected download folder from the SQL `app_settings` table.
             let global_download_path = match conn.query_row(
@@ -182,6 +187,15 @@ pub fn resolve_job_parameters(
             ) {
                 Ok(val) => Some(val),
                 Err(_) => None,
+            };
+
+            let download_chunks = match conn.query_row(
+                "SELECT value FROM app_settings WHERE key = 'download_chunks'",
+                [],
+                |r| r.get::<_, String>(0)
+            ) {
+                Ok(val) => val.parse::<usize>().unwrap_or(4),
+                Err(_) => 4,
             };
 
             // 2. Prioritize global setting, then the job's recorded path, then the OS downloads folder fallback.
@@ -198,7 +212,24 @@ pub fn resolve_job_parameters(
 
             let is_playlist_item = is_from_playlist == 1 || !parent_playlist_slug.clone().unwrap_or_default().trim().is_empty();
 
-            if is_playlist_item {
+            let raw_video_name = sanitized_title
+                .clone()
+                .or(custom_title.clone())
+                .unwrap_or_else(|| "video".to_string());
+            let video_slug = parsed_file_slug.clone().unwrap_or_else(|| "video".to_string());
+            let clean_video_name = {
+                let base = sanitize_title(&raw_video_name);
+                let clean_slug = sanitize_title(&video_slug);
+                if base.is_empty() {
+                    clean_slug
+                } else {
+                    format!("{}_{}", base, clean_slug)
+                }
+            };
+
+            if is_direct_url == 1 {
+                // Direct Standalone File - no video subfolder created. Sits directly under Synclime directory.
+            } else if is_playlist_item {
                 // Get playlist folder name (sanitized)
                 let raw_playlist_name = if is_playlist_parent == 1 {
                     sanitized_title.clone().unwrap_or_else(|| "playlist".to_string())
@@ -220,41 +251,10 @@ pub fn resolve_job_parameters(
                     }
                 };
 
-                // Get video folder name (sanitized)
-                let raw_video_name = if is_playlist_parent == 1 {
-                    custom_title.clone().unwrap_or_else(|| "video".to_string())
-                } else {
-                    sanitized_title.clone().unwrap_or_else(|| "video".to_string())
-                };
-                let video_slug = parsed_file_slug.clone().unwrap_or_else(|| "video".to_string());
-                let clean_video_name = {
-                    let base = sanitize_title(&raw_video_name);
-                    let clean_slug = sanitize_title(&video_slug);
-                    if base.is_empty() {
-                        clean_slug
-                    } else {
-                        format!("{}_{}", base, clean_slug)
-                    }
-                };
-
-                final_path = final_path.join(clean_playlist_name).join(clean_video_name);
+                final_path = final_path.join(clean_playlist_name).join(&clean_video_name);
             } else {
                 // Standalone video
-                let raw_video_name = sanitized_title
-                    .clone()
-                    .or(custom_title.clone())
-                    .unwrap_or_else(|| "video".to_string());
-                let video_slug = parsed_file_slug.clone().unwrap_or_else(|| "video".to_string());
-                let clean_video_name = {
-                    let base = sanitize_title(&raw_video_name);
-                    let clean_slug = sanitize_title(&video_slug);
-                    if base.is_empty() {
-                        clean_slug
-                    } else {
-                        format!("{}_{}", base, clean_slug)
-                    }
-                };
-                final_path = final_path.join(clean_video_name);
+                final_path = final_path.join(&clean_video_name);
             }
 
             if !final_path.exists() {
@@ -270,6 +270,9 @@ pub fn resolve_job_parameters(
                 proxy_string: proxy,
                 resolved_path: final_path.to_string_lossy().into_owned(),
                 custom_title,
+                sanitized_title: clean_video_name,
+                download_chunks,
+                is_direct_url: is_direct_url == 1,
             })
         }
         Ok(None) => Err(
@@ -354,6 +357,28 @@ pub async fn execute_download_worker(
     command_args.push("--newline".to_string());
     command_args.push("-P".to_string());
     command_args.push(config.resolved_path.clone());
+    
+    if !config.is_direct_url {
+        // Parsed video/playlist download job - concurrent fragments
+        command_args.push("-N".to_string());
+        command_args.push(config.download_chunks.to_string());
+    } else {
+        // Direct standalone file download - check if aria2c is installed on host system
+        let aria2_available = std::process::Command::new("aria2c")
+            .arg("--version")
+            .output()
+            .is_ok();
+
+        if aria2_available {
+            command_args.push("--downloader".to_string());
+            command_args.push("aria2c".to_string());
+            command_args.push("--downloader-args".to_string());
+            command_args.push(format!("aria2c:-x {} -s {}", config.download_chunks, config.download_chunks));
+        } else {
+            command_args.push("--http-chunk-size".to_string());
+            command_args.push("10M".to_string());
+        }
+    }
     
     // Specify the absolute output path directly in the output template to guarantee directory structure
     let output_template = if let Some(ref ct) = config.custom_title {
