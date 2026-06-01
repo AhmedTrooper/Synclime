@@ -188,7 +188,7 @@ export default function About() {
             </div>
             <div class="text-left">
               <h3 class="text-sm font-bold text-zinc-950 dark:text-white leading-tight">Indexer & Database</h3>
-              <p class="text-[10px] text-zinc-400">Zustand Store & SQLite Cache</p>
+              <p class="text-[10px] text-zinc-400">SolidJS Store & SQLite Cache</p>
             </div>
           </div>
           
