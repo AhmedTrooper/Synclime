@@ -1,14 +1,27 @@
 import { load, Store } from "@tauri-apps/plugin-store";
 
-// Detect if we are running inside the Tauri native OS shell
 const isTauri =
   typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
 
-// Create a single unified binary store file in the OS AppData directory
 let storePromise: Promise<Store> | null = null;
 if (isTauri) {
   storePromise = load("synclime_state.bin", { autoSave: false });
 }
+
+let saveTimeout: any = null;
+
+const debounceSave = (tauriStore: Store) => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+  saveTimeout = setTimeout(async () => {
+    try {
+      await tauriStore.save();
+    } catch (e) {
+      console.warn("[Tauri Store] Failed to save store to disk:", e);
+    }
+  }, 1000); // Throttle physical writes to 1 second of inactivity
+};
 
 export const nativeStorageAdapter = {
   getItem: async (name: string): Promise<string | null> => {
@@ -30,7 +43,7 @@ export const nativeStorageAdapter = {
       try {
         const tauriStore = await storePromise;
         await tauriStore.set(name, value);
-        await tauriStore.save();
+        debounceSave(tauriStore); // Optimized debounced disk flush
       } catch (e) {
         console.warn(`[Tauri Store] Failed to write ${name}:`, e);
       }
@@ -43,7 +56,7 @@ export const nativeStorageAdapter = {
       try {
         const tauriStore = await storePromise;
         await tauriStore.delete(name);
-        await tauriStore.save();
+        debounceSave(tauriStore); // Optimized debounced disk flush
       } catch (e) {
         console.warn(`[Tauri Store] Failed to remove ${name}:`, e);
       }
