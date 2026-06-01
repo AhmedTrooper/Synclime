@@ -136,10 +136,6 @@ export default function InboxDetail() {
         try {
           const configs = await invoke<SiteConfig[]>("get_site_configs");
           setSiteConfigs(configs);
-          const defaultCfg = configs.find(c => c.is_default);
-          if (defaultCfg) {
-            setSelectedSiteSlug(defaultCfg.slug);
-          }
         } catch (e) {
           await logErrorToDb(String(e), "fetchConfigs_inbox_detail");
         }
@@ -232,6 +228,7 @@ export default function InboxDetail() {
                 format_string: "bestvideo+bestaudio/best",
                 download_path: useUIStore.state.downloadPath,
                 created_at: newJob.createdAt,
+                site_config_slug: selectedSiteSlug() || null,
               }
             });
             if (!insertRes.success) throw new Error(insertRes.message);
@@ -516,19 +513,16 @@ export default function InboxDetail() {
 
               {/* Site configs */}
               <Show when={!directDownload()}>
-                <div class="space-y-1.5 animate-fade-in">
-                  <label class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center justify-between">
-                    <span>Site Configuration Profile</span>
-                    <span class="text-[9px] lowercase text-zinc-400 font-semibold normal-case">
-                      applied default credentials if domains match
-                    </span>
+                <div class="space-y-1.5 animate-fade-in text-left">
+                  <label class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                    Site Configuration Profile (Cookies & Proxy)
                   </label>
 
                   <CustomSelect
                     value={selectedSiteSlug()}
                     onChange={setSelectedSiteSlug}
                     options={siteConfigs().map(c => ({ value: c.slug, label: `${c.title} (${c.domain})` }))}
-                    placeholder="Auto-match configurations by link hostname"
+                    placeholder="No Site Profile (Direct network fallback)"
                   />
                 </div>
               </Show>
