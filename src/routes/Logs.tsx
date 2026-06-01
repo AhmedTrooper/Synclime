@@ -36,13 +36,12 @@ export default function Logs() {
     try {
       const isTauri = typeof window !== "undefined" && !!(window as any).__TAURI_INTERNALS__;
       if (isTauri) {
-        if (activeTab() === "errors") {
-          const data = await invoke<ErrorLog[]>("get_error_logs");
-          setErrorLogs(data);
-        } else {
-          const data = await invoke<ParseLog[]>("get_parse_logs");
-          setParseLogs(data);
-        }
+        const [errors, parses] = await Promise.all([
+          invoke<ErrorLog[]>("get_error_logs"),
+          invoke<ParseLog[]>("get_parse_logs")
+        ]);
+        setErrorLogs(errors);
+        setParseLogs(parses);
       }
     } catch (err) {
       console.error("Failed to load logs from SQLite:", err);
