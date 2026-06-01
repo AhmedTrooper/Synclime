@@ -88,21 +88,43 @@ fn parse_progress_line(line: &str) -> Option<(f64, String)> {
 
 /// Resilient progress line decoder for Aria2 external downloaders
 fn parse_aria2_progress(line: &str) -> Option<(f64, String)> {
-    if !line.contains("[#") || !line.contains("%") {
+    // Scan for any percentage symbol inside parentheses, e.g. "(99%)", "( 9.5%)"
+    if !line.contains('%') {
         return None;
     }
 
-    let pct_idx = line.find('%')?;
-    let open_paren = line[..pct_idx].rfind('(')?;
-    
-    let pct_str = line[open_paren + 1..pct_idx].trim();
-    let percentage = pct_str.parse::<f64>().ok()?;
+    // Try finding a percentage match dynamically by checking all '%' characters
+    let chars: Vec<char> = line.chars().collect();
+    for pct_idx in 0..chars.len() {
+        if chars[pct_idx] == '%' {
+            // Scan backward to locate the corresponding opening parenthesis '('
+            let mut i = pct_idx;
+            while i > 0 {
+                i -= 1;
+                if chars[i] == '(' {
+                    let pct_str: String = chars[i + 1..pct_idx].iter().collect();
+                    let trimmed = pct_str.trim();
+                    if let Ok(percentage) = trimmed.parse::<f64>() {
+                        if percentage >= 0.0 && percentage <= 100.0 {
+                            // Extract a clean status message
+                            // If the line contains a bracketed segment (e.g. [#xxxxxx ...]), extract it.
+                            // Otherwise, just use the trimmed line content.
+                            let status_msg = if let Some(start_idx) = line.find('[') {
+                                let end_idx = line.rfind(']').unwrap_or(line.len());
+                                line[start_idx..end_idx + 1].trim().to_string()
+                            } else {
+                                line.trim().to_string()
+                            };
+                            return Some((percentage, status_msg));
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
-    let start_idx = line.find('[')?;
-    let end_idx = line.rfind(']').unwrap_or(line.len());
-    let status_msg = line[start_idx..end_idx + 1].trim().to_string();
-
-    Some((percentage, status_msg))
+    None
 }
 
 /// Dynamic Cross-Platform Fallback: Fetches the pure Rust path targeting user standard downloads
