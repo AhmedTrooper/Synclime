@@ -204,7 +204,7 @@ async fn start_cancellation_worker(
                 };
 
                 match target_process {
-                    Some(child_process) => {
+                    Some(mut child_process) => {
                         #[cfg(unix)]
                         {
                             if let Some(pid) = child_process.id() {
@@ -299,7 +299,7 @@ pub fn run() {
                             "UPDATE download_jobs SET progress = ?1, tracking_message = ?2, status = ?3, updated_at = datetime('now') WHERE slug = ?4;",
                             rusqlite::params![snapshot.progress, snapshot.status_message, snapshot.status, slug]
                         );
-                        
+
                         let _ = tic_emitter.emit(
                             "download-progress-token",
                             serde_json::json!({
@@ -413,8 +413,8 @@ async fn start_axum_server(
         Json, Router,
     };
     use serde::Deserialize;
-    use tower_http::cors::CorsLayer;
     use std::net::SocketAddr;
+    use tower_http::cors::CorsLayer;
 
     #[derive(Deserialize)]
     struct AddUrlPayload {
@@ -422,73 +422,79 @@ async fn start_axum_server(
     }
 
     let app = Router::new()
-        .route("/health", get(|| async {
-            Json(serde_json::json!({
-                "status": "ok",
-                "message": "Synclime Local API server is healthy and online",
-                "version": "0.1.0"
-            }))
-        }))
-        .route("/add", post({
-            let app_handle = app_handle.clone();
-            let db_conn = db_conn.clone();
-            move |Json(payload): Json<AddUrlPayload>| {
+        .route(
+            "/health",
+            get(|| async {
+                Json(serde_json::json!({
+                    "status": "ok",
+                    "message": "Synclime Local API server is healthy and online",
+                    "version": "0.1.0"
+                }))
+            }),
+        )
+        .route(
+            "/add",
+            post({
                 let app_handle = app_handle.clone();
                 let db_conn = db_conn.clone();
-                async move {
-                    let url = payload.url.trim();
-                    if url.is_empty() {
-                        return (
-                            axum::http::StatusCode::BAD_REQUEST,
-                            Json(serde_json::json!({
-                                "success": false,
-                                "message": "URL cannot be empty"
-                            })),
-                        );
-                    }
+                move |Json(payload): Json<AddUrlPayload>| {
+                    let app_handle = app_handle.clone();
+                    let db_conn = db_conn.clone();
+                    async move {
+                        let url = payload.url.trim();
+                        if url.is_empty() {
+                            return (
+                                axum::http::StatusCode::BAD_REQUEST,
+                                Json(serde_json::json!({
+                                    "success": false,
+                                    "message": "URL cannot be empty"
+                                })),
+                            );
+                        }
 
-                    let slug = format!("inbox-{}", chrono::Utc::now().timestamp_millis());
+                        let slug = format!("inbox-{}", chrono::Utc::now().timestamp_millis());
 
-                    let conn = db_conn.lock();
+                        let conn = db_conn.lock();
 
-                    let query = "
+                        let query = "
                         INSERT OR IGNORE INTO inbox_urls (slug, url, status, created_at, updated_at)
                         VALUES (?1, ?2, 'pending', datetime('now'), datetime('now'));
                     ";
 
-                    match conn.execute(query, rusqlite::params![slug, url]) {
-                        Ok(rows) => {
-                            if rows > 0 {
-                                let _ = app_handle.emit("inbox-updated", ());
-                                (
-                                    axum::http::StatusCode::OK,
-                                    Json(serde_json::json!({
-                                        "success": true,
-                                        "message": "URL successfully added to inbox",
-                                        "slug": slug
-                                    })),
-                                )
-                            } else {
-                                (
-                                    axum::http::StatusCode::OK,
-                                    Json(serde_json::json!({
-                                        "success": false,
-                                        "message": "URL already exists in inbox"
-                                    })),
-                                )
+                        match conn.execute(query, rusqlite::params![slug, url]) {
+                            Ok(rows) => {
+                                if rows > 0 {
+                                    let _ = app_handle.emit("inbox-updated", ());
+                                    (
+                                        axum::http::StatusCode::OK,
+                                        Json(serde_json::json!({
+                                            "success": true,
+                                            "message": "URL successfully added to inbox",
+                                            "slug": slug
+                                        })),
+                                    )
+                                } else {
+                                    (
+                                        axum::http::StatusCode::OK,
+                                        Json(serde_json::json!({
+                                            "success": false,
+                                            "message": "URL already exists in inbox"
+                                        })),
+                                    )
+                                }
                             }
+                            Err(e) => (
+                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                Json(serde_json::json!({
+                                    "success": false,
+                                    "message": format!("Database insert error: {}", e)
+                                })),
+                            ),
                         }
-                        Err(e) => (
-                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(serde_json::json!({
-                                "success": false,
-                                "message": format!("Database insert error: {}", e)
-                            })),
-                        ),
                     }
                 }
-            }
-        }))
+            }),
+        )
         .layer(CorsLayer::permissive());
 
     for port in 14221..=14230 {
@@ -506,7 +512,7 @@ async fn start_axum_server(
             let conn = db_conn.lock();
             let _ = conn.execute(
                 "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('active_api_port', ?1);",
-                rusqlite::params![port.to_string()]
+                rusqlite::params![port.to_string()],
             );
         }
         if let Err(e) = axum::serve(listener, app).await {
