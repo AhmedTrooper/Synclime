@@ -217,7 +217,7 @@ export function PlaylistView(props: PlaylistViewProps) {
                         <Download class="w-3.5 h-3.5" />
                       </button>
                       <div class="absolute bottom-full right-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 dark:bg-zinc-950 text-white text-[9px] font-bold uppercase tracking-wider shadow-md px-2 py-1 rounded z-[99] border border-zinc-800 whitespace-nowrap">
-                        Queue Media
+                        Add To Queue
                       </div>
                     </div>
 
